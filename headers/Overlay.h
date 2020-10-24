@@ -5,12 +5,28 @@
 #include <d3dx9core.h>
 
 class Overlay {
+
 public:
-    static void init(HINSTANCE hInstance, Manager& pManager);
-    static void show_hint(std::string msg, int timeout=1000);
+    static void init(HINSTANCE hInstance, Manager &pManager);
+    static void show_hint(std::string msg, int timeout = 1000);
     static inline TtlStringCollection *hints = new TtlStringCollection(250, nullptr);
+    static void toggle_ui();
+    static void toggle_debug_ui();
 private:
 
+    enum class DebugUiMode {
+        Full, FrameOnly, TargetOnly, Off
+    };
+
+    enum class UiMode {
+        Full, InfoOnly, DebugOnly, Off
+    };
+
+    static inline DebugUiMode debugUiMode = DebugUiMode::Full;
+    static inline UiMode uiMode = UiMode::Full;
+    void render_hints();
+    void render_ui();
+    void render_debug_ui();
     int init_d3d(HWND hWnd);
     int render();
     void gradient(int x, int y, int w, int h, int r, int g, int b, int a);

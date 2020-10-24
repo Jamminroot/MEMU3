@@ -90,7 +90,7 @@ void Overlay::draw_line(float x, float y, float xx, float yy, int r, int g, int 
 
 void Overlay::draw_circle(float x, float y, float radius, int r, int g, int b, int alpha) {
     D3DXVECTOR2 Line[128];
-    float Step = 3.14159265 * 2.0 / 25.0f;
+    float Step = 3.14159265f * 2.0f / 25.0f;
     int Count = 0;
     for (float a = 0; a < 3.14159265*2.0; a += Step)
     {
@@ -246,22 +246,52 @@ int Overlay::init_d3d(HWND hWnd) {
 
 }
 
+void Overlay::toggle_debug_ui() {
+    debugUiMode = (DebugUiMode) ((((int)debugUiMode)+1) % sizeof(DebugUiMode));
+    switch(debugUiMode){
+        case DebugUiMode::FrameOnly: show_hint("Debug UI: Frame only"); break;
+        case DebugUiMode::Full: show_hint("Debug UI: Full"); break;
+        case DebugUiMode::TargetOnly: show_hint("Debug UI: Target only"); break;
+        case DebugUiMode::Off: show_hint("Debug UI: Off"); break;
+    }
+}
+
+void Overlay::toggle_ui() {
+    uiMode = (UiMode) ((((int)uiMode)+1) % sizeof(UiMode));
+    switch(uiMode){
+        case UiMode::DebugOnly: show_hint("UI: Debug only"); break;
+        case UiMode::Full: show_hint("UI: Full"); break;
+        case UiMode::InfoOnly: show_hint("UI: Info only"); break;
+        case UiMode::Off: show_hint("UI: Off"); break;
+    }
+}
+
+void Overlay::render_debug_ui() {
+    if (manager.enemyVisible){
+        draw_circle((float) manager.localEnemyCoords.x + manager.region.left, (float) manager.region.top + manager.region.height-manager.localEnemyCoords.y, 15, 128, 255, 0, 0);
+    }
+}
+
+void Overlay::render_ui() {
+
+}
+
+void Overlay::render_hints() {
+    auto index = 0;
+    for (auto &item: Overlay::hints->strings()) {
+        draw_string((char *) item.c_str(), 100, 20 + 20 * index, 220, 200, 100, dx_Font); // Put Main procedure here like ESP etc.
+        index++;
+    }
+}
+
 int Overlay::render() {
 
     dx_Device->BeginScene();
     dx_Device->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
 
-    if (TargetWnd == GetForegroundWindow()) {
-        auto index = 0;
-        for (auto &item: Overlay::hints->strings()) {
-            draw_string((char *) item.c_str(), 100, 20 + 20 * index, 220, 200, 100, dx_Font); // Put Main procedure here like ESP etc.
-            index++;
-        }
-    }
-    if (manager.enemyVisible){
-        draw_circle(manager.localEnemyCoords.x + manager.region.left, manager.region.top + manager.region.height-manager.localEnemyCoords.y, 15, 128, 255, 0, 0);
-    }
-
+    render_hints();
+    render_debug_ui();
+    render_ui();
     dx_Device->EndScene();
     dx_Device->PresentEx(0, 0, 0, 0, 0);
 
@@ -444,7 +474,7 @@ int WINAPI Overlay::run(HINSTANCE hInstance) {
     Lets exit immediately...
     */
     std::cout << "EXIT!" << std::endl;
-
+    return 0;
 }
 
 Overlay::Overlay(Manager &pManager) : manager(pManager) {}

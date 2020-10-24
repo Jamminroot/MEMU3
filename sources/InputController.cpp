@@ -73,6 +73,12 @@ bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke, Inte
             manager.set_running(!manager.is_running());
             Overlay::show_hint(manager.is_running()?"Running":"Paused");
             break;
+        case KeyCode::Numpad0:
+            Overlay::toggle_ui();
+            break;
+        case KeyCode::NumpadDelete:
+            Overlay::toggle_debug_ui();
+            break;
     }
     return false;
 }
