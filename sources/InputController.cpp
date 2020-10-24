@@ -1,4 +1,5 @@
 #include "../headers/InputController.h"
+#include "../headers/Overlay.h"
 #include <thread>
 #include <iostream>
 
@@ -24,7 +25,7 @@ void InputController::input_thread_handler() {
 
     InterceptionDevice device;
     InterceptionStroke stroke;
-    interception_set_filter(context, interception_is_keyboard, INTERCEPTION_FILTER_KEY_DOWN | INTERCEPTION_FILTER_KEY_UP);
+    interception_set_filter(context, interception_is_keyboard, INTERCEPTION_FILTER_KEY_DOWN);
     interception_set_filter(context, interception_is_mouse, INTERCEPTION_FILTER_MOUSE_ALL);
 
     while ((!mouse_captured || !keyboard_captured) && interception_receive(context, device = interception_wait(context), &stroke, 1) > 0) {
@@ -70,6 +71,7 @@ bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke, Inte
             break;
         case KeyCode::RightAlt:
             manager.set_running(!manager.is_running());
+            Overlay::show_hint(manager.is_running()?"Running":"Paused");
             break;
     }
     return false;

@@ -1,8 +1,6 @@
 #include "../headers/Manager.h"
 #include "../headers/Utils.h"
 
-#include <iostream>
-
 Manager::~Manager() {
 }
 

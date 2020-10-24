@@ -1,7 +1,7 @@
 #include "../headers/TtlStringCollection.h"
 
 #include <thread>
-#include <iostream>
+#include <utility>
 
 TtlStringCollection::TtlStringCollection(const int pMilliseconds, void (*pCallback)(int)) {
     handler = pCallback;
@@ -9,36 +9,39 @@ TtlStringCollection::TtlStringCollection(const int pMilliseconds, void (*pCallba
     clearThread.detach();
 }
 
-void TtlStringCollection::vector_cleaner(int pCheckPeriod) {
+[[noreturn]] void TtlStringCollection::vector_cleaner(int pCheckPeriod) {
     using namespace std::chrono;
+
     for (;;) {
         std::this_thread::sleep_for(std::chrono::milliseconds(pCheckPeriod));
         if (data.empty()) continue;
         auto index = (int)data.size() - 1;
         auto now = high_resolution_clock::now().time_since_epoch();
-        auto timestamp = now.count() / 1000000;
+        auto timestamp = (unsigned int)(now.count() / 1000000);
         while (index >= 0 && !data.empty()) {
             auto item = data.at(index);
-            int stamp = item.expirationTimePoint;
+            auto stamp = item.expirationTimePoint;
             if (stamp < timestamp) {
                 auto deletedId = item.id;
-                std::cout << "Cleaning. Removing " << data.at(index).message << std::endl;
                 data.erase(data.begin() + index);
-                handler(deletedId);
+                if (handler!=nullptr) {
+                    handler(deletedId);
+                }
             }
             index--;
         }
     }
 }
 
-int TtlStringCollection::add(std::string msg, int timeout) {
+int TtlStringCollection::add(std::string &msg, int timeout) {
     using namespace std::chrono;
     auto str = TtlString();
     int id = nextId++;
-    str.message = msg;
-    str.expirationTimePoint = (unsigned int) high_resolution_clock::now().time_since_epoch().count() / 1000000 + timeout;
+    str.message = std::move(msg);
+    str.expirationTimePoint = (unsigned int) (high_resolution_clock::now().time_since_epoch().count() / 1000000) + timeout;
     str.id = id;
     data.push_back(str);
+
     return id;
 }
 

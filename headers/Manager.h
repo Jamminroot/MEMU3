@@ -18,11 +18,10 @@ public:
     bool is_exit_requested() const;
     void set_running(const bool &);
     void request_exit();
-    std::string targetWindowName = "Untitled - Paint";
+    std::string targetWindowName = "Overwatch";
     std::atomic_bool enemyVisible;
     std::atomic_bool screenshotHandled;
 
-    bool showOverlay = true;
     bool flickReady;
     aim_mode mode = aim;
     int mouseTriggerKeyStates = 0;

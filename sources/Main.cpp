@@ -15,7 +15,6 @@ void TerminateIn30Seconds(Manager &manager) {
 
 #endif
 
-HINSTANCE hInstance;
 
 int main() {
     std::cout << "Starting\n";
@@ -23,14 +22,16 @@ int main() {
     auto manager = Manager(400, 300, -200, -200, Coords(50, 35), Coords(65, 65));
     auto assistant = AimAssistant(manager, 3.5f);
     manager.set_running(true);
-    Overlay::Init(hInstance, manager);
+    Overlay::init(nullptr, manager);
+    Overlay::show_hint("MEMU Started", 5000);
+
     /*std::thread olt(overlayInit);
     olt.detach();*/
     /*  Overlay overlay = Overlay(manager);
       Overlay::add_hint("Hello", 1000);
       Overlay::add_hint("Hello - 2", 1000 * 2);
       Overlay::add_hint("Hello - 3", 1000 * 3);
-      Overlay::add_hint("Hello - 3", 1000 * 4);*/
+      Overlay::show_hint("Hello - 3", 1000 * 4);*/
 
     /* std::thread overlayThread(&::OverlayThreadHandler, overlay);
      SetThreadPriority(overlayThread.native_handle(), THREAD_PRIORITY_ABOVE_NORMAL);

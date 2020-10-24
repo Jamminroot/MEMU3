@@ -3,11 +3,22 @@
 #include "../headers/Overlay.h"
 
 #include <algorithm>
+#include <thread>
+#include <iostream>
 #include <dwmapi.h>
 
 #pragma comment(lib, "d3dx9.lib")
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "dwmapi.lib")
+
+HWND hWnd, TargetWnd;
+MSG Message;
+RECT WindowRect, ClientRect;
+int windowWidth, windowHeight;
+int clientWidth = 2560, clientHeight = 1440;
+int borderWidth, borderHeight;
+
+const MARGINS pMargin = {0, 0, clientWidth, clientHeight};
 
 IDirect3D9Ex *dx_Object = NULL;
 IDirect3DDevice9Ex *dx_Device = NULL;
@@ -15,19 +26,8 @@ D3DPRESENT_PARAMETERS dx_Params;
 ID3DXLine *dx_Line;
 ID3DXFont *dx_Font = 0;
 
-HWND hWnd, TargetWnd;
-MSG Message;
-RECT WindowRect, ClientRect;
-int windowWidth, windowHeight;
-int clientWidth = 1600, clientHeight = 900;
-int borderWidth, borderHeight;
 
-char lWindowName[256] = "Overlay";
-char tWindowName[256] = "Untitled - Paint"; // put Game window name here
-
-const MARGINS pMargin = {0, 0, clientWidth, clientHeight};
-
-int Overlay::DrawString(char *String, int x, int y, int r, int g, int b, ID3DXFont *ifont) {
+int Overlay::draw_string(char *String, int x, int y, int r, int g, int b, ID3DXFont *ifont) {
     RECT ShadowPos;
     ShadowPos.left = x + 1;
     ShadowPos.top = y + 1;
@@ -39,7 +39,7 @@ int Overlay::DrawString(char *String, int x, int y, int r, int g, int b, ID3DXFo
     return 0;
 }
 
-int Overlay::DrawShadowString(char *String, int x, int y, int r, int g, int b, ID3DXFont *ifont) {
+int Overlay::draw_string_shadow(char *String, int x, int y, int r, int g, int b, ID3DXFont *ifont) {
     RECT Font;
     Font.left = x;
     Font.top = y;
@@ -63,17 +63,17 @@ int Overlay::DrawShadowString(char *String, int x, int y, int r, int g, int b, I
     return 0;
 }
 
-void Overlay::GradientFunc(int x, int y, int w, int h, int r, int g, int b, int a) {
+void Overlay::gradient(int x, int y, int w, int h, int r, int g, int b, int a) {
     int iColorr, iColorg, iColorb;
     for (int i = 1; i < h; i++) {
         iColorr = (int) ((float) i / h * r);
         iColorg = (int) ((float) i / h * g);
         iColorb = (int) ((float) i / h * b);
-        DrawFilled((float) x, (float) y + i, (float) w, (float) 1, r - iColorr, g - iColorg, b - iColorb, a);
+        draw_filled((float) x, (float) y + i, (float) w, (float) 1, r - iColorr, g - iColorg, b - iColorb, a);
     }
 }
 
-void Overlay::DrawLine(float x, float y, float xx, float yy, int r, int g, int b, int a) {
+void Overlay::draw_line(float x, float y, float xx, float yy, int r, int g, int b, int a) {
     D3DXVECTOR2 dLine[2];
 
     dx_Line->SetWidth(1);
@@ -88,7 +88,27 @@ void Overlay::DrawLine(float x, float y, float xx, float yy, int r, int g, int b
 
 }
 
-void Overlay::DrawFilled(float x, float y, float w, float h, int r, int g, int b, int a) {
+void Overlay::draw_circle(float x, float y, float radius, int r, int g, int b, int alpha) {
+    D3DXVECTOR2 Line[128];
+    float Step = 3.14159265 * 2.0 / 25.0f;
+    int Count = 0;
+    for (float a = 0; a < 3.14159265*2.0; a += Step)
+    {
+        float X1 = radius * cos(a) + x;
+        float Y1 = radius * sin(a) + y;
+        float X2 = radius * cos(a + Step) + x;
+        float Y2 = radius * sin(a + Step) + y;
+        Line[Count].x = X1;
+        Line[Count].y = Y1;
+        Line[Count + 1].x = X2;
+        Line[Count + 1].y = Y2;
+        Count += 2;
+    }
+
+    dx_Line->Draw(Line, Count, D3DCOLOR_RGBA(r, g, b, alpha));
+}
+
+void Overlay::draw_filled(float x, float y, float w, float h, int r, int g, int b, int a) {
     D3DXVECTOR2 vLine[2];
 
     dx_Line->SetWidth(w);
@@ -103,7 +123,7 @@ void Overlay::DrawFilled(float x, float y, float w, float h, int r, int g, int b
     dx_Line->End();
 }
 
-void Overlay::DrawBox(float x, float y, float width, float height, float px, int r, int g, int b, int a) {
+void Overlay::draw_box(float x, float y, float width, float height, float px, int r, int g, int b, int a) {
     D3DXVECTOR2 points[5];
     points[0] = D3DXVECTOR2(x, y);
     points[1] = D3DXVECTOR2(x + width, y);
@@ -114,20 +134,20 @@ void Overlay::DrawBox(float x, float y, float width, float height, float px, int
     dx_Line->Draw(points, 5, D3DCOLOR_RGBA(r, g, b, a));
 }
 
-void Overlay::DrawGUIBox(float x, float y, float w, float h, int r, int g, int b, int a, int rr, int gg, int bb, int aa) {
-    DrawBox(x, y, w, h, 1, r, g, b, a);
-    DrawFilled(x, y, w, h, rr, gg, bb, a);
+void Overlay::draw_gui_box(float x, float y, float w, float h, int r, int g, int b, int a, int rr, int gg, int bb, int aa) {
+    draw_box(x, y, w, h, 1, r, g, b, a);
+    draw_filled(x, y, w, h, rr, gg, bb, a);
 }
 
-void Overlay::DrawHealthBar(float x, float y, float w, float h, int r, int g, int b, int a) {
-    DrawFilled(x, y, w, h, r, g, b, a);
+void Overlay::draw_healthbar(float x, float y, float w, float h, int r, int g, int b, int a) {
+    draw_filled(x, y, w, h, r, g, b, a);
 }
 
-void Overlay::DrawHealthBarBack(float x, float y, float w, float h, int a) {
-    DrawFilled(x, y, w, h, 0, 0, 0, a);
+void Overlay::draw_healthbar_back(float x, float y, float w, float h, int a) {
+    draw_filled(x, y, w, h, 0, 0, 0, a);
 }
 
-void Overlay::DrawCenterLine(float x, float y, int width, int r, int g, int b) {
+void Overlay::draw_center_line(float x, float y, int width, int r, int g, int b) {
     D3DXVECTOR2 dPoints[2];
     dPoints[0] = D3DXVECTOR2(x, y);
     dPoints[1] = D3DXVECTOR2((float) windowWidth / 2, (float) windowHeight);
@@ -138,7 +158,7 @@ void Overlay::DrawCenterLine(float x, float y, int width, int r, int g, int b) {
 /*
 We require to initialize the D3D drawing, so we require hWnd. Windows identifies each form or application by assigning it a handle or also known as hWnd.
 */
-int Overlay::D3D9Init(HWND hWnd) {
+int Overlay::init_d3d(HWND hWnd) {
     // We get our Process Access and Module Bases
 
 
@@ -146,7 +166,7 @@ int Overlay::D3D9Init(HWND hWnd) {
     We need to check to see if we can create an IDirect3D9Ex object and return an interface to it. Why is D3D_SDK_VERSION passed? Because we will need to ensure that the header files used in the compiled application match the version of the installed runtime DLLs. Why are we passing the object to dx_Object? Because we are creating an IDirect3D9Ex object, and we need to store it somewhere. If it fails, the app crashes (the DLL), and if it passes, it continues, simple huh?
     */
     if (FAILED(Direct3DCreate9Ex(D3D_SDK_VERSION, &dx_Object))) {
-        exit(1);
+        return 1;
     }
 
     /*
@@ -220,41 +240,47 @@ int Overlay::D3D9Init(HWND hWnd) {
     Verdana (LPCTSTR) is the string containing the typeface name (font style).
     dx_Font (LPD3DXFONT*) returns a pointer to an ID3DXFont interface, representing the created font object.
     */
-    D3DXCreateFont(dx_Device, 18, 0, FW_LIGHT, 1, false, DEFAULT_CHARSET, OUT_DEVICE_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Arial", &dx_Font);
+    D3DXCreateFont(dx_Device, 36, 0, FW_NORMAL, 2, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Calibri", &dx_Font);
 
     return 0;
 
 }
 
-int Overlay::Render() {
-    dx_Device->Clear(0, 0, D3DCLEAR_TARGET, 0, 1.0f, 0);
+int Overlay::render() {
 
     dx_Device->BeginScene();
+    dx_Device->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
 
     if (TargetWnd == GetForegroundWindow()) {
-        DrawString((char *) "Test", windowWidth / 2, windowHeight / 2, 255, 0, 0, dx_Font); // Put Main procedure here like ESP etc.
+        auto index = 0;
+        for (auto &item: Overlay::hints->strings()) {
+            draw_string((char *) item.c_str(), 100, 20 + 20 * index, 220, 200, 100, dx_Font); // Put Main procedure here like ESP etc.
+            index++;
+        }
+    }
+    if (manager.enemyVisible){
+        draw_circle(manager.localEnemyCoords.x + manager.region.left, manager.region.top + manager.region.height-manager.localEnemyCoords.y, 15, 128, 255, 0, 0);
     }
 
-    Sleep(100);
     dx_Device->EndScene();
     dx_Device->PresentEx(0, 0, 0, 0, 0);
 
     return 0;
 }
 
-LRESULT CALLBACK Overlay::Proc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK Overlay::callback_proc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
     if (WM_NCCREATE == Message) {
         SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR) ((CREATESTRUCT *) lParam)->lpCreateParams);
         return TRUE;
     }
 
-    return ((Overlay *) GetWindowLongPtr(hWnd, GWLP_USERDATA))->_Proc(hWnd, Message, wParam, lParam);
+    return ((Overlay *) GetWindowLongPtr(hWnd, GWLP_USERDATA))->callback_proc_instance(hWnd, Message, wParam, lParam);
 }
 
-LRESULT CALLBACK Overlay::_Proc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK Overlay::callback_proc_instance(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
     switch (Message) {
         case WM_PAINT: // we need to paint? lets paint!
-            Render();
+            render();
             break;
         case WM_CREATE:
             return DwmExtendFrameIntoClientArea(hWnd, &pMargin); // extension of window frame into client area
@@ -268,17 +294,21 @@ LRESULT CALLBACK Overlay::_Proc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM l
     return DefWindowProc(hWnd, Message, wParam, lParam); // Making sure all messages are processed
 }
 
-void Overlay::Init(HINSTANCE hInstance, Manager &pManager) {
+void Overlay::init(HINSTANCE hInstance, Manager &pManager) {
     if (sharedInstance != nullptr) return;
     sharedInstance = new Overlay(pManager);
-    sharedInstance->Run(hInstance);
+    std::thread runThread(&Overlay::run, sharedInstance, hInstance);
+    //Sleep(100);
+    runThread.detach();
+    show_hint("Overlay init complete.", 10000);
 }
 
-int WINAPI Overlay::Run(HINSTANCE hInstance) {
+int WINAPI Overlay::run(HINSTANCE hInstance) {
+    char overlayWindowName[] = "MEMU3-Overlay";
     WNDCLASSEXA OverlayWnd; // contains window class information
     OverlayWnd.cbSize = sizeof(WNDCLASSEXA); // size of struct, basically checking for version or check
     OverlayWnd.style = CS_HREDRAW | CS_VREDRAW;  // Style, redraw method type
-    OverlayWnd.lpfnWndProc = Proc; // Pointer to the window procedure
+    OverlayWnd.lpfnWndProc = callback_proc; // Pointer to the window procedure
     OverlayWnd.cbClsExtra = 0; // window class struct extra bytes
     OverlayWnd.cbWndExtra = 0; // window instance extra bytes
     OverlayWnd.hInstance = hInstance; // handle to the instance that contains the window procedure for the class
@@ -286,15 +316,15 @@ int WINAPI Overlay::Run(HINSTANCE hInstance) {
     OverlayWnd.hIconSm = LoadIcon(NULL, IDI_APPLICATION); // basic window icon set
     OverlayWnd.hCursor = LoadCursor(NULL, IDC_ARROW); // basic window cursor icon set
     OverlayWnd.hbrBackground = (HBRUSH) CreateSolidBrush(RGB(0, 0, 0)); // handle to the class background brush
-    OverlayWnd.lpszMenuName = lWindowName;
-    OverlayWnd.lpszClassName = lWindowName;
+    OverlayWnd.lpszMenuName = overlayWindowName;
+    OverlayWnd.lpszClassName = overlayWindowName;
 
     // registers a window class for the use in call to this createwindowex func
     if (!RegisterClassExA(&OverlayWnd)) {
-        exit(1);
+        return 1;
     }
 
-    TargetWnd = FindWindowA(0, tWindowName);
+    TargetWnd = FindWindowA(0, manager.targetWindowName.c_str());
 
     /*
     CreateWindowEx creates an overlapped, pop-up, or child window with an extended window style.
@@ -324,10 +354,9 @@ int WINAPI Overlay::Run(HINSTANCE hInstance) {
         GetWindowRect(TargetWnd, &WindowRect);
         windowWidth = WindowRect.right - WindowRect.left;
         windowHeight = WindowRect.bottom - WindowRect.top;
-        hWnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED, lWindowName, lWindowName, WS_POPUP, 1, 1, windowWidth, windowHeight, 0, 0, 0,
-                               this);
+        hWnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED, overlayWindowName, overlayWindowName, WS_POPUP, 1, 1, windowWidth,
+                               windowHeight, 0, 0, 0, this);
     }
-
 
     /*
     SetLayeredWindowAttributes sets the opacity and transparency color key for a layered window.
@@ -343,18 +372,18 @@ int WINAPI Overlay::Run(HINSTANCE hInstance) {
     /*
     We use our handle to our overlay and initalize our D3D adapter.
     */
-    D3D9Init(hWnd);
-
-    bool panic = false;
+    if (init_d3d(hWnd) > 0) {
+        return 1;
+    }
 
     /*
     While we are not panicking, we will be enable our hack.
     */
-    while (panic == false) {
-        Sleep(100);
-        if (GetAsyncKeyState(VK_F12))
+    while (!manager.is_exit_requested()) {
+        //Sleep(100);
+        /*if (GetAsyncKeyState(VK_F12))
             panic = true;
-
+*/
         /*
         Dispatches incoming sent messages, checks the thread message queue for a posted message, and retrieves the message (if any exist). Messages are removed from the queue after processing due to PM_REMOVE.
         */
@@ -373,13 +402,11 @@ int WINAPI Overlay::Run(HINSTANCE hInstance) {
         /*
         Set the hWnd for the game we want.
         */
-        TargetWnd = FindWindowA(0, tWindowName);
+        TargetWnd = FindWindowA(0, manager.targetWindowName.c_str());
 
         /*
         If there is no game, quit.
         */
-        if (!TargetWnd)
-            exit(0);
 
         /*
         Set the RECT using the targeted window.
@@ -409,16 +436,25 @@ int WINAPI Overlay::Run(HINSTANCE hInstance) {
         }
 
         MoveWindow(hWnd, WindowRect.left, WindowRect.top, clientWidth, clientHeight, true);
-
+        render();
+        Sleep(10);
     } // End of Panic Loop
 
     /*
     Lets exit immediately...
     */
-    exit(0);
+    std::cout << "EXIT!" << std::endl;
 
 }
 
-Overlay::Overlay(Manager &pManager) : manager(pManager) {
+Overlay::Overlay(Manager &pManager) : manager(pManager) {}
 
+void Overlay::show_hint(std::string msg, int timeout) {
+    if (sharedInstance == nullptr) return;
+    hints->add(msg, timeout);
 }
+
+Overlay::~Overlay() {
+    delete hints;
+}
+
