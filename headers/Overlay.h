@@ -9,7 +9,7 @@ class Overlay {
 public:
     static void init(HINSTANCE hInstance, Manager &pManager);
     static void show_hint(std::string msg, int timeout = 1000);
-    static inline TtlStringCollection *hints = new TtlStringCollection(250, nullptr);
+    static inline TtlStringCollection *hints = new TtlStringCollection(250);
     static void toggle_ui();
     static void toggle_debug_ui();
 private:
