@@ -1,15 +1,12 @@
 #pragma once
 
 #include "../headers/Overlay.h"
-#include "../headers/Defines.h"
 
 #include <algorithm>
+#include <dwmapi.h>
 
 #pragma comment(lib, "d3dx9.lib")
 #pragma comment(lib, "d3d9.lib")
-
-#include <dwmapi.h>
-
 #pragma comment(lib, "dwmapi.lib")
 
 IDirect3D9Ex *dx_Object = NULL;
@@ -18,6 +15,18 @@ D3DPRESENT_PARAMETERS dx_Params;
 ID3DXLine *dx_Line;
 ID3DXFont *dx_Font = 0;
 
+HWND hWnd, TargetWnd;
+MSG Message;
+RECT WindowRect, ClientRect;
+int windowWidth, windowHeight;
+int clientWidth = 1600, clientHeight = 900;
+int borderWidth, borderHeight;
+
+char lWindowName[256] = "Overlay";
+char tWindowName[256] = "Untitled - Paint"; // put Game window name here
+
+const MARGINS pMargin = {0, 0, clientWidth, clientHeight};
+
 int Overlay::DrawString(char *String, int x, int y, int r, int g, int b, ID3DXFont *ifont) {
     RECT ShadowPos;
     ShadowPos.left = x + 1;
@@ -25,8 +34,8 @@ int Overlay::DrawString(char *String, int x, int y, int r, int g, int b, ID3DXFo
     RECT FontPos;
     FontPos.left = x;
     FontPos.top = y;
-    ifont->DrawTextA(0, String, strlen(String), &ShadowPos, DT_NOCLIP, D3DCOLOR_ARGB(255, r / 3, g / 3, b / 3));
-    ifont->DrawTextA(0, String, strlen(String), &FontPos, DT_NOCLIP, D3DCOLOR_ARGB(255, r, g, b));
+    ifont->DrawTextA(nullptr, String, (int) strlen(String), &ShadowPos, DT_NOCLIP, D3DCOLOR_ARGB(255, r / 3, g / 3, b / 3));
+    ifont->DrawTextA(nullptr, String, (int) strlen(String), &FontPos, DT_NOCLIP, D3DCOLOR_ARGB(255, r, g, b));
     return 0;
 }
 
@@ -46,11 +55,11 @@ int Overlay::DrawShadowString(char *String, int x, int y, int r, int g, int b, I
     RECT Fonts3;
     Fonts3.left = x;
     Fonts3.top = y - 1;
-    ifont->DrawTextA(0, String, strlen(String), &Fonts3, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
-    ifont->DrawTextA(0, String, strlen(String), &Fonts2, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
-    ifont->DrawTextA(0, String, strlen(String), &Fonts1, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
-    ifont->DrawTextA(0, String, strlen(String), &Fonts, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
-    ifont->DrawTextA(0, String, strlen(String), &Font, DT_NOCLIP, D3DCOLOR_ARGB(255, r, g, b));
+    ifont->DrawTextA(nullptr, String, (int) strlen(String), &Fonts3, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
+    ifont->DrawTextA(nullptr, String, (int) strlen(String), &Fonts2, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
+    ifont->DrawTextA(nullptr, String, (int) strlen(String), &Fonts1, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
+    ifont->DrawTextA(nullptr, String, (int) strlen(String), &Fonts, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
+    ifont->DrawTextA(nullptr, String, (int) strlen(String), &Font, DT_NOCLIP, D3DCOLOR_ARGB(255, r, g, b));
     return 0;
 }
 
@@ -60,7 +69,7 @@ void Overlay::GradientFunc(int x, int y, int w, int h, int r, int g, int b, int 
         iColorr = (int) ((float) i / h * r);
         iColorg = (int) ((float) i / h * g);
         iColorb = (int) ((float) i / h * b);
-        DrawFilled(x, y + i, w, 1, r - iColorr, g - iColorg, b - iColorb, a);
+        DrawFilled((float) x, (float) y + i, (float) w, (float) 1, r - iColorr, g - iColorg, b - iColorb, a);
     }
 }
 
@@ -121,8 +130,8 @@ void Overlay::DrawHealthBarBack(float x, float y, float w, float h, int a) {
 void Overlay::DrawCenterLine(float x, float y, int width, int r, int g, int b) {
     D3DXVECTOR2 dPoints[2];
     dPoints[0] = D3DXVECTOR2(x, y);
-    dPoints[1] = D3DXVECTOR2(windowWidth / 2, windowHeight);
-    dx_Line->SetWidth(width);
+    dPoints[1] = D3DXVECTOR2((float) windowWidth / 2, (float) windowHeight);
+    dx_Line->SetWidth((float) width);
     dx_Line->Draw(dPoints, 2, D3DCOLOR_RGBA(r, g, b, 255));
 }
 
@@ -219,12 +228,14 @@ int Overlay::D3D9Init(HWND hWnd) {
 
 int Overlay::Render() {
     dx_Device->Clear(0, 0, D3DCLEAR_TARGET, 0, 1.0f, 0);
+
     dx_Device->BeginScene();
 
     if (TargetWnd == GetForegroundWindow()) {
         DrawString((char *) "Test", windowWidth / 2, windowHeight / 2, 255, 0, 0, dx_Font); // Put Main procedure here like ESP etc.
     }
 
+    Sleep(100);
     dx_Device->EndScene();
     dx_Device->PresentEx(0, 0, 0, 0, 0);
 
@@ -242,7 +253,6 @@ LRESULT CALLBACK Overlay::Proc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lP
 
 LRESULT CALLBACK Overlay::_Proc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
     switch (Message) {
-
         case WM_PAINT: // we need to paint? lets paint!
             Render();
             break;
@@ -253,9 +263,9 @@ LRESULT CALLBACK Overlay::_Proc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM l
             PostQuitMessage(0); // We need to use this to exit a message loop
             break;
         default:
-            return DefWindowProc(hWnd, Message, wParam, lParam); // Making sure all messages are processed
             break;
     }
+    return DefWindowProc(hWnd, Message, wParam, lParam); // Making sure all messages are processed
 }
 
 void Overlay::Init(HINSTANCE hInstance, Manager &pManager) {
@@ -341,7 +351,7 @@ int WINAPI Overlay::Run(HINSTANCE hInstance) {
     While we are not panicking, we will be enable our hack.
     */
     while (panic == false) {
-
+        Sleep(100);
         if (GetAsyncKeyState(VK_F12))
             panic = true;
 

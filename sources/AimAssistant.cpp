@@ -46,7 +46,7 @@ void AimAssistant::main_thread() {
 #endif
         manager.enemyVisible = probe_healthbar_brute();
 
-        std::chrono::duration<double, std::milli> elapsed = std::chrono::high_resolution_clock::now() - start;
+        //std::chrono::duration<double, std::milli> elapsed = std::chrono::high_resolution_clock::now() - start;
         //std::cout << "Elapsed scan time: " << elapsed.count() << (manager.enemyVisible ? " (found at " : " (not found)");
         if (manager.enemyVisible) {
             find_healthbar_height();

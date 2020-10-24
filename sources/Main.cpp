@@ -16,10 +16,6 @@ void TerminateIn30Seconds(Manager &manager) {
 #endif
 
 HINSTANCE hInstance;
-HINSTANCE hPrevInstance;
-LPSTR lpCmdLine;
-int nCmdShow;
-
 
 int main() {
     std::cout << "Starting\n";
@@ -50,12 +46,4 @@ int main() {
     while (!manager.is_exit_requested()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-}
-
-int WINAPI WinMain(HINSTANCE phInstance, HINSTANCE phPrevInstance, LPSTR plpCmdLine, int pnCmdShow) {
-    hInstance = phInstance;
-    hPrevInstance = phPrevInstance;
-    lpCmdLine = plpCmdLine;
-    nCmdShow = pnCmdShow;
-    main();
 }
