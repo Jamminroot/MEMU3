@@ -268,7 +268,7 @@ void Overlay::toggle_ui() {
 
 void Overlay::render_debug_ui() {
     if (manager.enemyVisible){
-        draw_circle((float) manager.localEnemyCoords.x + manager.region.left, (float) manager.region.top + manager.region.height-manager.localEnemyCoords.y, 15, 128, 255, 0, 0);
+        draw_circle((float) manager.enemyCoords.x, (float) manager.enemyCoords.y, 15, 128, 255, 0, 0);
     }
 }
 

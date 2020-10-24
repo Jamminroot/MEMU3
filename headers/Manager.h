@@ -27,8 +27,11 @@ public:
     int mouseTriggerKeyStates = 0;
     bool mouseTriggered;
     int triggerStateChanged;
-    Coords relative_head_coords() const;
-    Coords localEnemyCoords;
+    bool is_crosshair_over_enemy() const;
+    Coords enemyCoords;
+    int lastKnownIndex = 0;
+    void update_enemy_coords_with_local_coords(int x, int y);
+    void update_enemy_coords_with_local_coords(Coords coords);
     Coords lastKnownBarSize;
     Rect region;
     ScreenshotData screenshot;

@@ -107,12 +107,13 @@ bool AimAssistant::probe_color(const RGBQUAD &pColor) const {
 }
 
 bool AimAssistant::probe_healthbar_brute() const {
-    auto index = coords_to_offset(manager.localEnemyCoords);
+    auto index = manager.lastKnownIndex;
     auto regionWidth = manager.region.width;
     auto regionHeight = manager.region.height;
 
     if (probe_region_spiral(index, 9) && locate_healthbar_handle_left(index)) {
-        manager.localEnemyCoords = offset_to_coords(index);
+        manager.update_enemy_coords_with_local_coords(offset_to_coords(index));
+        manager.lastKnownIndex = index;
         return true;
     }
 
@@ -126,7 +127,8 @@ bool AimAssistant::probe_healthbar_brute() const {
                 i = coords_to_offset(xx, y);
             }
             if (!probe_handle(i)) continue;
-            manager.localEnemyCoords.set(x, y);
+            manager.update_enemy_coords_with_local_coords(x, y);
+            manager.lastKnownIndex = i;
             return true;
         }
     return false;
@@ -253,7 +255,7 @@ bool AimAssistant::read_table() const {
 }
 
 void AimAssistant::find_healthbar_height() {
-    auto offset = coords_to_offset(manager.localEnemyCoords);
+    auto offset = manager.lastKnownIndex;
     auto check = 0;
     auto redsFound = false;
     for (auto ni = -5; ni < 20; ni++) {
@@ -271,7 +273,7 @@ void AimAssistant::find_healthbar_height() {
 }
 
 void AimAssistant::find_healthbar_width() {
-    auto offset = coords_to_offset(manager.localEnemyCoords);
+    auto offset = manager.lastKnownIndex;
     auto check = 0;
     auto redsFound = false;
     for (auto ni = -5; ni < 15; ni++) {
@@ -303,7 +305,7 @@ void AimAssistant::input_thread() {
 void AimAssistant::aim_handler() {
     if (!manager.mouseTriggered) return;
     if (!manager.enemyVisible) return;
-    std::thread moveThread(&AimAssistant::move_by, this, manager.relative_head_coords().x, manager.relative_head_coords().y);
+    std::thread moveThread(&AimAssistant::move_by, this, manager.enemyCoords.x, manager.enemyCoords.y);
     moveThread.detach();
     //std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
