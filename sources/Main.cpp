@@ -1,6 +1,6 @@
 #include "../headers/Manager.h"
 #include "../headers/AimAssistant.h"
-//#include "../headers/Overlay.h"
+#include "../headers/Overlay.h"
 #include <iostream>
 #include <thread>
 
@@ -15,13 +15,21 @@ void TerminateIn30Seconds(Manager &manager) {
 
 #endif
 
+HINSTANCE hInstance;
+HINSTANCE hPrevInstance;
+LPSTR lpCmdLine;
+int nCmdShow;
+
+
 int main() {
     std::cout << "Starting\n";
     SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
     auto manager = Manager(400, 300, -200, -200, Coords(50, 35), Coords(65, 65));
     auto assistant = AimAssistant(manager, 3.5f);
     manager.set_running(true);
-
+    Overlay::Init(hInstance, manager);
+    /*std::thread olt(overlayInit);
+    olt.detach();*/
     /*  Overlay overlay = Overlay(manager);
       Overlay::add_hint("Hello", 1000);
       Overlay::add_hint("Hello - 2", 1000 * 2);
@@ -44,6 +52,10 @@ int main() {
     }
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+int WINAPI WinMain(HINSTANCE phInstance, HINSTANCE phPrevInstance, LPSTR plpCmdLine, int pnCmdShow) {
+    hInstance = phInstance;
+    hPrevInstance = phPrevInstance;
+    lpCmdLine = plpCmdLine;
+    nCmdShow = pnCmdShow;
     main();
 }

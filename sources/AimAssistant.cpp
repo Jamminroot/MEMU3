@@ -10,6 +10,7 @@
 #define SCANNING_THRESHOLD_PERCENT 80
 #define CHECK_COEFFICIENT 100/(IGNORED_BORDER_SIZE*IGNORED_BORDER_SIZE)
 
+
 AimAssistant::AimAssistant(class Manager &pManager, const float &sensitivity) : manager(pManager), input(manager) {
     modifier = sensitivity * COEFFICIENT_A;
     std::vector<RGBQUAD> colors = {{65,  38,  240, 34},
@@ -27,9 +28,9 @@ AimAssistant::AimAssistant(class Manager &pManager, const float &sensitivity) : 
     std::thread mainThread(&AimAssistant::main_thread, this);
     SetThreadPriority(mainThread.native_handle(), THREAD_PRIORITY_ABOVE_NORMAL);
     mainThread.detach();
-/*    std::thread inputThread(&AimAssistant::input_thread, this);
+    std::thread inputThread(&AimAssistant::input_thread, this);
     SetThreadPriority(inputThread.native_handle(), THREAD_PRIORITY_ABOVE_NORMAL);
-    inputThread.detach();*/
+    inputThread.detach();
 }
 
 void AimAssistant::main_thread() {
@@ -53,6 +54,7 @@ void AimAssistant::main_thread() {
         }
         manager.screenshotHandled = false;
         handle_screenshot();
+
         //std::cout << std::endl;
 
         //std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -286,6 +288,7 @@ void AimAssistant::find_healthbar_width() {
 }
 
 void AimAssistant::input_thread() {
+
     while (!manager.is_exit_requested()) {
         while (!manager.is_running()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));

@@ -14,7 +14,7 @@ void TtlStringCollection::vector_cleaner(int pCheckPeriod) {
     for (;;) {
         std::this_thread::sleep_for(std::chrono::milliseconds(pCheckPeriod));
         if (data.empty()) continue;
-        int index = data.size() - 1;
+        auto index = (int)data.size() - 1;
         auto now = high_resolution_clock::now().time_since_epoch();
         auto timestamp = now.count() / 1000000;
         while (index >= 0 && !data.empty()) {
@@ -36,7 +36,7 @@ int TtlStringCollection::add(std::string msg, int timeout) {
     auto str = TtlString();
     int id = nextId++;
     str.message = msg;
-    str.expirationTimePoint = high_resolution_clock::now().time_since_epoch().count() / 1000000 + timeout;
+    str.expirationTimePoint = (unsigned int) high_resolution_clock::now().time_since_epoch().count() / 1000000 + timeout;
     str.id = id;
     data.push_back(str);
     return id;

@@ -2,22 +2,24 @@ cmake_minimum_required(VERSION 3.10)
 
 project(MEMU3 C CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(SUGGESTED_STACK_SIZE 10000000)
 set(EXECUTABLE_NAME MEMU3)
-string(TOUPPER "${CMAKE_LINKER}" COMPILER_ID)
+
 string(TOUPPER "${CMAKE_BUILD_TYPE}" VARIANT)
 
 add_definitions(-DUNICODE)
 
-if (VARIANT MATCHES DEBUG)
-    message("Build variant:\t ${VARIANT}")
+message("Build variant:\t ${VARIANT}")
+
+if (VARIANT STREQUAL "DEBUG")
     add_definitions(-DDEBUG=1)
+else ()
+
 endif ()
 
-message("COMPILER_ID:\t ${CMAKE_LINKER}")
 
-if (COMPILER_ID MATCHES ".*MSVC.*")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     message("MSVC Compiler detected. Setting stack size to ${SUGGESTED_STACK_SIZE}b")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:${SUGGESTED_STACK_SIZE}")
 else ()
@@ -30,7 +32,7 @@ set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall")
 
 set(SOURCE_FILES
         sources/Main.cpp
-        #sources/Overlay.cpp
+        sources/Overlay.cpp
         sources/Rect.cpp
         sources/ScreenshotData.cpp
         sources/ScreenshotFactory.cpp
@@ -39,11 +41,27 @@ set(SOURCE_FILES
         sources/Coords.cpp
         sources/InputController.cpp
         sources/Utils.cpp
-        sources/TtlStringCollection.cpp)
+        sources/TtlStringCollection.cpp headers/Defines.h)
+
 
 add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
 
+
+#[[
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /AI\"../Overlay_Library\" " )
+set(CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG} /AI\"../Overlay_Library\" " )
+
+string(REPLACE "/RTC1" " " CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
+
+#set_target_properties(${PROJECT_NAME} PROPERTIES COMMON_LANGUAGE_RUNTIME "")
+set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_FLAGS "/clr")
 # Interception
+]]
+
+
 
 include_directories(Interception/)
 
@@ -81,7 +99,6 @@ mark_as_advanced(DirectX_INCLUDE_DIRS DirectX_D3D9_LIBRARY DirectX_D3DX9_LIBRARY
 include_directories(${DirectX_INCLUDE_DIRS})
 target_link_libraries(${EXECUTABLE_NAME} "${DirectX_LIBRARY_PATHS}/d3d9.lib")
 target_link_libraries(${EXECUTABLE_NAME} "${DirectX_LIBRARY_PATHS}/d3dx9.lib")
-message("${DirectX_LIBRARY_PATHS}/d3dx9.lib")
 
 
 #[[
