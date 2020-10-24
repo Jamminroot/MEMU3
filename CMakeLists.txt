@@ -5,25 +5,25 @@ project(MEMU3 C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(SUGGESTED_STACK_SIZE 10000000)
 set(EXECUTABLE_NAME MEMU3)
-string(TOUPPER "${CMAKE_LINKER}" COMPILER_ID )
-string(TOUPPER "${CMAKE_BUILD_TYPE}" VARIANT )
+string(TOUPPER "${CMAKE_LINKER}" COMPILER_ID)
+string(TOUPPER "${CMAKE_BUILD_TYPE}" VARIANT)
 
 add_definitions(-DUNICODE)
 
 if (VARIANT MATCHES DEBUG)
     message("Build variant:\t ${VARIANT}")
     add_definitions(-DDEBUG=1)
-endif()
+endif ()
 
 message("COMPILER_ID:\t ${CMAKE_LINKER}")
 
 if (COMPILER_ID MATCHES ".*MSVC.*")
     message("MSVC Compiler detected. Setting stack size to ${SUGGESTED_STACK_SIZE}b")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:${SUGGESTED_STACK_SIZE}")
-else()
+else ()
     message("Other linker detected. Make sure to increase stack size is increased to ${SUGGESTED_STACK_SIZE}b!")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--stack,${SUGGESTED_STACK_SIZE}")
-endif()
+endif ()
 
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall")
@@ -49,17 +49,16 @@ include_directories(Interception/)
 
 if (TARGET_64)
     add_definitions(-DTARGET_64=1)
-    link_directories (Interception/x64/)
-else()
-    link_directories (Interception/x86/)
-endif()
+    link_directories(Interception/x64/)
+else ()
+    link_directories(Interception/x86/)
+endif ()
 
 # Direct X
 
 
-
-set (DirectX_ROOT_DIR "$ENV{ProgramFiles\(x86\)}/Microsoft DirectX SDK (June 2010)")
-set (DirectX_INCLUDE_DIRS "${DirectX_ROOT_DIR}/Include")
+set(DirectX_ROOT_DIR "$ENV{ProgramFiles\(x86\)}/Microsoft DirectX SDK (June 2010)")
+set(DirectX_INCLUDE_DIRS "${DirectX_ROOT_DIR}/Include")
 
 #get_filename_component(DirectX_ROOT_DIR "${DirectX_INCLUDE_DIRS}/.." ABSOLUTE)
 
@@ -83,10 +82,6 @@ include_directories(${DirectX_INCLUDE_DIRS})
 target_link_libraries(${EXECUTABLE_NAME} "${DirectX_LIBRARY_PATHS}/d3d9.lib")
 target_link_libraries(${EXECUTABLE_NAME} "${DirectX_LIBRARY_PATHS}/d3dx9.lib")
 message("${DirectX_LIBRARY_PATHS}/d3dx9.lib")
-
-
-
-
 
 
 #[[
@@ -283,9 +278,6 @@ if (WIN32)
             )
 
 endif ()]]
-
-
-
 
 
 #[[
