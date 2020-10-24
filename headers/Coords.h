@@ -1,7 +1,8 @@
 #pragma once
+
 class Coords {
 public:
-    Coords(const int& pX, const int& pY);
+    Coords(const int &pX, const int &pY);
     Coords();
     int x, y;
     float length;

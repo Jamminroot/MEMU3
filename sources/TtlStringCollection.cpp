@@ -3,7 +3,7 @@
 #include <thread>
 #include <iostream>
 
-TtlStringCollection::TtlStringCollection(const int pMilliseconds, void (* pCallback) (int))  {
+TtlStringCollection::TtlStringCollection(const int pMilliseconds, void (*pCallback)(int)) {
     handler = pCallback;
     std::thread clearThread(&TtlStringCollection::vector_cleaner, this, pMilliseconds);
     clearThread.detach();
@@ -17,7 +17,7 @@ void TtlStringCollection::vector_cleaner(int pCheckPeriod) {
         int index = data.size() - 1;
         auto now = high_resolution_clock::now().time_since_epoch();
         auto timestamp = now.count() / 1000000;
-        while (index>=0 && !data.empty()) {
+        while (index >= 0 && !data.empty()) {
             auto item = data.at(index);
             int stamp = item.expirationTimePoint;
             if (stamp < timestamp) {

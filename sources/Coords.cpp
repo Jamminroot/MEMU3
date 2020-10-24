@@ -8,10 +8,10 @@ void Coords::set(const int pX, const int pY) {
 }
 
 void Coords::recalculate_length() {
-    length = sqrtf(powf((float)x, 2) + powf((float)y, 2));
+    length = sqrtf(powf((float) x, 2) + powf((float) y, 2));
 }
 
-Coords::Coords(const int &pX, const int &pY) : x(pX), y(pY){
+Coords::Coords(const int &pX, const int &pY) : x(pX), y(pY) {
     recalculate_length();
 }
 

@@ -12,19 +12,17 @@
 
 AimAssistant::AimAssistant(class Manager &pManager, const float &sensitivity) : manager(pManager), input(manager) {
     modifier = sensitivity * COEFFICIENT_A;
-    std::vector<RGBQUAD> colors = {
-            {65,  38,  240, 34},
-            {114, 81,  235, 15},
-            {105, 70,  227, 15},
-            {145, 124, 253, 15},
-            {133, 99,  239, 15},
-            {111, 99,  223, 15},
-            {115, 103, 229, 15},
-            {58,  54,  219, 15},
-            {60,  58,  224, 15},
-            {46,  23,  212, 15},
-            {48,  41,  211, 15},
-    };
+    std::vector<RGBQUAD> colors = {{65,  38,  240, 34},
+                                   {114, 81,  235, 15},
+                                   {105, 70,  227, 15},
+                                   {145, 124, 253, 15},
+                                   {133, 99,  239, 15},
+                                   {111, 99,  223, 15},
+                                   {115, 103, 229, 15},
+                                   {58,  54,  219, 15},
+                                   {60,  58,  224, 15},
+                                   {46,  23,  212, 15},
+                                   {48,  41,  211, 15},};
     initialize_color_table(colors);
     std::thread mainThread(&AimAssistant::main_thread, this);
     SetThreadPriority(mainThread.native_handle(), THREAD_PRIORITY_ABOVE_NORMAL);
@@ -39,7 +37,7 @@ void AimAssistant::main_thread() {
 
     while (!manager.is_exit_requested()) {
         while (!manager.is_running()) {
-           // std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            // std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
         bool captured = factory.update_screenshot();
 #if DEBUG
@@ -188,7 +186,6 @@ Coords AimAssistant::offset_to_coords(const int &offset) const {
     return coords;
 }
 
-
 int AimAssistant::coords_to_offset(const Coords &coords) const {
     return coords.x + coords.y * manager.region.width;
 }
@@ -260,14 +257,12 @@ void AimAssistant::find_healthbar_height() {
     for (auto ni = -5; ni < 20; ni++) {
         auto i = offset + ni;
         try {
-            auto res = probe_color(manager.screenshot.data[i])
-                       || probe_color(manager.screenshot.data[i + manager.region.width - 1])
-                       || probe_color(manager.screenshot.data[i + manager.region.width * 2 - 2]);
+            auto res = probe_color(manager.screenshot.data[i]) || probe_color(manager.screenshot.data[i + manager.region.width - 1]) ||
+                       probe_color(manager.screenshot.data[i + manager.region.width * 2 - 2]);
             if (!redsFound && res) redsFound = true;
             if (redsFound && !res) break;
             check += res;
-        }
-        catch (_exception) {
+        } catch (_exception) {
         }
     }
     manager.lastKnownBarSize.x = check;
@@ -280,14 +275,11 @@ void AimAssistant::find_healthbar_width() {
     for (auto ni = -5; ni < 15; ni++) {
         auto i = offset + manager.region.width * ni;
         try {
-            auto res = probe_color(manager.screenshot.data[i])
-                       || probe_color(manager.screenshot.data[i + 1])
-                       || probe_color(manager.screenshot.data[i + 2]);
+            auto res = probe_color(manager.screenshot.data[i]) || probe_color(manager.screenshot.data[i + 1]) || probe_color(manager.screenshot.data[i + 2]);
             if (!redsFound && res) redsFound = true;
             if (redsFound && !res) break;
             check += res;
-        }
-        catch (_exception) {
+        } catch (_exception) {
         }
     }
     manager.lastKnownBarSize.y = check;
@@ -299,7 +291,7 @@ void AimAssistant::input_thread() {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         while (manager.screenshotHandled || !manager.enemyVisible) {
-           // std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            // std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         handle_screenshot();
     }
@@ -335,13 +327,13 @@ void AimAssistant::move_by(const int &pX, const int &pY) {
     x = (int) (x * modifier);
     y = (int) (y * modifier);
     auto steps = 5.000f;
-    auto divX = (float) x * 1.0000f / (steps / 5.0000f );
+    auto divX = (float) x * 1.0000f / (steps / 5.0000f);
     auto divY = (float) y * 1.0000f / (steps / 5.0000f);
     auto remainderX = 0.0f;
     auto remainderY = 0.0f;
     for (auto i = 0; i < steps; i++) {
         if (suspendThreads) {
-            threadCount --;
+            threadCount--;
             suspendThreads = false;
             return;
         }
@@ -368,10 +360,10 @@ void AimAssistant::apply_midifiers(int &x, int &y) const {
     if (y < -2) dirYMultiplier = 0.5f / 3;
     const float min = 15.0f;
     const float max = 25.0f;
-    auto mx = (clamp((float)abs(x), min, max) - min + 1) / (max - min);
-    auto my = (clamp((float)abs(y), min, max) - min + 1) / (max - min);
-    x = (int) ((float)x * mx * dirXMultiplier);
-    y = (int) ((float)y * my * dirYMultiplier);
+    auto mx = (clamp((float) abs(x), min, max) - min + 1) / (max - min);
+    auto my = (clamp((float) abs(y), min, max) - min + 1) / (max - min);
+    x = (int) ((float) x * mx * dirXMultiplier);
+    y = (int) ((float) y * my * dirYMultiplier);
 }
 
 void AimAssistant::handle_screenshot() {

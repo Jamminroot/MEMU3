@@ -4,14 +4,15 @@
 #include <iostream>
 #include <thread>
 
-
 #if DEBUG
+
 void TerminateIn30Seconds(Manager &manager) {
     std::this_thread::sleep_for(std::chrono::seconds(30));
     manager.request_exit();
     std::this_thread::sleep_for(std::chrono::seconds(1));
     exit(0);
 }
+
 #endif
 
 int main() {
@@ -21,15 +22,15 @@ int main() {
     auto assistant = AimAssistant(manager, 3.5f);
     manager.set_running(true);
 
-  /*  Overlay overlay = Overlay(manager);
-    Overlay::add_hint("Hello", 1000);
-    Overlay::add_hint("Hello - 2", 1000 * 2);
-    Overlay::add_hint("Hello - 3", 1000 * 3);
-    Overlay::add_hint("Hello - 3", 1000 * 4);*/
+    /*  Overlay overlay = Overlay(manager);
+      Overlay::add_hint("Hello", 1000);
+      Overlay::add_hint("Hello - 2", 1000 * 2);
+      Overlay::add_hint("Hello - 3", 1000 * 3);
+      Overlay::add_hint("Hello - 3", 1000 * 4);*/
 
-   /* std::thread overlayThread(&::OverlayThreadHandler, overlay);
-    SetThreadPriority(overlayThread.native_handle(), THREAD_PRIORITY_ABOVE_NORMAL);
-    overlayThread.detach();*/
+    /* std::thread overlayThread(&::OverlayThreadHandler, overlay);
+     SetThreadPriority(overlayThread.native_handle(), THREAD_PRIORITY_ABOVE_NORMAL);
+     overlayThread.detach();*/
 
 
 
@@ -42,6 +43,7 @@ int main() {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     main();
 }

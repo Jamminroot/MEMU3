@@ -8,7 +8,8 @@
 #pragma  comment(lib, "Interception/x86/interception.lib")
 #endif
 
-const int AimMouseDownKeys = InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_5_DOWN | InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_4_DOWN | InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN;
+const int AimMouseDownKeys = InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_5_DOWN | InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_4_DOWN |
+                             InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN;
 
 InputController::InputController(Manager &pManager) : manager(pManager) {
 
@@ -63,7 +64,7 @@ void InputController::handle_stroke(InterceptionStroke &pStroke, InterceptionDev
 }
 
 bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke, InterceptionDevice &device) {
-    switch (stroke.code){
+    switch (stroke.code) {
         case KeyCode::Esc:
             manager.request_exit();
             break;
@@ -78,28 +79,29 @@ bool InputController::handle_mouse_stroke(InterceptionMouseStroke &stroke, Inter
     auto cache = manager.mouseTriggerKeyStates;
     manager.mouseTriggerKeyStates |= stroke.state & AimMouseDownKeys;
 
-    manager.mouseTriggerKeyStates ^= (stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_UP) != 0 ? InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN : 0;
-    manager.mouseTriggerKeyStates ^= (stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_5_UP) != 0 ? InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_5_DOWN : 0;
-    manager.mouseTriggerKeyStates ^= (stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_4_UP) != 0 ? InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_4_DOWN : 0;
+    manager.mouseTriggerKeyStates ^=
+            (stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_UP) != 0 ? InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN : 0;
+    manager.mouseTriggerKeyStates ^=
+            (stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_5_UP) != 0 ? InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_5_DOWN : 0;
+    manager.mouseTriggerKeyStates ^=
+            (stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_4_UP) != 0 ? InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_4_DOWN : 0;
 
     manager.triggerStateChanged = manager.mouseTriggerKeyStates != cache;
 
-    switch (manager.mode)
-    {
-        case flick:
-        {
+    switch (manager.mode) {
+        case flick: {
             if ((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_RIGHT_BUTTON_DOWN) != 0) manager.flickReady = true;
             if ((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_RIGHT_BUTTON_UP) != 0) manager.flickReady = false;
             break;
         }
-        case hanzo:
-        {
+        case hanzo: {
             if ((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN) != 0) manager.flickReady = true;
             break;
         }
     }
     manager.mouseTriggered = (manager.mouseTriggerKeyStates & AimMouseDownKeys) > 0;
-    return manager.flickReady && manager.triggerStateChanged && (manager.mode == flick || manager.mode == hanzo) && manager.enemyVisible && (stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN) != 0;
+    return manager.flickReady && manager.triggerStateChanged && (manager.mode == flick || manager.mode == hanzo) && manager.enemyVisible &&
+           (stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN) != 0;
 }
 
 void InputController::move_by(const int &x, const int &y) const {

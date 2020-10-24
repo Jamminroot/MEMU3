@@ -24,10 +24,8 @@ LRESULT CALLBACK Overlay::OverlayCallback(HWND hwnd, UINT message, WPARAM wParam
 void add_label(HWND &pParent, unsigned long id, int x, int y, int w, int h, std::string message) {
     string ids = std::to_string(id);
     //CreateWindowW(L"STATIC", selectedPatternProblem, WS_CHILD | WS_VISIBLE | SS_LEFT | ES_MULTILINE | WM_CTLCOLORSTATIC, 500, 190, 380, 90,*mainOverlayHwnd, (HMENU) 1, NULL, NULL);
-    auto pHWnd = CreateWindow(L"static", s2ws(ids).c_str(),
-                              WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                              x, y, w, h,
-                              pParent, (HMENU) id, (HINSTANCE) GetWindowLong(pParent, -6), NULL);
+    auto pHWnd = CreateWindow(L"static", s2ws(ids).c_str(), WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, w, h, pParent, (HMENU) id,
+                              (HINSTANCE) GetWindowLong(pParent, -6), NULL);
     elements.push_back(pHWnd);
 }
 
@@ -36,15 +34,11 @@ LRESULT CALLBACK Overlay::_OverlayCallback(HWND hwnd, UINT message, WPARAM wPara
         case WM_CTLCOLORSTATIC: {
             HDC hdcStatic = (HDC) wParam;
 
+            DWORD CtrlID = GetDlgCtrlID((HWND) lParam); //Window Control ID
 
-
-             DWORD CtrlID = GetDlgCtrlID((HWND)lParam); //Window Control ID
-
-             SetTextColor(hdcStatic, RGB(157, 197, 206));
-             SetBkColor(hdcStatic, RGB(40, 53, 79));
-             return (LRESULT)hBrush;
-
-
+            SetTextColor(hdcStatic, RGB(157, 197, 206));
+            SetBkColor(hdcStatic, RGB(40, 53, 79));
+            return (LRESULT) hBrush;
 
         }
 
@@ -80,16 +74,7 @@ int Overlay::Start() {
     if (!RegisterClass(&wc)) {
         return 0;
     }
-    mainOverlayHwnd = CreateWindowW(
-            L"MEMU-Overlay",
-            L"MEMU Overlay",
-            WS_EX_TOPMOST | WS_POPUP,
-            rc.left, rc.top,
-            800, 800,
-            HWND_DESKTOP,
-            NULL,
-            { 0 },
-            this);
+    mainOverlayHwnd = CreateWindowW(L"MEMU-Overlay", L"MEMU Overlay", WS_EX_TOPMOST | WS_POPUP, rc.left, rc.top, 800, 800, HWND_DESKTOP, NULL, { 0 }, this);
     SetWindowLongW(mainOverlayHwnd, GWL_EXSTYLE, (int) GetWindowLong(mainOverlayHwnd, GWL_EXSTYLE) | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW);
     SetLayeredWindowAttributes(mainOverlayHwnd, 0, 255, LWA_ALPHA);
 
@@ -128,7 +113,7 @@ void Overlay::add_hint(std::string msg, int timeout) {
 
 void Overlay::add_hint_instance(std::string msg, int timeout) {
     auto id = hints.add(msg, timeout);
-    add_label(mainOverlayHwnd, id, 10, 20*id, 100, 16, msg);
+    add_label(mainOverlayHwnd, id, 10, 20 * id, 100, 16, msg);
 }
 
 void Overlay::hint_deleted_callback(int id) {
@@ -136,12 +121,12 @@ void Overlay::hint_deleted_callback(int id) {
 }
 
 void Overlay::_hint_deleted_callback(int id) {
-    std::cout << "CALLBACK! "<< id << std::endl;
+    std::cout << "CALLBACK! " << id << std::endl;
     int childId = -1;
     HWND handle;
-    int index = elements.size()-1;
+    int index = elements.size() - 1;
     bool found = false;
-    while(index>=0 && !elements.empty()){
+    while (index >= 0 && !elements.empty()) {
         handle = elements.at(index);
         childId = GetDlgCtrlID(handle);
         if (id == childId) {
@@ -151,9 +136,9 @@ void Overlay::_hint_deleted_callback(int id) {
         }
         index--;
     }
-    if (found){
-        elements.erase(elements.begin()+index);
+    if (found) {
+        elements.erase(elements.begin() + index);
         std::cout << "Deleted element" << id << std::endl;
-        SendMessage(handle, WM_CLOSE , NULL, NULL);
+        SendMessage(handle, WM_CLOSE, NULL, NULL);
     }
 }
