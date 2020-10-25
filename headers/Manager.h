@@ -27,7 +27,6 @@ public:
     void decrease_sensitivity();
     void increase_sensitivity();
     float sensitivity;
-    std::string targetWindowName = "Overwatch";
     std::atomic_bool enemyVisible;
     std::atomic_bool screenshotHandled;
     bool flickReady;
@@ -35,7 +34,6 @@ public:
     Mode mode = aim;
     int mouseTriggerKeyStates = 0;
     bool triggered;
-    int triggerStateChanged;
     Coords enemyCoords;
     int lastKnownIndex = 0;
     Rect region;

@@ -42,9 +42,12 @@ set(SOURCE_FILES
         sources/InputController.cpp
         sources/Utils.cpp
         sources/TtlStringCollection.cpp
-        #headers/Defines.h
         )
 
+configure_file(Icons/Aim.bmp Aim.bmp COPYONLY)
+configure_file(Icons/Trigger.bmp Trigger.bmp COPYONLY)
+configure_file(Icons/Hanzo.bmp Hanzo.bmp COPYONLY)
+configure_file(Icons/Flick.bmp Flick.bmp COPYONLY)
 
 add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
 

@@ -2,7 +2,6 @@
 #include "../headers/Overlay.h"
 #include "../headers/Utils.h"
 #include <thread>
-#include <iostream>
 
 #if (TARGET_64)
 #pragma comment(lib, "../Interception/x64/interception.lib")
@@ -14,7 +13,6 @@ const int AimMouseDownKeys = InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_5
                              InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN;
 
 InputController::InputController(Manager &pManager) : manager(pManager) {
-
     context = interception_create_context();
     std::thread inputFiltrationThread(&InputController::input_thread_handler, this);
     inputFiltrationThread.detach();
@@ -57,7 +55,11 @@ void InputController::handle_stroke(InterceptionStroke &pStroke, InterceptionDev
     auto skip = false;
     if (interception_is_mouse(device)) {
         InterceptionMouseStroke &mouseStroke = *(InterceptionMouseStroke *) &pStroke;
-        skip = handle_mouse_stroke(mouseStroke, device);
+        if ((mouseStroke.flags & InterceptionMouseFlag::INTERCEPTION_MOUSE_CUSTOM) == 0) {
+            skip = handle_mouse_stroke(mouseStroke, device);
+        } else {
+            Overlay::show_hint("Skipped custom event");
+        }
     }
 
     if (interception_is_keyboard(device)) {
@@ -77,7 +79,7 @@ bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke, Inte
         case KeyCode::F2:
             manager.toggle_mode();
             break;
-        case KeyCode::NumLock/:
+        case KeyCode::NumLock:
             manager.request_exit();
             break;
         case KeyCode::Numpad0:
@@ -92,10 +94,10 @@ bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke, Inte
         case KeyCode::NumpadPlus:
             manager.increase_aim_strength();
             break;
-        case KeyCode::PageUp:
+        case KeyCode::Numpad9:
             manager.increase_sensitivity();
             break;
-        case KeyCode::PageDown:
+        case KeyCode::Numpad3:
             manager.decrease_sensitivity();
             break;
     }
@@ -113,34 +115,46 @@ bool InputController::handle_mouse_stroke(InterceptionMouseStroke &stroke, Inter
     manager.mouseTriggerKeyStates ^=
             (stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_4_UP) != 0 ? InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_4_DOWN : 0;
 
-    manager.triggerStateChanged = manager.mouseTriggerKeyStates != cache;
+    manager.triggered = manager.mouseTriggerKeyStates != cache;
 
+    bool hanzoSkip = false;
     switch (manager.mode) {
         case flick: {
-            if ((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_RIGHT_BUTTON_DOWN) != 0) manager.flickReady = true;
-            if ((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_RIGHT_BUTTON_UP) != 0) manager.flickReady = false;
+            if ((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_RIGHT_BUTTON_DOWN) != 0) { manager.flickReady = true; }
+            if ((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_RIGHT_BUTTON_UP) != 0) { manager.flickReady = false; }
             break;
         }
         case hanzo: {
-            if ((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN) != 0) manager.flickReady = true;
+            if ((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN) != 0) { manager.flickReady = true; }
+            if ((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_UP) != 0 && manager.enemyVisible) {
+                manager.triggered = true;
+                hanzoSkip = true;
+            }
             break;
         }
     }
-    manager.triggered = (manager.mouseTriggerKeyStates & AimMouseDownKeys) > 0;
-    return manager.flickReady && manager.triggerStateChanged && (manager.mode == flick || manager.mode == hanzo) && manager.enemyVisible &&
-           (stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN) != 0;
+    if (manager.mode != hanzo) {
+        manager.triggered = (manager.mouseTriggerKeyStates & AimMouseDownKeys) > 0;
+    }
+
+    /* return manager.flickReady && manager.mouseKeyState && (manager.mode == flick || manager.mode == hanzo) && manager.enemyVisible &&
+            (stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN) != 0;*/
+    return hanzoSkip || manager.flickReady && manager.triggered && manager.enemyVisible &&
+                        ((((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN) != 0) && manager.mode == flick) ||
+                         (((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_UP) != 0) && manager.mode == hanzo));
 }
 
 void InputController::move_by(const int &x, const int &y) const {
     InterceptionMouseStroke mstroke = InterceptionMouseStroke();
     mstroke.x = x;
     mstroke.y = y;
-    mstroke.flags = InterceptionMouseFlag::INTERCEPTION_MOUSE_MOVE_RELATIVE;
+    mstroke.flags = (InterceptionMouseFlag::INTERCEPTION_MOUSE_MOVE_RELATIVE | InterceptionMouseFlag::INTERCEPTION_MOUSE_CUSTOM);
     interception_send(context, mouse, (InterceptionStroke *) &mstroke, 1);
 }
 
 void InputController::lmb_click() const {
     InterceptionMouseStroke mstroke = InterceptionMouseStroke();
+    mstroke.flags = InterceptionMouseFlag::INTERCEPTION_MOUSE_CUSTOM;
     mstroke.state = InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN;
     interception_send(context, mouse, (InterceptionStroke *) &mstroke, 1);
     std::this_thread::sleep_for(std::chrono::milliseconds(next_random_user_delay()));
@@ -150,6 +164,7 @@ void InputController::lmb_click() const {
 
 void InputController::lmb_release() const {
     InterceptionMouseStroke mstroke = InterceptionMouseStroke();
+    mstroke.flags = InterceptionMouseFlag::INTERCEPTION_MOUSE_CUSTOM;
     mstroke.state = InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_UP;
     interception_send(context, mouse, (InterceptionStroke *) &mstroke, 1);
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../headers/Overlay.h"
+#include "../headers/Utils.h"
 
 #include <algorithm>
 #include <thread>
@@ -22,7 +23,74 @@ IDirect3D9Ex *dx_Object = nullptr;
 IDirect3DDevice9Ex *dx_Device = nullptr;
 D3DPRESENT_PARAMETERS dx_Params;
 ID3DXLine *dx_Line = nullptr;
+ID3DXSprite *dx_Sprite = nullptr;
+IDirect3DTexture9 *dx_AimTexture = nullptr;
+IDirect3DTexture9 *dx_FlickTexture = nullptr;
+IDirect3DTexture9 *dx_HanzoTexture = nullptr;
+IDirect3DTexture9 *dx_TriggerTexture = nullptr;
 ID3DXFont *dx_Font = nullptr;
+
+LPDIRECT3DTEXTURE9 load_texture(std::string filename, D3DCOLOR transcolor)
+{
+    LPDIRECT3DTEXTURE9 texture = NULL;
+
+    //get width and height from bitmap file
+    D3DXIMAGE_INFO info;
+    HRESULT result = D3DXGetImageInfoFromFile(s2ws(filename).c_str(), &info);
+    if (result != D3D_OK) {
+        return NULL;
+    }
+
+    //create the new textur by loading a bitmap image file
+    result = D3DXCreateTextureFromFileEx(
+            dx_Device,
+            s2ws(filename).c_str(),
+            info.Width, info.Height,
+            1,
+            D3DPOOL_DEFAULT,
+            D3DFMT_UNKNOWN,
+            D3DPOOL_DEFAULT,
+            D3DX_DEFAULT, D3DX_DEFAULT,
+            transcolor,
+            &info,
+            NULL,
+            &texture);
+
+    //make sure the bitmap texture was loaded correctly
+    if (result != D3D_OK) {
+        return NULL;
+    }
+
+    return texture;
+}
+
+void sprite_transform_draw(LPDIRECT3DTEXTURE9 image, int x, int y, int width, int height,
+                           int frame, int columns, float rotation, float scaling, D3DCOLOR color)
+{
+    //Create a scale vector
+    D3DXVECTOR2 scale(scaling, scaling);
+
+    //Create a translate vector
+    D3DXVECTOR2 trans(x, y);
+
+    //Set center by dividing width and height by two
+    D3DXVECTOR2 center((float)(width * scaling) / 2, (float)(height * scaling)/2);
+
+    //Create 2D transformation matrix
+    D3DXMATRIX mat;
+    D3DXMatrixTransformation2D(&mat, NULL, 0, &scale, &center, rotation, &trans);
+
+    //Tell sprite object to use the transform
+    dx_Sprite->SetTransform( &mat );
+
+    //Calculate frame location in source image
+    int fx = (frame % columns) * width;
+    int fy = (frame / columns) * height;
+    RECT srcRect = {fx, fy, fx + width, fy + height};
+
+    //draw the sprite frame
+    dx_Sprite->Draw(image, &srcRect, NULL, NULL, color);
+}
 
 int Overlay::draw_string(char *String, int x, int y, int r, int g, int b) {
     RECT ShadowPos;
@@ -217,7 +285,16 @@ int Overlay::init_d3d(HWND hWnd) {
 
     if (!dx_Line)
         D3DXCreateLine(dx_Device, &dx_Line);
-
+    if (!dx_Sprite)
+        D3DXCreateSprite(dx_Device, &dx_Sprite);
+    if (!dx_AimTexture && dx_Sprite)
+        dx_AimTexture = load_texture("Aim.bmp", D3DCOLOR_XRGB(73, 125, 65));
+    if (!dx_FlickTexture && dx_Sprite)
+        dx_FlickTexture = load_texture("Flick.bmp", D3DCOLOR_XRGB(73, 125, 65));
+    if (!dx_HanzoTexture && dx_Sprite)
+        dx_HanzoTexture = load_texture("Hanzo.bmp", D3DCOLOR_XRGB(73, 125, 65));
+    if (!dx_TriggerTexture && dx_Sprite)
+        dx_TriggerTexture = load_texture("Trigger.bmp", D3DCOLOR_XRGB(73, 125, 65));
     /*
     D3DXCreateFont creates a font object for a device and font.
 
@@ -278,6 +355,7 @@ void Overlay::toggle_ui() {
     }
 }
 
+
 void Overlay::render_debug_ui() {
     if ((debugUiMode == DebugUiMode::TargetOnly || debugUiMode == DebugUiMode::Full) && manager.enemyVisible) {
         //draw_box((float) manager.enemyCoords.x - 15, (float) manager.enemyCoords.y-15, 30, 30, 2, 128, 255, 0, 255);
@@ -287,17 +365,36 @@ void Overlay::render_debug_ui() {
     if (debugUiMode == DebugUiMode::FrameOnly || debugUiMode == DebugUiMode::Full) {
         draw_box((float) manager.region.left, (float) manager.region.top, (float) manager.region.width, (float) manager.region.height, 2, 50, 50, 240, 200);
     }
+
 }
 
 void Overlay::render_ui() {
-
+    if (uiMode!=UiMode::InfoOnly && uiMode!=UiMode::Full) return;
+    dx_Sprite->Begin(D3DXSPRITE_ALPHABLEND);
+    const int x = 5;
+    const int y = 24;
+    switch(manager.mode){
+        case flick:
+            sprite_transform_draw(dx_FlickTexture, x, y, 50, 50, 0, 1, 0, 1.0f, D3DCOLOR_XRGB(255, 255, 255));
+            break;
+        case aim:
+            sprite_transform_draw(dx_AimTexture, x, y, 50, 50, 0, 1, 0, 1.0f, D3DCOLOR_XRGB(255, 255, 255));
+            break;
+        case trigger:
+            sprite_transform_draw(dx_TriggerTexture, x, y, 50, 50, 0, 1, 0, 1.0f, D3DCOLOR_XRGB(255, 255, 255));
+            break;
+        case hanzo:
+            sprite_transform_draw(dx_HanzoTexture, x, y, 50, 50, 0, 1, 0, 1.0f, D3DCOLOR_XRGB(255, 255, 255));
+            break;
+    }
+    dx_Sprite->End();
 }
 
 void Overlay::render_hints() {
     auto index = 0;
     for (auto &item: Overlay::hints->strings()) {
-        draw_filled(20, 24 + 30 * index, max(item.size() * 15, 180) + 5, 30, 10, 10, 10, 190);
-        draw_string((char *) item.c_str(), 25, 24 + 30 * index, 220, 200, 100); // Put Main procedure here like ESP etc.
+        draw_filled(60, (float) 24 + (float) 30 * index, (float) max(item.size() * 15, 180) + 5.0f, 30, 10, 10, 10, 190);
+        draw_string((char *) item.c_str(), 65, 24 + 30 * index, 220, 200, 100); // Put Main procedure here like ESP etc.
         index++;
     }
 }

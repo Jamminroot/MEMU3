@@ -315,12 +315,12 @@ void AimAssistant::flick_handler() {
 }
 
 void AimAssistant::hanzo_handler() {
-    if (!manager.flickReady) return;
     if (!manager.triggered) return;
+    if (!manager.flickReady) return;
     if (!manager.enemyVisible) return;
     std::thread flickThread(&AimAssistant::flick_and_release, this, manager.enemyCoords);
     flickThread.detach();
-    std::this_thread::sleep_for(std::chrono::milliseconds(next_random_user_delay()*5));
+    std::this_thread::sleep_for(std::chrono::milliseconds(next_random_user_delay()*15));
 }
 
 void AimAssistant::trigger_handler() const {
@@ -336,7 +336,7 @@ void AimAssistant::flick_and_shot(const Coords &coords) {
     threadCount++;
     apply_modifiers_common(target);
     input.move_by(target.x, target.y);
-    next_random_user_delay();
+    std::this_thread::sleep_for(std::chrono::milliseconds(next_random_user_delay()));
     input.lmb_click();
     suspendThreads = false;
     threadCount--;
@@ -349,7 +349,7 @@ void AimAssistant::flick_and_release(const Coords &coords) {
     threadCount++;
     apply_modifiers_common(target);
     input.move_by(target.x, target.y);
-    next_random_user_delay();
+    std::this_thread::sleep_for(std::chrono::milliseconds(next_random_user_delay()));
     input.lmb_release();
     suspendThreads = false;
     threadCount--;

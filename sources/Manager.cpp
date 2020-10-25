@@ -80,13 +80,13 @@ void Manager::toggle_mode() {
             Overlay::show_hint("Mode: Hanzo");
             break;
         case aim:
-            Overlay::show_hint("Mode: AimAssist");
+            Overlay::show_hint("Mode: Aim Assist");
             break;
         case flick:
-            Overlay::show_hint("Mode: FlickShot");
+            Overlay::show_hint("Mode: Flickshots");
             break;
         case trigger:
-            Overlay::show_hint("Mode: TriggerBot");
+            Overlay::show_hint("Mode: Triggerbot");
             break;
     }
 }

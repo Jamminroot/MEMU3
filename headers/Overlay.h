@@ -40,6 +40,7 @@ private:
 
     int draw_string(char *String, int x, int y, int r, int g, int b);
     int draw_string_shadow(char *String, int x, int y, int r, int g, int b);
+
     LRESULT CALLBACK callback_proc_instance(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK callback_proc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
 
