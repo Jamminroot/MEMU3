@@ -34,7 +34,7 @@ public:
     float strength;
     Mode mode = aim;
     int mouseTriggerKeyStates = 0;
-    bool mouseTriggered;
+    bool triggered;
     int triggerStateChanged;
     Coords enemyCoords;
     int lastKnownIndex = 0;

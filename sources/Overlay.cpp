@@ -13,14 +13,10 @@
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "dwmapi.lib")
 
-HWND hWnd, TargetWnd;
+HWND hWnd;//, TargetWnd;
 MSG Message;
-RECT WindowRect, ClientRect;
-int windowWidth, windowHeight;
-int clientWidth = 2560, clientHeight = 1440;
-int borderWidth, borderHeight;
 
-const MARGINS pMargin = {0, 0, clientWidth, clientHeight};
+const MARGINS pMargin = {0, 0, 2560, 1440};
 
 IDirect3D9Ex *dx_Object = nullptr;
 IDirect3DDevice9Ex *dx_Device = nullptr;
@@ -104,7 +100,7 @@ void Overlay::draw_circle(float x, float y, float radius, int r, int g, int b, i
         Line[Count + 1].y = Y2;
         Count += 2;
     }
-
+    dx_Line->SetWidth(1);
     dx_Line->Draw(Line, Count, D3DCOLOR_ARGB(alpha, r, g, b));
 }
 
@@ -150,7 +146,7 @@ void Overlay::draw_healthbar_back(float x, float y, float w, float h, int a) {
 void Overlay::draw_center_line(float x, float y, int width, int r, int g, int b) {
     D3DXVECTOR2 dPoints[2];
     dPoints[0] = D3DXVECTOR2(x, y);
-    dPoints[1] = D3DXVECTOR2((float) windowWidth / 2, (float) windowHeight);
+    dPoints[1] = D3DXVECTOR2((float) manager.screenSize.x / 2, (float) manager.screenSize.y);
     dx_Line->SetWidth((float) width);
     dx_Line->Draw(dPoints, 2, D3DCOLOR_RGBA(r, g, b, 255));
 }
@@ -179,8 +175,8 @@ int Overlay::init_d3d(HWND hWnd) {
 
     dx_Params.BackBufferFormat = D3DFMT_A8R8G8B8;
 
-    dx_Params.BackBufferWidth = windowWidth;
-    dx_Params.BackBufferHeight = windowHeight;
+    dx_Params.BackBufferWidth = manager.screenSize.x;
+    dx_Params.BackBufferHeight = manager.screenSize.y;
     dx_Params.EnableAutoDepthStencil = TRUE;
     dx_Params.AutoDepthStencilFormat = D3DFMT_D16;
 
@@ -240,7 +236,7 @@ int Overlay::init_d3d(HWND hWnd) {
     Verdana (LPCTSTR) is the string containing the typeface name (font style).
     dx_Font (LPD3DXFONT*) returns a pointer to an ID3DXFont interface, representing the created font object.
     */
-    D3DXCreateFont(dx_Device, 28, 0, FW_NORMAL, 2, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Calibri", &dx_Font);
+    D3DXCreateFont(dx_Device, 28, 0, FW_NORMAL, 2, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Consolas", &dx_Font);
 
     return 0;
 
@@ -285,10 +281,10 @@ void Overlay::toggle_ui() {
 void Overlay::render_debug_ui() {
     if ((debugUiMode == DebugUiMode::TargetOnly || debugUiMode == DebugUiMode::Full) && manager.enemyVisible) {
         //draw_box((float) manager.enemyCoords.x - 15, (float) manager.enemyCoords.y-15, 30, 30, 2, 128, 255, 0, 255);
-        draw_circle((float) manager.enemyCoords.x + (float) manager.screenSize.x / 2, (float) manager.enemyCoords.y + (float) manager.screenSize.y / 2, 15, 128, 255, 0, 255);
+        draw_circle((float) manager.enemyCoords.x + (float) manager.screenSize.x / 2, (float) manager.enemyCoords.y + (float) manager.screenSize.y / 2, 15, 128, 255, 0, 200);
     }
     if (debugUiMode == DebugUiMode::FrameOnly || debugUiMode == DebugUiMode::Full) {
-        draw_box((float) manager.region.left, (float) manager.region.top, (float) manager.region.width, (float) manager.region.height, 2, 50, 50, 240, 255);
+        draw_box((float) manager.region.left, (float) manager.region.top, (float) manager.region.width, (float) manager.region.height, 2, 50, 50, 240, 200);
     }
 }
 
@@ -299,7 +295,8 @@ void Overlay::render_ui() {
 void Overlay::render_hints() {
     auto index = 0;
     for (auto &item: Overlay::hints->strings()) {
-        draw_string((char *) item.c_str(), 120, 20 + 20 * index, 220, 200, 100); // Put Main procedure here like ESP etc.
+        draw_filled(20, 24 + 30 * index, max(item.size()*15, 180) + 5, 30, 10, 10, 10, 190);
+        draw_string((char *) item.c_str(), 25, 24 + 30 * index, 220, 200, 100); // Put Main procedure here like ESP etc.
         index++;
     }
 }
@@ -348,12 +345,12 @@ LRESULT CALLBACK Overlay::callback_proc_instance(HWND hWnd, UINT Message, WPARAM
 void Overlay::init(Manager &pManager) {
     if (sharedInstance != nullptr) return;
     sharedInstance = new Overlay(pManager);
-    std::thread runThread(&Overlay::run, sharedInstance, nullptr);
+    std::thread runThread(&Overlay::run, sharedInstance);
     runThread.detach();
-    show_hint("Overlay init complete.", 10000);
+    show_hint("MEMU3 - Version 1. Enjoy :)", 1000);
 }
 
-int WINAPI Overlay::run(HINSTANCE hInstance) {
+int WINAPI Overlay::run() {
     char overlayWindowName[] = "MEMU3-Overlay";
     WNDCLASSEXA OverlayWnd; // contains window class information
     OverlayWnd.cbSize = sizeof(WNDCLASSEXA); // size of struct, basically checking for version or check
@@ -361,7 +358,7 @@ int WINAPI Overlay::run(HINSTANCE hInstance) {
     OverlayWnd.lpfnWndProc = callback_proc; // Pointer to the window procedure
     OverlayWnd.cbClsExtra = 0; // window class struct extra bytes
     OverlayWnd.cbWndExtra = 0; // window instance extra bytes
-    OverlayWnd.hInstance = hInstance; // handle to the instance that contains the window procedure for the class
+    OverlayWnd.hInstance = nullptr; // handle to the instance that contains the window procedure for the class
     OverlayWnd.hIcon = LoadIcon(NULL, IDI_APPLICATION); // basic window icon set
     OverlayWnd.hIconSm = LoadIcon(NULL, IDI_APPLICATION); // basic window icon set
     OverlayWnd.hCursor = LoadCursor(NULL, IDC_ARROW); // basic window cursor icon set
@@ -374,7 +371,7 @@ int WINAPI Overlay::run(HINSTANCE hInstance) {
         return 1;
     }
 
-    TargetWnd = FindWindowA(0, manager.targetWindowName.c_str());
+    //TargetWnd = FindWindowA(0, manager.targetWindowName.c_str());
 
     /*
     CreateWindowEx creates an overlapped, pop-up, or child window with an extended window style.
@@ -400,13 +397,13 @@ int WINAPI Overlay::run(HINSTANCE hInstance) {
     */
 
 
-    if (TargetWnd) {
-        GetWindowRect(TargetWnd, &WindowRect);
-        windowWidth = WindowRect.right - WindowRect.left;
-        windowHeight = WindowRect.bottom - WindowRect.top;
-        hWnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED, overlayWindowName, overlayWindowName, WS_POPUP, 1, 1, windowWidth,
-                               windowHeight, 0, 0, 0, this);
-    }
+    //if (TargetWnd) {
+        //GetWindowRect(TargetWnd, &WindowRect);
+        //windowWidth = WindowRect.right - WindowRect.left;
+        //windowHeight = WindowRect.bottom - WindowRect.top;
+        hWnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED, overlayWindowName, overlayWindowName, WS_POPUP, 1, 1, manager.screenSize.x,
+                               manager.screenSize.y, 0, 0, 0, this);
+    //}
 
     /*
     SetLayeredWindowAttributes sets the opacity and transparency color key for a layered window.
@@ -430,10 +427,6 @@ int WINAPI Overlay::run(HINSTANCE hInstance) {
     While we are not panicking, we will be enable our hack.
     */
     while (!manager.is_exit_requested()) {
-        //Sleep(100);
-        /*if (GetAsyncKeyState(VK_F12))
-            panic = true;
-*/
         /*
         Dispatches incoming sent messages, checks the thread message queue for a posted message, and retrieves the message (if any exist). Messages are removed from the queue after processing due to PM_REMOVE.
         */
@@ -449,43 +442,6 @@ int WINAPI Overlay::run(HINSTANCE hInstance) {
             DispatchMessage(&Message);
         }
 
-        /*
-        Set the hWnd for the game we want.
-        */
-        TargetWnd = FindWindowA(0, manager.targetWindowName.c_str());
-
-        /*
-        If there is no game, quit.
-        */
-
-        /*
-        Set the RECT using the targeted window.
-        */
-        GetWindowRect(TargetWnd, &WindowRect);
-        GetClientRect(TargetWnd, &ClientRect);
-
-        windowWidth = WindowRect.right - WindowRect.left;
-        windowHeight = WindowRect.bottom - WindowRect.top;
-
-        /*
-        Resize the overlay matching what is required.
-        */
-        DWORD dwStyle = GetWindowLong(TargetWnd, GWL_STYLE);
-
-        if (dwStyle & WS_BORDER) {
-            windowHeight = WindowRect.bottom - WindowRect.top;
-            windowWidth = WindowRect.right - WindowRect.left;
-            clientHeight = ClientRect.bottom - ClientRect.top;
-            clientWidth = ClientRect.right - ClientRect.left;
-            borderHeight = (windowHeight - ClientRect.bottom);
-            borderWidth = (windowWidth - ClientRect.right) / 2; //only want one side
-            borderHeight -= borderWidth; //remove bottom from width, bottom is the same size as either side so we subtract that
-
-            WindowRect.left += borderWidth;
-            WindowRect.top += borderHeight;
-        }
-
-        MoveWindow(hWnd, WindowRect.left, WindowRect.top, clientWidth, clientHeight, true);
         render();
         std::this_thread::sleep_for(std::chrono::milliseconds(25));
     } // End of main Loop

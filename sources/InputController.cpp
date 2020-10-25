@@ -31,12 +31,16 @@ void InputController::input_thread_handler() {
 
     while ((!mouse_captured || !keyboard_captured) && interception_receive(context, device = interception_wait(context), &stroke, 1) > 0) {
         if (interception_is_mouse(device) && !mouse_captured) {
-            std::cout << "Mouse device initialized.\n";
+#if DEBUG
+            Overlay::show_hint("Mouse device initialized");
+#endif
             mouse_captured = true;
             mouse = device;
         }
         if (interception_is_keyboard(device) && !keyboard_captured) {
-            std::cout << "Keyboard device initialized.\n";
+#if DEBUG
+            Overlay::show_hint("Keyboard device initialized");
+#endif
             keyboard_captured = true;
             keyboard = device;
         }
@@ -119,7 +123,7 @@ bool InputController::handle_mouse_stroke(InterceptionMouseStroke &stroke, Inter
             break;
         }
     }
-    manager.mouseTriggered = (manager.mouseTriggerKeyStates & AimMouseDownKeys) > 0;
+    manager.triggered = (manager.mouseTriggerKeyStates & AimMouseDownKeys) > 0;
     return manager.flickReady && manager.triggerStateChanged && (manager.mode == flick || manager.mode == hanzo) && manager.enemyVisible &&
            (stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN) != 0;
 }
@@ -137,6 +141,12 @@ void InputController::lmb_click() const {
     mstroke.state = InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN;
     interception_send(context, mouse, (InterceptionStroke *) &mstroke, 1);
     std::this_thread::sleep_for(std::chrono::milliseconds(next_random_user_delay()));
+    mstroke.state = InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_UP;
+    interception_send(context, mouse, (InterceptionStroke *) &mstroke, 1);
+}
+
+void InputController::lmb_release() const {
+    InterceptionMouseStroke mstroke = InterceptionMouseStroke();
     mstroke.state = InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_UP;
     interception_send(context, mouse, (InterceptionStroke *) &mstroke, 1);
 }

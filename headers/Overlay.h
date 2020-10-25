@@ -21,7 +21,7 @@ private:
         Full, InfoOnly, DebugOnly, Off
     };
 
-    static inline DebugUiMode debugUiMode = DebugUiMode::Full;
+    static inline DebugUiMode debugUiMode = DebugUiMode::TargetOnly;
     static inline UiMode uiMode = UiMode::Full;
     void render_hints();
     void render_ui();
@@ -45,7 +45,7 @@ private:
 
     Overlay(Manager &manager);
     ~Overlay();
-    int WINAPI run(HINSTANCE hInstance);
+    int WINAPI run();
 
     Manager &manager;
     static inline Overlay *sharedInstance;

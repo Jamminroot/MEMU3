@@ -8,6 +8,7 @@ public:
     InputController(Manager &pManager);
     void move_by(const int &x, const int &y) const;
     void lmb_click() const;
+    void lmb_release() const;
 private:
     Manager &manager;
     InterceptionContext context = interception_create_context();

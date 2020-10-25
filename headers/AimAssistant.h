@@ -41,11 +41,13 @@ private:
     void find_healthbar_width();
     void move_by_smoothed(const Coords &coords);
     void flick_and_shot(const Coords &coords);
+    void flick_and_release(const Coords &coords);
     void aim_handler();
     void trigger_handler() const;
     void flick_handler();
-    void hanzo_handler() const;
+    void hanzo_handler();
     void terminate_threads();
     void apply_modifiers_common(Coords &coords) const;
+    static void apply_modifiers_hanzo(Coords &coords) ;
     void apply_modifiers_smooth(Coords &coords) const;
 };
