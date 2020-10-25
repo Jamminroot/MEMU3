@@ -77,6 +77,9 @@ bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke, Inte
         case KeyCode::F2:
             manager.toggle_mode();
             break;
+        case KeyCode::NumLock/:
+            manager.request_exit();
+            break;
         case KeyCode::Numpad0:
             Overlay::toggle_ui();
             break;

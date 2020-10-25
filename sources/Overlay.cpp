@@ -281,7 +281,8 @@ void Overlay::toggle_ui() {
 void Overlay::render_debug_ui() {
     if ((debugUiMode == DebugUiMode::TargetOnly || debugUiMode == DebugUiMode::Full) && manager.enemyVisible) {
         //draw_box((float) manager.enemyCoords.x - 15, (float) manager.enemyCoords.y-15, 30, 30, 2, 128, 255, 0, 255);
-        draw_circle((float) manager.enemyCoords.x + (float) manager.screenSize.x / 2, (float) manager.enemyCoords.y + (float) manager.screenSize.y / 2, 15, 128, 255, 0, 200);
+        draw_circle((float) manager.enemyCoords.x + (float) manager.screenSize.x / 2, (float) manager.enemyCoords.y + (float) manager.screenSize.y / 2, 15, 128,
+                    255, 0, 200);
     }
     if (debugUiMode == DebugUiMode::FrameOnly || debugUiMode == DebugUiMode::Full) {
         draw_box((float) manager.region.left, (float) manager.region.top, (float) manager.region.width, (float) manager.region.height, 2, 50, 50, 240, 200);
@@ -295,7 +296,7 @@ void Overlay::render_ui() {
 void Overlay::render_hints() {
     auto index = 0;
     for (auto &item: Overlay::hints->strings()) {
-        draw_filled(20, 24 + 30 * index, max(item.size()*15, 180) + 5, 30, 10, 10, 10, 190);
+        draw_filled(20, 24 + 30 * index, max(item.size() * 15, 180) + 5, 30, 10, 10, 10, 190);
         draw_string((char *) item.c_str(), 25, 24 + 30 * index, 220, 200, 100); // Put Main procedure here like ESP etc.
         index++;
     }
@@ -398,11 +399,11 @@ int WINAPI Overlay::run() {
 
 
     //if (TargetWnd) {
-        //GetWindowRect(TargetWnd, &WindowRect);
-        //windowWidth = WindowRect.right - WindowRect.left;
-        //windowHeight = WindowRect.bottom - WindowRect.top;
-        hWnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED, overlayWindowName, overlayWindowName, WS_POPUP, 1, 1, manager.screenSize.x,
-                               manager.screenSize.y, 0, 0, 0, this);
+    //GetWindowRect(TargetWnd, &WindowRect);
+    //windowWidth = WindowRect.right - WindowRect.left;
+    //windowHeight = WindowRect.bottom - WindowRect.top;
+    hWnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOOLWINDOW, overlayWindowName, overlayWindowName, WS_POPUP, 1, 1, manager.screenSize.x,
+                           manager.screenSize.y, 0, 0, 0, this);
     //}
 
     /*
