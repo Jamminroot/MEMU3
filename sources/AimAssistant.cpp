@@ -1,6 +1,7 @@
 #include "../headers/AimAssistant.h"
 #include "../headers/ScreenshotFactory.h"
 #include "../headers/Utils.h"
+#include "../headers/Overlay.h"
 #include <thread>
 #include <iostream>
 #include <fstream>
@@ -10,9 +11,8 @@
 #define SCANNING_THRESHOLD_PERCENT 80
 #define CHECK_COEFFICIENT 100/(IGNORED_BORDER_SIZE*IGNORED_BORDER_SIZE)
 
+AimAssistant::AimAssistant(class Manager &pManager) : manager(pManager), input(manager) {
 
-AimAssistant::AimAssistant(class Manager &pManager, const float &sensitivity) : manager(pManager), input(manager) {
-    modifier = sensitivity * COEFFICIENT_A;
     std::vector<RGBQUAD> colors = {{65,  38,  240, 34},
                                    {114, 81,  235, 15},
                                    {105, 70,  227, 15},
@@ -53,7 +53,6 @@ void AimAssistant::main_thread() {
             find_healthbar_width();
         }
         manager.screenshotHandled = false;
-        handle_screenshot();
 
         //std::cout << std::endl;
 
@@ -77,7 +76,6 @@ void AimAssistant::initialize_color_table(const std::vector<RGBQUAD> &pColors, c
             return;
         }
     }
-
     std::cout << "Building table.\n";
     int colorIndex = 0;
     for (auto targetColor : pColors) {
@@ -305,13 +303,19 @@ void AimAssistant::input_thread() {
 void AimAssistant::aim_handler() {
     if (!manager.mouseTriggered) return;
     if (!manager.enemyVisible) return;
-    std::thread moveThread(&AimAssistant::move_by, this, manager.enemyCoords.x, manager.enemyCoords.y);
+
+    std::thread moveThread(&AimAssistant::move_by_smoothed, this, manager.enemyCoords);
     moveThread.detach();
     //std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
 
-void AimAssistant::flick_handler() const {
-
+void AimAssistant::flick_handler() {
+    if (!manager.mouseTriggered) return;
+    if (!manager.enemyVisible) return;
+    Overlay::show_hint("Flick");
+    std::thread flickThread(&AimAssistant::move_by, this, manager.enemyCoords);
+    flickThread.detach();
+    Sleep(150);
 }
 
 void AimAssistant::hanzo_handler() const {
@@ -319,21 +323,33 @@ void AimAssistant::hanzo_handler() const {
 }
 
 void AimAssistant::trigger_handler() const {
-
+    if (!manager.enemyVisible) return;
+    if (!manager.is_crosshair_over_enemy()) return;
+    input.lmb_click();
 }
 
-void AimAssistant::move_by(const int &pX, const int &pY) {
+void AimAssistant::move_by(const Coords &coords) {
     terminate_threads();
     while (suspendThreads) {}//std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    auto x = pX;
-    auto y = pY;
+    auto target = coords;
     threadCount++;
-    apply_midifiers(x, y);
-    x = (int) (x * modifier);
-    y = (int) (y * modifier);
+    apply_modifiers_common(target);
+    input.move_by(target.x, target.y);
+    suspendThreads = false;
+    threadCount--;
+}
+
+void AimAssistant::move_by_smoothed(const Coords &coords) {
+    terminate_threads();
+    while (suspendThreads) {}//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    auto target = coords;
+    threadCount++;
+    apply_modifiers_common(target);
+    apply_modifiers_smooth(target);
+
     auto steps = 5.000f;
-    auto divX = (float) x * 1.0000f / (steps / 5.0000f);
-    auto divY = (float) y * 1.0000f / (steps / 5.0000f);
+    auto divX = (float) target.x / (steps);
+    auto divY = (float) target.y / (steps);
     auto remainderX = 0.0f;
     auto remainderY = 0.0f;
     for (auto i = 0; i < steps; i++) {
@@ -356,19 +372,9 @@ void AimAssistant::terminate_threads() {
     suspendThreads = threadCount > 0;
 }
 
-void AimAssistant::apply_midifiers(int &x, int &y) const {
-    float dirXMultiplier = 1;
-    float dirYMultiplier = 1;
-    if (x > 3) dirXMultiplier = 1;
-    if (x < -3) dirXMultiplier = 1;
-    if (y > 2) dirYMultiplier = 0.5f / 3;
-    if (y < -2) dirYMultiplier = 0.5f / 3;
-    const float min = 15.0f;
-    const float max = 25.0f;
-    auto mx = (clamp((float) abs(x), min, max) - min + 1) / (max - min);
-    auto my = (clamp((float) abs(y), min, max) - min + 1) / (max - min);
-    x = (int) ((float) x * mx * dirXMultiplier);
-    y = (int) ((float) y * my * dirYMultiplier);
+void AimAssistant::apply_modifiers_common(Coords &coords) const {
+    coords.x = (int) ((float) coords.x * manager.sensitivity);
+    coords.y = (int) ((float) coords.y * manager.sensitivity);
 }
 
 void AimAssistant::handle_screenshot() {
@@ -393,4 +399,28 @@ void AimAssistant::handle_screenshot() {
             break;
     }
     manager.screenshotHandled = true;
+}
+
+void AimAssistant::apply_modifiers_smooth(Coords &coords) const {
+    float modDistance;
+    if (coords.length <= 25.0f) {
+        modDistance = lerp(coords.length / 25.0f, 0.1f, 0.5f);
+    } else if (coords.length <= 50) {
+        modDistance = lerp((coords.length - 25.0f) / 25.0f, 0.5f, 1.0f);
+    } else if (coords.length <= 100) {
+        modDistance = lerp((coords.length - 50.0f) / 50.0f, 1.0f, 0.3f);
+    } else {
+        modDistance = 0.25f;
+    }
+
+    /*
+    const float min = 15.0f;
+    const float max = 25.0f;
+
+    auto mx = ((clamp((float) abs(coords.x), min, max) - min + 1) / (max - min) * (strength / 10.0f) );
+    auto my = ((clamp((float) abs(coords.y), min, max) - min + 1) / (max - min) * (strength / 10.0f) );
+    */
+
+    coords.x = (int) ((float) coords.x * modDistance * (manager.strength / 10.0f));
+    coords.y = (int) ((float) coords.y * modDistance * (manager.strength / 30.0f));
 }

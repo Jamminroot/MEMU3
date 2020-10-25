@@ -7,8 +7,10 @@ class InputController {
 public:
     InputController(Manager &pManager);
     void move_by(const int &x, const int &y) const;
+    void lmb_click() const;
 private:
     Manager &manager;
+    int next_random_user_delay() const;
     InterceptionContext context = interception_create_context();
     InterceptionDevice mouse;
     InterceptionDevice keyboard;

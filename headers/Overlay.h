@@ -2,12 +2,11 @@
 
 #include "Manager.h"
 #include "TtlStringCollection.h"
-#include <d3dx9core.h>
 
 class Overlay {
 
 public:
-    static void init(HINSTANCE hInstance, Manager &pManager);
+    static void init(Manager &pManager);
     static void show_hint(std::string msg, int timeout = 1000);
     static inline TtlStringCollection *hints = new TtlStringCollection(250);
     static void toggle_ui();
@@ -39,8 +38,8 @@ private:
     void draw_healthbar(float x, float y, float w, float h, int r, int g, int b, int a);
     void draw_healthbar_back(float x, float y, float w, float h, int a);
 
-    int draw_string(char *String, int x, int y, int r, int g, int b, ID3DXFont *ifont);
-    int draw_string_shadow(char *String, int x, int y, int r, int g, int b, ID3DXFont *ifont);
+    int draw_string(char *String, int x, int y, int r, int g, int b);
+    int draw_string_shadow(char *String, int x, int y, int r, int g, int b);
     LRESULT CALLBACK callback_proc_instance(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK callback_proc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
 

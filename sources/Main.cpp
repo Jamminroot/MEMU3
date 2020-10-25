@@ -19,10 +19,10 @@ void TerminateIn30Seconds(Manager &manager) {
 int main() {
     std::cout << "Starting\n";
     SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-    auto manager = Manager(400, 300, -200, -200, Coords(50, 35), Coords(65, 65));
-    auto assistant = AimAssistant(manager, 3.5f);
+    auto manager = Manager(400, 300, -200, -200, Coords(50, 35), Coords(65, 65), 3.5f, 3.0f);
+    auto assistant = AimAssistant(manager);
     manager.set_running(true);
-    Overlay::init(nullptr, manager);
+    Overlay::init(manager);
     Overlay::show_hint("MEMU Started", 5000);
 
     /*std::thread olt(overlayInit);

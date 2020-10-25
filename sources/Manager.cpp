@@ -1,5 +1,6 @@
 #include "../headers/Manager.h"
 #include "../headers/Utils.h"
+#include "../headers/Overlay.h"
 
 Manager::~Manager() {
 }
@@ -10,10 +11,12 @@ bool Manager::is_running() const {
 
 void Manager::set_running(const bool &state) {
     running = state;
+    Overlay::show_hint(running?"Running":"Paused");
 }
 
-Manager::Manager(const int width, const int height, const int offsetLeft, const int offsetTop, const Coords &pFarHeadOffset, const Coords &pCloseHeadOffset)
-        : running(false), exitRequested(false), screenshot(ScreenshotData(width, height)), farHeadOffset(pFarHeadOffset), closeHeadOffset(pCloseHeadOffset) {
+Manager::Manager(const int width, const int height, const int offsetLeft, const int offsetTop, const Coords &pFarHeadOffset, const Coords &pCloseHeadOffset,
+                 const float &pSensitivity, const float &pStrength) : running(false), exitRequested(false), screenshot(ScreenshotData(width, height)), farHeadOffset(pFarHeadOffset),
+                                           closeHeadOffset(pCloseHeadOffset), sensitivity(pSensitivity), strength(pStrength) {
     RECT desktop;
     const auto hDesktop = GetDesktopWindow();
     GetWindowRect(hDesktop, &desktop);
@@ -43,9 +46,47 @@ void Manager::update_enemy_coords_with_local_coords(int x, int y) {
 }
 
 bool Manager::is_crosshair_over_enemy() const {
-    return false;
+    return enemyCoords.length <= 15.0f;
 }
 
 void Manager::update_enemy_coords_with_local_coords(Coords coords) {
     update_enemy_coords_with_local_coords(coords.x, coords.y);
+}
+
+void Manager::increase_sensitivity() {
+    sensitivity = min(sensitivity + 0.1f, 25.0f);
+    Overlay::show_hint("Sensitivity: " + std::to_string(sensitivity));
+}
+
+void Manager::decrease_sensitivity() {
+    sensitivity = max(sensitivity - 0.1f, 0.1f);
+    Overlay::show_hint("Sensitivity: " + std::to_string(sensitivity));
+}
+
+void Manager::increase_aim_strength() {
+    strength = min(strength + 0.5f, 10.0f);
+    Overlay::show_hint("Strength: " + std::to_string(strength));
+}
+
+void Manager::decrease_aim_strength() {
+    strength = max(strength - 0.5f, 0.0f);
+    Overlay::show_hint("Strength: " + std::to_string(strength));
+}
+
+void Manager::toggle_mode() {
+    mode = (Mode) ((((int) mode) + 1) % sizeof(Mode));
+    switch (mode) {
+        case hanzo:
+            Overlay::show_hint("Mode: Hanzo");
+            break;
+        case aim:
+            Overlay::show_hint("Mode: AimAssist");
+            break;
+        case flick:
+            Overlay::show_hint("Mode: FlickShot");
+            break;
+        case trigger:
+            Overlay::show_hint("Mode: TriggerBot");
+            break;
+    }
 }

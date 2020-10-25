@@ -6,6 +6,8 @@
 #include <thread>
 #include <iostream>
 #include <dwmapi.h>
+#include <d3d9.h>
+#include <d3dx9core.h>
 
 #pragma comment(lib, "d3dx9.lib")
 #pragma comment(lib, "d3d9.lib")
@@ -20,26 +22,25 @@ int borderWidth, borderHeight;
 
 const MARGINS pMargin = {0, 0, clientWidth, clientHeight};
 
-IDirect3D9Ex *dx_Object = NULL;
-IDirect3DDevice9Ex *dx_Device = NULL;
+IDirect3D9Ex *dx_Object = nullptr;
+IDirect3DDevice9Ex *dx_Device = nullptr;
 D3DPRESENT_PARAMETERS dx_Params;
-ID3DXLine *dx_Line;
-ID3DXFont *dx_Font = 0;
+ID3DXLine *dx_Line = nullptr;
+ID3DXFont *dx_Font = nullptr;
 
-
-int Overlay::draw_string(char *String, int x, int y, int r, int g, int b, ID3DXFont *ifont) {
+int Overlay::draw_string(char *String, int x, int y, int r, int g, int b) {
     RECT ShadowPos;
     ShadowPos.left = x + 1;
     ShadowPos.top = y + 1;
     RECT FontPos;
     FontPos.left = x;
     FontPos.top = y;
-    ifont->DrawTextA(nullptr, String, (int) strlen(String), &ShadowPos, DT_NOCLIP, D3DCOLOR_ARGB(255, r / 3, g / 3, b / 3));
-    ifont->DrawTextA(nullptr, String, (int) strlen(String), &FontPos, DT_NOCLIP, D3DCOLOR_ARGB(255, r, g, b));
+    dx_Font->DrawTextA(nullptr, String, (int) strlen(String), &ShadowPos, DT_NOCLIP, D3DCOLOR_ARGB(255, r / 3, g / 3, b / 3));
+    dx_Font->DrawTextA(nullptr, String, (int) strlen(String), &FontPos, DT_NOCLIP, D3DCOLOR_ARGB(255, r, g, b));
     return 0;
 }
 
-int Overlay::draw_string_shadow(char *String, int x, int y, int r, int g, int b, ID3DXFont *ifont) {
+int Overlay::draw_string_shadow(char *String, int x, int y, int r, int g, int b) {
     RECT Font;
     Font.left = x;
     Font.top = y;
@@ -55,11 +56,11 @@ int Overlay::draw_string_shadow(char *String, int x, int y, int r, int g, int b,
     RECT Fonts3;
     Fonts3.left = x;
     Fonts3.top = y - 1;
-    ifont->DrawTextA(nullptr, String, (int) strlen(String), &Fonts3, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
-    ifont->DrawTextA(nullptr, String, (int) strlen(String), &Fonts2, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
-    ifont->DrawTextA(nullptr, String, (int) strlen(String), &Fonts1, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
-    ifont->DrawTextA(nullptr, String, (int) strlen(String), &Fonts, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
-    ifont->DrawTextA(nullptr, String, (int) strlen(String), &Font, DT_NOCLIP, D3DCOLOR_ARGB(255, r, g, b));
+    dx_Font->DrawTextA(nullptr, String, (int) strlen(String), &Fonts3, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
+    dx_Font->DrawTextA(nullptr, String, (int) strlen(String), &Fonts2, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
+    dx_Font->DrawTextA(nullptr, String, (int) strlen(String), &Fonts1, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
+    dx_Font->DrawTextA(nullptr, String, (int) strlen(String), &Fonts, DT_NOCLIP, D3DCOLOR_ARGB(255, 1, 1, 1));
+    dx_Font->DrawTextA(nullptr, String, (int) strlen(String), &Font, DT_NOCLIP, D3DCOLOR_ARGB(255, r, g, b));
     return 0;
 }
 
@@ -90,10 +91,9 @@ void Overlay::draw_line(float x, float y, float xx, float yy, int r, int g, int 
 
 void Overlay::draw_circle(float x, float y, float radius, int r, int g, int b, int alpha) {
     D3DXVECTOR2 Line[128];
-    float Step = 3.14159265f * 2.0f / 25.0f;
+    float Step = 3.14159265f * 2.0f / 50.0f;
     int Count = 0;
-    for (float a = 0; a < 3.14159265*2.0; a += Step)
-    {
+    for (float a = 0; a < 3.14159265 * 2.0; a += Step) {
         float X1 = radius * cos(a) + x;
         float Y1 = radius * sin(a) + y;
         float X2 = radius * cos(a + Step) + x;
@@ -105,7 +105,7 @@ void Overlay::draw_circle(float x, float y, float radius, int r, int g, int b, i
         Count += 2;
     }
 
-    dx_Line->Draw(Line, Count, D3DCOLOR_RGBA(r, g, b, alpha));
+    dx_Line->Draw(Line, Count, D3DCOLOR_ARGB(alpha, r, g, b));
 }
 
 void Overlay::draw_filled(float x, float y, float w, float h, int r, int g, int b, int a) {
@@ -216,7 +216,7 @@ int Overlay::init_d3d(HWND hWnd) {
     dx_Device (IDirect3DDevice9Ex**) is the address of a pointer to the returned IDirect3DDevice9Ex, which represents the created device.
     */
     if (FAILED(dx_Object->CreateDeviceEx(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, NULL, D3DCREATE_HARDWARE_VERTEXPROCESSING, &dx_Params, 0, &dx_Device))) {
-        exit(1);
+        return 1;
     }
 
     if (!dx_Line)
@@ -240,35 +240,55 @@ int Overlay::init_d3d(HWND hWnd) {
     Verdana (LPCTSTR) is the string containing the typeface name (font style).
     dx_Font (LPD3DXFONT*) returns a pointer to an ID3DXFont interface, representing the created font object.
     */
-    D3DXCreateFont(dx_Device, 36, 0, FW_NORMAL, 2, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Calibri", &dx_Font);
+    D3DXCreateFont(dx_Device, 28, 0, FW_NORMAL, 2, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Calibri", &dx_Font);
 
     return 0;
 
 }
 
 void Overlay::toggle_debug_ui() {
-    debugUiMode = (DebugUiMode) ((((int)debugUiMode)+1) % sizeof(DebugUiMode));
-    switch(debugUiMode){
-        case DebugUiMode::FrameOnly: show_hint("Debug UI: Frame only"); break;
-        case DebugUiMode::Full: show_hint("Debug UI: Full"); break;
-        case DebugUiMode::TargetOnly: show_hint("Debug UI: Target only"); break;
-        case DebugUiMode::Off: show_hint("Debug UI: Off"); break;
+    debugUiMode = (DebugUiMode) ((((int) debugUiMode) + 1) % sizeof(DebugUiMode));
+    switch (debugUiMode) {
+        case DebugUiMode::FrameOnly:
+            show_hint("Debug UI: Frame only");
+            break;
+        case DebugUiMode::Full:
+            show_hint("Debug UI: Full");
+            break;
+        case DebugUiMode::TargetOnly:
+            show_hint("Debug UI: Target only");
+            break;
+        case DebugUiMode::Off:
+            show_hint("Debug UI: Off");
+            break;
     }
 }
 
 void Overlay::toggle_ui() {
-    uiMode = (UiMode) ((((int)uiMode)+1) % sizeof(UiMode));
-    switch(uiMode){
-        case UiMode::DebugOnly: show_hint("UI: Debug only"); break;
-        case UiMode::Full: show_hint("UI: Full"); break;
-        case UiMode::InfoOnly: show_hint("UI: Info only"); break;
-        case UiMode::Off: show_hint("UI: Off"); break;
+    uiMode = (UiMode) ((((int) uiMode) + 1) % sizeof(UiMode));
+    switch (uiMode) {
+        case UiMode::DebugOnly:
+            show_hint("UI: Debug only");
+            break;
+        case UiMode::Full:
+            show_hint("UI: Full");
+            break;
+        case UiMode::InfoOnly:
+            show_hint("UI: Info only");
+            break;
+        case UiMode::Off:
+            show_hint("UI: Off");
+            break;
     }
 }
 
 void Overlay::render_debug_ui() {
-    if (manager.enemyVisible){
-        draw_circle((float) manager.enemyCoords.x, (float) manager.enemyCoords.y, 15, 128, 255, 0, 0);
+    if ((debugUiMode == DebugUiMode::TargetOnly || debugUiMode == DebugUiMode::Full) && manager.enemyVisible) {
+        //draw_box((float) manager.enemyCoords.x - 15, (float) manager.enemyCoords.y-15, 30, 30, 2, 128, 255, 0, 255);
+        draw_circle((float) manager.enemyCoords.x + (float) manager.screenSize.x / 2, (float) manager.enemyCoords.y + (float) manager.screenSize.y / 2, 15, 128, 255, 0, 255);
+    }
+    if (debugUiMode == DebugUiMode::FrameOnly || debugUiMode == DebugUiMode::Full) {
+        draw_box((float) manager.region.left, (float) manager.region.top, (float) manager.region.width, (float) manager.region.height, 2, 50, 50, 240, 255);
     }
 }
 
@@ -279,22 +299,23 @@ void Overlay::render_ui() {
 void Overlay::render_hints() {
     auto index = 0;
     for (auto &item: Overlay::hints->strings()) {
-        draw_string((char *) item.c_str(), 100, 20 + 20 * index, 220, 200, 100, dx_Font); // Put Main procedure here like ESP etc.
+        draw_string((char *) item.c_str(), 120, 20 + 20 * index, 220, 200, 100); // Put Main procedure here like ESP etc.
         index++;
     }
 }
 
 int Overlay::render() {
-
     dx_Device->BeginScene();
     dx_Device->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
-
     render_hints();
-    render_debug_ui();
-    render_ui();
+    if (uiMode == UiMode::Full || uiMode == UiMode::DebugOnly) {
+        render_debug_ui();
+    }
+    if (uiMode == UiMode::Full || uiMode == UiMode::InfoOnly) {
+        render_ui();
+    }
     dx_Device->EndScene();
     dx_Device->PresentEx(0, 0, 0, 0, 0);
-
     return 0;
 }
 
@@ -324,11 +345,10 @@ LRESULT CALLBACK Overlay::callback_proc_instance(HWND hWnd, UINT Message, WPARAM
     return DefWindowProc(hWnd, Message, wParam, lParam); // Making sure all messages are processed
 }
 
-void Overlay::init(HINSTANCE hInstance, Manager &pManager) {
+void Overlay::init(Manager &pManager) {
     if (sharedInstance != nullptr) return;
     sharedInstance = new Overlay(pManager);
-    std::thread runThread(&Overlay::run, sharedInstance, hInstance);
-    //Sleep(100);
+    std::thread runThread(&Overlay::run, sharedInstance, nullptr);
     runThread.detach();
     show_hint("Overlay init complete.", 10000);
 }
@@ -468,12 +488,11 @@ int WINAPI Overlay::run(HINSTANCE hInstance) {
         MoveWindow(hWnd, WindowRect.left, WindowRect.top, clientWidth, clientHeight, true);
         render();
         Sleep(10);
-    } // End of Panic Loop
+    } // End of main Loop
 
     /*
     Lets exit immediately...
     */
-    std::cout << "EXIT!" << std::endl;
     return 0;
 }
 

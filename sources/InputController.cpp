@@ -2,12 +2,16 @@
 #include "../headers/Overlay.h"
 #include <thread>
 #include <iostream>
+#include <random>
 
 #if (TARGET_64)
 #pragma comment(lib, "../Interception/x64/interception.lib")
 #else
 #pragma  comment(lib, "Interception/x86/interception.lib")
 #endif
+
+std::default_random_engine generator((int)std::chrono::system_clock::now().time_since_epoch().count()%10000);
+std::uniform_int_distribution<int> random_user_delay(9,25);
 
 const int AimMouseDownKeys = InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_5_DOWN | InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_4_DOWN |
                              InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN;
@@ -66,18 +70,29 @@ void InputController::handle_stroke(InterceptionStroke &pStroke, InterceptionDev
 
 bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke, InterceptionDevice &device) {
     switch (stroke.code) {
-        case KeyCode::Esc:
-            manager.request_exit();
-            break;
         case KeyCode::RightAlt:
             manager.set_running(!manager.is_running());
-            Overlay::show_hint(manager.is_running()?"Running":"Paused");
+            break;
+        case KeyCode::F2:
+            manager.toggle_mode();
             break;
         case KeyCode::Numpad0:
             Overlay::toggle_ui();
             break;
         case KeyCode::NumpadDelete:
             Overlay::toggle_debug_ui();
+            break;
+        case KeyCode::NumpadMinus:
+            manager.decrease_aim_strength();
+            break;
+        case KeyCode::NumpadPlus:
+            manager.increase_aim_strength();
+            break;
+        case KeyCode::PageUp:
+            manager.increase_aim_strength();
+            break;
+        case KeyCode::PageDown:
+            manager.increase_aim_strength();
             break;
     }
     return false;
@@ -118,4 +133,17 @@ void InputController::move_by(const int &x, const int &y) const {
     mstroke.y = y;
     mstroke.flags = InterceptionMouseFlag::INTERCEPTION_MOUSE_MOVE_RELATIVE;
     interception_send(context, mouse, (InterceptionStroke *) &mstroke, 1);
+}
+
+void InputController::lmb_click() const {
+    InterceptionMouseStroke mstroke = InterceptionMouseStroke();
+    mstroke.state = InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN;
+    interception_send(context, mouse, (InterceptionStroke *) &mstroke, 1);
+    Sleep(next_random_user_delay());
+    mstroke.state = InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_UP;
+    interception_send(context, mouse, (InterceptionStroke *) &mstroke, 1);
+}
+
+int InputController::next_random_user_delay() const {
+    return (int)random_user_delay(generator);
 }

@@ -10,12 +10,11 @@
 
 class AimAssistant {
 public:
-    AimAssistant(class Manager &pManager, const float &sensitivity = 3.5f);
+    AimAssistant(class Manager &pManager);
 private:
     BYTE hashTable[COLOR_HASHTABLE_SIZE];
     Manager &manager;
     InputController input;
-    float modifier;
     std::atomic_bool suspendThreads = false;
     std::atomic_int threadCount = 0;
     void main_thread();
@@ -36,11 +35,13 @@ private:
     bool probe_handle(const int &) const;
     void find_healthbar_height();
     void find_healthbar_width();
-    void move_by(const int &x, const int &y);
+    void move_by_smoothed(const Coords &coords);
+    void move_by(const Coords &coords);
     void aim_handler();
     void trigger_handler() const;
-    void flick_handler() const;
+    void flick_handler();
     void hanzo_handler() const;
     void terminate_threads();
-    void apply_midifiers(int &x, int &y) const;
+    void apply_modifiers_common(Coords &coords) const;
+    void apply_modifiers_smooth(Coords &coords) const;
 };
