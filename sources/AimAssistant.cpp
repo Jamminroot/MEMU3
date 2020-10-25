@@ -5,11 +5,8 @@
 #include <thread>
 #include <iostream>
 #include <fstream>
+#include <random>
 
-#define COEFFICIENT_A 0.116f
-#define IGNORED_BORDER_SIZE 5
-#define SCANNING_THRESHOLD_PERCENT 80
-#define CHECK_COEFFICIENT 100/(IGNORED_BORDER_SIZE*IGNORED_BORDER_SIZE)
 
 AimAssistant::AimAssistant(class Manager &pManager) : manager(pManager), input(manager) {
 
@@ -313,9 +310,9 @@ void AimAssistant::flick_handler() {
     if (!manager.mouseTriggered) return;
     if (!manager.enemyVisible) return;
     Overlay::show_hint("Flick");
-    std::thread flickThread(&AimAssistant::move_by, this, manager.enemyCoords);
+    std::thread flickThread(&AimAssistant::flick_and_shot, this, manager.enemyCoords);
     flickThread.detach();
-    Sleep(150);
+    std::this_thread::sleep_for(std::chrono::milliseconds(next_random_user_delay()*5));
 }
 
 void AimAssistant::hanzo_handler() const {
@@ -328,13 +325,15 @@ void AimAssistant::trigger_handler() const {
     input.lmb_click();
 }
 
-void AimAssistant::move_by(const Coords &coords) {
+void AimAssistant::flick_and_shot(const Coords &coords) {
     terminate_threads();
     while (suspendThreads) {}//std::this_thread::sleep_for(std::chrono::milliseconds(1));
     auto target = coords;
     threadCount++;
     apply_modifiers_common(target);
     input.move_by(target.x, target.y);
+    next_random_user_delay();
+    input.lmb_click();
     suspendThreads = false;
     threadCount--;
 }

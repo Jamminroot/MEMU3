@@ -12,6 +12,10 @@ class AimAssistant {
 public:
     AimAssistant(class Manager &pManager);
 private:
+    const int IGNORED_BORDER_SIZE = 5;
+    const int SCANNING_THRESHOLD_PERCENT = 80;
+    const int CHECK_COEFFICIENT = 100 / (IGNORED_BORDER_SIZE*IGNORED_BORDER_SIZE);
+
     BYTE hashTable[COLOR_HASHTABLE_SIZE];
     Manager &manager;
     InputController input;
@@ -36,7 +40,7 @@ private:
     void find_healthbar_height();
     void find_healthbar_width();
     void move_by_smoothed(const Coords &coords);
-    void move_by(const Coords &coords);
+    void flick_and_shot(const Coords &coords);
     void aim_handler();
     void trigger_handler() const;
     void flick_handler();

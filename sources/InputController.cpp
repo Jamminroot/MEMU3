@@ -1,17 +1,14 @@
 #include "../headers/InputController.h"
 #include "../headers/Overlay.h"
+#include "../headers/Utils.h"
 #include <thread>
 #include <iostream>
-#include <random>
 
 #if (TARGET_64)
 #pragma comment(lib, "../Interception/x64/interception.lib")
 #else
 #pragma  comment(lib, "Interception/x86/interception.lib")
 #endif
-
-std::default_random_engine generator((int)std::chrono::system_clock::now().time_since_epoch().count()%10000);
-std::uniform_int_distribution<int> random_user_delay(9,25);
 
 const int AimMouseDownKeys = InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_5_DOWN | InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_4_DOWN |
                              InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN;
@@ -139,11 +136,7 @@ void InputController::lmb_click() const {
     InterceptionMouseStroke mstroke = InterceptionMouseStroke();
     mstroke.state = InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN;
     interception_send(context, mouse, (InterceptionStroke *) &mstroke, 1);
-    Sleep(next_random_user_delay());
+    std::this_thread::sleep_for(std::chrono::milliseconds(next_random_user_delay()));
     mstroke.state = InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_UP;
     interception_send(context, mouse, (InterceptionStroke *) &mstroke, 1);
-}
-
-int InputController::next_random_user_delay() const {
-    return (int)random_user_delay(generator);
 }

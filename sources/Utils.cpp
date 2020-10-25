@@ -1,7 +1,19 @@
 #include "../headers/Utils.h"
 #include <rpc.h>
+#include <random>
+#include <chrono>
+
+#if  !(WIN32 || !(_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING || _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS))
 #include <locale>
 #include <codecvt>
+#endif
+
+std::default_random_engine generator((int)std::chrono::system_clock::now().time_since_epoch().count()%10000);
+std::uniform_int_distribution<int> random_user_delay(9,25);
+
+int next_random_user_delay() {
+    return random_user_delay(generator);
+}
 
 float clamp(float val, float min, float max) {
     if (val > max) return max;

@@ -487,7 +487,7 @@ int WINAPI Overlay::run(HINSTANCE hInstance) {
 
         MoveWindow(hWnd, WindowRect.left, WindowRect.top, clientWidth, clientHeight, true);
         render();
-        Sleep(10);
+        std::this_thread::sleep_for(std::chrono::milliseconds(25));
     } // End of main Loop
 
     /*

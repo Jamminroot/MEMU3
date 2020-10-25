@@ -10,7 +10,6 @@ public:
     void lmb_click() const;
 private:
     Manager &manager;
-    int next_random_user_delay() const;
     InterceptionContext context = interception_create_context();
     InterceptionDevice mouse;
     InterceptionDevice keyboard;
