@@ -89,10 +89,10 @@ bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke, Inte
             manager.increase_aim_strength();
             break;
         case KeyCode::PageUp:
-            manager.increase_aim_strength();
+            manager.increase_sensitivity();
             break;
         case KeyCode::PageDown:
-            manager.increase_aim_strength();
+            manager.decrease_sensitivity();
             break;
     }
     return false;
