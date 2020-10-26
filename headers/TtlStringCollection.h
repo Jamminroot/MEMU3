@@ -4,6 +4,8 @@
 #include <string>
 #include <chrono>
 #include <atomic>
+#include <mutex>
+#include <condition_variable>
 
 class TtlString {
 public:
@@ -17,6 +19,8 @@ public:
     void add(std::string &msg, int timeout);
     std::vector<std::string> strings();
 private:
+    std::mutex empty_mutex;
+    std::condition_variable empty_cond;
     [[noreturn]] void vector_cleaner(int);
     std::vector<TtlString> data = std::vector<TtlString>();
 };

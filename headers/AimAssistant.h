@@ -6,16 +6,14 @@
 #include <vector>
 #include <atomic>
 
-#define COLOR_HASHTABLE_SIZE (0xFFFFFF + 1) / 8
-
 class AimAssistant {
+#define COLOR_HASHTABLE_SIZE (0xFFFFFF + 1) / 8
 public:
     AimAssistant(class Manager &pManager);
 private:
     const int IGNORED_BORDER_SIZE = 5;
     const int SCANNING_THRESHOLD_PERCENT = 80;
-    const int CHECK_COEFFICIENT = 100 / (IGNORED_BORDER_SIZE*IGNORED_BORDER_SIZE);
-
+    const int CHECK_COEFFICIENT = 100 / (IGNORED_BORDER_SIZE * IGNORED_BORDER_SIZE);
     BYTE hashTable[COLOR_HASHTABLE_SIZE];
     Manager &manager;
     InputController input;
@@ -48,6 +46,6 @@ private:
     void hanzo_handler();
     void terminate_threads();
     void apply_modifiers_common(Coords &coords) const;
-    static void apply_modifiers_hanzo(Coords &coords) ;
+    static void apply_modifiers_hanzo(Coords &coords);
     void apply_modifiers_smooth(Coords &coords) const;
 };

@@ -13,7 +13,7 @@ bool ScreenshotFactory::update_screenshot() {
     HDC hdc = GetDC(nullptr);
     HDC captureDC = CreateCompatibleDC(hdc);
     HBITMAP hBmp = CreateCompatibleBitmap(hdc, manager.region.width, manager.region.height);
-    HGDIOBJ hOld = SelectObject(captureDC, hBmp);
+    SelectObject(captureDC, hBmp);
 
     if (!BitBlt(captureDC, 0, 0, manager.region.width, manager.region.height, hdc, manager.region.left, manager.region.top, SRCCOPY | CAPTUREBLT)) {
         cout << "ERROR: bit-block transfer failed!" << endl;

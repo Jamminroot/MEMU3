@@ -56,7 +56,7 @@ void InputController::handle_stroke(InterceptionStroke &pStroke, InterceptionDev
     if (interception_is_mouse(device)) {
         InterceptionMouseStroke &mouseStroke = *(InterceptionMouseStroke *) &pStroke;
         if ((mouseStroke.flags & InterceptionMouseFlag::INTERCEPTION_MOUSE_CUSTOM) == 0) {
-            skip = handle_mouse_stroke(mouseStroke, device);
+            skip = handle_mouse_stroke(mouseStroke);
         } else {
             Overlay::show_hint("Skipped custom event");
         }
@@ -64,14 +64,14 @@ void InputController::handle_stroke(InterceptionStroke &pStroke, InterceptionDev
 
     if (interception_is_keyboard(device)) {
         InterceptionKeyStroke &keyStroke = *(InterceptionKeyStroke *) &pStroke;
-        skip = handle_keyboard_stroke(keyStroke, device);
+        skip = handle_keyboard_stroke(keyStroke);
     }
     if (!skip) {
         interception_send(context, device, &pStroke, 1);
     }
 }
 
-bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke, InterceptionDevice &device) {
+bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke) {
     switch (stroke.code) {
         case KeyCode::RightAlt:
             manager.set_running(!manager.is_running());
@@ -104,7 +104,7 @@ bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke, Inte
     return false;
 }
 
-bool InputController::handle_mouse_stroke(InterceptionMouseStroke &stroke, InterceptionDevice &device) {
+bool InputController::handle_mouse_stroke(InterceptionMouseStroke &stroke) {
     auto cache = manager.mouseTriggerKeyStates;
     manager.mouseTriggerKeyStates |= stroke.state & AimMouseDownKeys;
 

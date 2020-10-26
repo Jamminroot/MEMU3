@@ -2,9 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 
 project(MEMU3 C CXX)
 
+set(TARGET_NAME MEMU3)
+
 set(CMAKE_CXX_STANDARD 20)
 set(SUGGESTED_STACK_SIZE 10000000)
-set(EXECUTABLE_NAME MEMU3)
 
 string(TOUPPER "${CMAKE_BUILD_TYPE}" VARIANT)
 
@@ -18,17 +19,10 @@ else ()
 
 endif ()
 
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    message("MSVC Compiler detected. Setting stack size to ${SUGGESTED_STACK_SIZE}b")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:${SUGGESTED_STACK_SIZE}")
-else ()
-    message("Other linker detected. Make sure to increase stack size is increased to ${SUGGESTED_STACK_SIZE}b!")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--stack,${SUGGESTED_STACK_SIZE}")
-endif ()
-
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall")
+
+#string(REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 
 set(SOURCE_FILES
         sources/Main.cpp
@@ -49,23 +43,20 @@ configure_file(Icons/Trigger.bmp Trigger.bmp COPYONLY)
 configure_file(Icons/Hanzo.bmp Hanzo.bmp COPYONLY)
 configure_file(Icons/Flick.bmp Flick.bmp COPYONLY)
 
-add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
+add_executable(${TARGET_NAME} ${SOURCE_FILES})
 
-# For CLR - remove?
-#[[
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /AI\"../Overlay_Library\" " )
-set(CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG} /AI\"../Overlay_Library\" " )
+string(REPLACE "/W4" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+string(REPLACE "/W3" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
-string(REPLACE "/RTC1" " " CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /W3 /WX")
 
-
-#set_target_properties(${PROJECT_NAME} PROPERTIES COMMON_LANGUAGE_RUNTIME "")
-set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_FLAGS "/clr")
-# Interception
-]]
-
-
+if (MSVC)
+    message("MSVC Compiler detected. Setting stack size to ${SUGGESTED_STACK_SIZE}b")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:${SUGGESTED_STACK_SIZE}")
+else ()
+    message("Other linker detected. Make sure to increase stack size is increased to ${SUGGESTED_STACK_SIZE}b!")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--stack,${SUGGESTED_STACK_SIZE}")
+endif ()
 
 include_directories(Interception/)
 
@@ -89,7 +80,7 @@ else ()
     set(DirectX_LIBRARY_PATHS "${DirectX_ROOT_DIR}/Lib/x86" "${DirectX_ROOT_DIR}/Lib")
 endif ()
 
-message("DirectX paths:\n${DirectX_ROOT_DIR}\n${DirectX_INCLUDE_DIRS}\n${DirectX_LIBRARY_PATHS}")
+message("DirectX path:\n${DirectX_ROOT_DIR}")
 
 find_library(DirectX_D3D9_LIBRARY d3d9 ${DirectX_LIBRARY_PATHS} NO_DEFAULT_PATH)
 find_library(DirectX_D3DX9_LIBRARY d3dx9 ${DirectX_LIBRARY_PATHS} NO_DEFAULT_PATH)
@@ -100,6 +91,13 @@ include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(DirectX DEFAULT_MSG DirectX_ROOT_DIR DirectX_LIBRARIES DirectX_INCLUDE_DIRS)
 mark_as_advanced(DirectX_INCLUDE_DIRS DirectX_D3D9_LIBRARY DirectX_D3DX9_LIBRARY)
 include_directories(${DirectX_INCLUDE_DIRS})
-target_link_libraries(${EXECUTABLE_NAME} "${DirectX_LIBRARY_PATHS}/d3d9.lib")
-target_link_libraries(${EXECUTABLE_NAME} "${DirectX_LIBRARY_PATHS}/d3dx9.lib")
+target_link_libraries(${TARGET_NAME} "${DirectX_LIBRARY_PATHS}/d3d9.lib")
+target_link_libraries(${TARGET_NAME} "${DirectX_LIBRARY_PATHS}/d3dx9.lib")
 
+# Output flags
+
+message("CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+message("CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
+message("CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
+message("CMAKE_CXX_FLAGS_MINSIZEREL: ${CMAKE_CXX_FLAGS_MINSIZEREL}")
+message("CMAKE_CXX_FLAGS_RELWITHDEBINFO: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")

@@ -1,7 +1,9 @@
 #include "../headers/TtlStringCollection.h"
 
+#include <mutex>
 #include <thread>
 #include <utility>
+
 
 TtlStringCollection::TtlStringCollection(const int pMilliseconds) {
     std::thread clearThread(&TtlStringCollection::vector_cleaner, this, pMilliseconds);
@@ -10,11 +12,10 @@ TtlStringCollection::TtlStringCollection(const int pMilliseconds) {
 
 [[noreturn]] void TtlStringCollection::vector_cleaner(int pCheckPeriod) {
     using namespace std::chrono;
-
-    for (;;) {
-        // TODO: Replace with locks
+    while(true) {
         std::this_thread::sleep_for(std::chrono::milliseconds(pCheckPeriod));
-        if (data.empty()) continue;
+        std::unique_lock lock(empty_mutex);
+        if (data.empty()) empty_cond.wait(lock);
         auto index = (int) data.size() - 1;
         auto now = high_resolution_clock::now().time_since_epoch();
         auto timestamp = (unsigned int) (now.count() / 1000000);
@@ -31,10 +32,12 @@ TtlStringCollection::TtlStringCollection(const int pMilliseconds) {
 
 void TtlStringCollection::add(std::string &msg, int timeout) {
     using namespace std::chrono;
+    std::unique_lock lock(empty_mutex);
     auto str = TtlString();
     str.message = std::move(msg);
     str.expirationTimePoint = (unsigned int) (high_resolution_clock::now().time_since_epoch().count() / 1000000) + timeout;
     data.push_back(str);
+    empty_cond.notify_all();
 }
 
 std::vector<std::string> TtlStringCollection::strings() {

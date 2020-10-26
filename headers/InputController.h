@@ -16,6 +16,6 @@ private:
     InterceptionDevice keyboard;
     void input_thread_handler();
     void handle_stroke(InterceptionStroke &stroke, InterceptionDevice &device);
-    bool handle_keyboard_stroke(InterceptionKeyStroke &stroke, InterceptionDevice &device);
-    bool handle_mouse_stroke(InterceptionMouseStroke &stroke, InterceptionDevice &device);
+    bool handle_keyboard_stroke(InterceptionKeyStroke &stroke);
+    bool handle_mouse_stroke(InterceptionMouseStroke &stroke);
 };

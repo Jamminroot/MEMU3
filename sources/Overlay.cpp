@@ -30,8 +30,7 @@ IDirect3DTexture9 *dx_HanzoTexture = nullptr;
 IDirect3DTexture9 *dx_TriggerTexture = nullptr;
 ID3DXFont *dx_Font = nullptr;
 
-LPDIRECT3DTEXTURE9 load_texture(std::string filename, D3DCOLOR transcolor)
-{
+LPDIRECT3DTEXTURE9 load_texture(std::string filename, D3DCOLOR transcolor) {
     LPDIRECT3DTEXTURE9 texture = NULL;
 
     //get width and height from bitmap file
@@ -42,19 +41,8 @@ LPDIRECT3DTEXTURE9 load_texture(std::string filename, D3DCOLOR transcolor)
     }
 
     //create the new textur by loading a bitmap image file
-    result = D3DXCreateTextureFromFileEx(
-            dx_Device,
-            s2ws(filename).c_str(),
-            info.Width, info.Height,
-            1,
-            D3DPOOL_DEFAULT,
-            D3DFMT_UNKNOWN,
-            D3DPOOL_DEFAULT,
-            D3DX_DEFAULT, D3DX_DEFAULT,
-            transcolor,
-            &info,
-            NULL,
-            &texture);
+    result = D3DXCreateTextureFromFileEx(dx_Device, s2ws(filename).c_str(), info.Width, info.Height, 1, D3DPOOL_DEFAULT, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT,
+                                         D3DX_DEFAULT, D3DX_DEFAULT, transcolor, &info, NULL, &texture);
 
     //make sure the bitmap texture was loaded correctly
     if (result != D3D_OK) {
@@ -64,24 +52,23 @@ LPDIRECT3DTEXTURE9 load_texture(std::string filename, D3DCOLOR transcolor)
     return texture;
 }
 
-void sprite_transform_draw(LPDIRECT3DTEXTURE9 image, int x, int y, int width, int height,
-                           int frame, int columns, float rotation, float scaling, D3DCOLOR color)
-{
+void
+sprite_transform_draw(LPDIRECT3DTEXTURE9 image, int x, int y, int width, int height, int frame, int columns, float rotation, float scaling, D3DCOLOR color) {
     //Create a scale vector
     D3DXVECTOR2 scale(scaling, scaling);
 
     //Create a translate vector
-    D3DXVECTOR2 trans((float)x, (float)y);
+    D3DXVECTOR2 trans((float) x, (float) y);
 
     //Set center by dividing width and height by two
-    D3DXVECTOR2 center((float)(width * scaling) / 2, (float)(height * scaling)/2);
+    D3DXVECTOR2 center((float) (width * scaling) / 2, (float) (height * scaling) / 2);
 
     //Create 2D transformation matrix
     D3DXMATRIX mat;
     D3DXMatrixTransformation2D(&mat, NULL, 0, &scale, &center, rotation, &trans);
 
     //Tell sprite object to use the transform
-    dx_Sprite->SetTransform( &mat );
+    dx_Sprite->SetTransform(&mat);
 
     //Calculate frame location in source image
     int fx = (frame % columns) * width;
@@ -200,7 +187,7 @@ void Overlay::draw_box(float x, float y, float width, float height, float px, in
 
 void Overlay::draw_gui_box(float x, float y, float w, float h, int r, int g, int b, int a, int rr, int gg, int bb, int aa) {
     draw_box(x, y, w, h, 1, r, g, b, a);
-    draw_filled(x, y, w, h, rr, gg, bb, a);
+    draw_filled(x, y, w, h, rr, gg, bb, aa);
 }
 
 void Overlay::draw_healthbar(float x, float y, float w, float h, int r, int g, int b, int a) {
@@ -222,7 +209,7 @@ void Overlay::draw_center_line(float x, float y, int width, int r, int g, int b)
 /*
 We require to initialize the D3D drawing, so we require hWnd. Windows identifies each form or application by assigning it a handle or also known as hWnd.
 */
-int Overlay::init_d3d(HWND hWnd) {
+int Overlay::init_d3d(HWND pHWnd) {
     // We get our Process Access and Module Bases
 
 
@@ -251,7 +238,7 @@ int Overlay::init_d3d(HWND hWnd) {
     /*
     hDeviceWindow (HWND) is the form or application that determines the location and size of the back buffer on the screen.
     */
-    dx_Params.hDeviceWindow = hWnd;
+    dx_Params.hDeviceWindow = pHWnd;
 
     /*
     MultiSampleQuality (DWORD) is the quality level. Technically speaking DEFAULT_QUALITY is zero which also is kind of funny because zero is the lowest MultiSampleQuality. Why are we setting this? Well this is all GPU related, and microsoft is extremely vauge about this, so we will just leave this as zero.
@@ -355,7 +342,6 @@ void Overlay::toggle_ui() {
     }
 }
 
-
 void Overlay::render_debug_ui() {
     if ((debugUiMode == DebugUiMode::TargetOnly || debugUiMode == DebugUiMode::Full) && manager.enemyVisible) {
         //draw_box((float) manager.enemyCoords.x - 15, (float) manager.enemyCoords.y-15, 30, 30, 2, 128, 255, 0, 255);
@@ -369,11 +355,11 @@ void Overlay::render_debug_ui() {
 }
 
 void Overlay::render_ui() {
-    if (uiMode!=UiMode::InfoOnly && uiMode!=UiMode::Full) return;
+    if (uiMode != UiMode::InfoOnly && uiMode != UiMode::Full) return;
     dx_Sprite->Begin(D3DXSPRITE_ALPHABLEND);
     const int x = 5;
     const int y = 24;
-    switch(manager.mode){
+    switch (manager.mode) {
         case flick:
             sprite_transform_draw(dx_FlickTexture, x, y, 50, 50, 0, 1, 0, 1.0f, D3DCOLOR_XRGB(255, 255, 255));
             break;
@@ -392,7 +378,7 @@ void Overlay::render_ui() {
 
 void Overlay::render_hints() {
     auto index = 0;
-    for (auto &item: Overlay::hints->strings()) {
+    for (auto &item: Overlay::hints.strings()) {
         draw_filled(60, (float) 24 + (float) 30 * index, (float) max(item.size() * 15, 180) + 5.0f, 30, 10, 10, 10, 190);
         draw_string((char *) item.c_str(), 65, 24 + 30 * index, 220, 200, 100); // Put Main procedure here like ESP etc.
         index++;
@@ -414,22 +400,22 @@ int Overlay::render() {
     return 0;
 }
 
-LRESULT CALLBACK Overlay::callback_proc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
-    if (WM_NCCREATE == Message) {
-        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR) ((CREATESTRUCT *) lParam)->lpCreateParams);
+LRESULT CALLBACK Overlay::callback_proc(HWND pHwnd, UINT pMessage, WPARAM wParam, LPARAM lParam) {
+    if (WM_NCCREATE == pMessage) {
+        SetWindowLongPtr(pHwnd, GWLP_USERDATA, (LONG_PTR) ((CREATESTRUCT *) lParam)->lpCreateParams);
         return TRUE;
     }
 
-    return ((Overlay *) GetWindowLongPtr(hWnd, GWLP_USERDATA))->callback_proc_instance(hWnd, Message, wParam, lParam);
+    return ((Overlay *) GetWindowLongPtr(pHwnd, GWLP_USERDATA))->callback_proc_instance(pHwnd, pMessage, wParam, lParam);
 }
 
-LRESULT CALLBACK Overlay::callback_proc_instance(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
-    switch (Message) {
+LRESULT CALLBACK Overlay::callback_proc_instance(HWND pHWnd, UINT pMessage, WPARAM wParam, LPARAM lParam) {
+    switch (pMessage) {
         case WM_PAINT: // we need to paint? lets paint!
             render();
             break;
         case WM_CREATE:
-            return DwmExtendFrameIntoClientArea(hWnd, &pMargin); // extension of window frame into client area
+            return DwmExtendFrameIntoClientArea(pHWnd, &pMargin); // extension of window frame into client area
             break;
         case WM_DESTROY:
             PostQuitMessage(0); // We need to use this to exit a message loop
@@ -437,7 +423,7 @@ LRESULT CALLBACK Overlay::callback_proc_instance(HWND hWnd, UINT Message, WPARAM
         default:
             break;
     }
-    return DefWindowProc(hWnd, Message, wParam, lParam); // Making sure all messages are processed
+    return DefWindowProc(pHWnd, pMessage, wParam, lParam); // Making sure all messages are processed
 }
 
 void Overlay::init(Manager &pManager) {
@@ -499,8 +485,8 @@ int WINAPI Overlay::run() {
     //GetWindowRect(TargetWnd, &WindowRect);
     //windowWidth = WindowRect.right - WindowRect.left;
     //windowHeight = WindowRect.bottom - WindowRect.top;
-    hWnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOOLWINDOW, overlayWindowName, overlayWindowName, WS_POPUP, 1, 1, manager.screenSize.x,
-                           manager.screenSize.y, 0, 0, 0, this);
+    hWnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOOLWINDOW, overlayWindowName, overlayWindowName, WS_POPUP, 1, 1,
+                           manager.screenSize.x, manager.screenSize.y, 0, 0, 0, this);
     //}
 
     /*
@@ -554,10 +540,10 @@ Overlay::Overlay(Manager &pManager) : manager(pManager) {}
 
 void Overlay::show_hint(std::string msg, int timeout) {
     if (sharedInstance == nullptr) return;
-    hints->add(msg, timeout);
+    hints.add(msg, timeout);
 }
 
 Overlay::~Overlay() {
-    delete hints;
+
 }
 
