@@ -15,7 +15,6 @@ std::condition_variable terminate_thread_cond;
 std::condition_variable screenshot_cond;
 
 AimAssistant::AimAssistant(class Manager &pManager) : manager(pManager), input(manager) {
-
     std::vector<RGBQUAD> colors = {{65,  38,  240, 34},
                                    {114, 81,  235, 15},
                                    {105, 70,  227, 15},
@@ -68,24 +67,35 @@ static bool probe_bytes_against_rgbquad(const BYTE r, const BYTE g, const BYTE b
     return checkResult;
 }
 
+std::string AimAssistant::hashtable_name(const std::vector<RGBQUAD> &pColors) {
+    std::string bytes;
+    for (auto targetColor : pColors) {
+        bytes.push_back(targetColor.rgbRed);
+        bytes.push_back(targetColor.rgbGreen);
+        bytes.push_back(targetColor.rgbBlue);
+        bytes.push_back(targetColor.rgbReserved);
+    }
+    return "ct_" + base64_encode(bytes) + ".bin";
+}
+
 void AimAssistant::initialize_color_table(const std::vector<RGBQUAD> &pColors, const bool pUseCacheFile) {
     //hashTable = BYTE[COLOR_HASHTABLE_SIZE];
     memset(hashTable, '\0', COLOR_HASHTABLE_SIZE);
+    auto tablename = hashtable_name(pColors);
     if (pUseCacheFile) {
-        if (restore_table()) {
+        if (restore_table(tablename)) {
             return;
         }
     }
-    std::cout << "Building table.\n";
+    Overlay::show_hint("Building color scan table.");
     int colorIndex = 0;
     for (auto targetColor : pColors) {
         colorIndex++;
-        std::cout << "Color " << colorIndex << "/" << pColors.size();
+        Overlay::show_hint("Color " + std::to_string(colorIndex) + "/" + std::to_string(pColors.size()));
         for (unsigned int i = 0x000000u; i <= 0xFFFFFFu; i++) {
-            bool res = probe_bytes_against_rgbquad(((BYTE)((i & 0xFF0000) >> 16)), ((BYTE)((i & 0x00FF00) >> 8)), (BYTE)(i & 0x0000FF), targetColor);
+            bool res = probe_bytes_against_rgbquad(((BYTE) ((i & 0xFF0000) >> 16)), ((BYTE) ((i & 0x00FF00) >> 8)), (BYTE) (i & 0x0000FF), targetColor);
             hashTable[i / 8] |= (byte) (res << (i % 8));
         }
-        std::cout << " done.\n";
     }
 #if DEBUG
     std::cout << "Checking colors against table.\n";
@@ -94,7 +104,7 @@ void AimAssistant::initialize_color_table(const std::vector<RGBQUAD> &pColors, c
                   << probe_color(targetColor) << ".\n";
     }
 #endif
-    dump_table();
+    dump_table(tablename);
     //Manager.WriteByteArray("colorHashTable.bin", hashTable);
     //return hashTable;
 }
@@ -227,29 +237,26 @@ bool AimAssistant::probe_handle(const int &index) const {
     return successfulChecks * CHECK_COEFFICIENT >= SCANNING_THRESHOLD_PERCENT;
 }
 
-bool AimAssistant::dump_table() const {
-    std::ofstream fout;
-    fout.open("table.bin", std::ios::out | std::ios::binary);
-    fout.write((const char *) hashTable, sizeof(hashTable));
-    fout.close();
+bool AimAssistant::dump_table(std::string &tablename) const {
+    std::ofstream outStream;
+    outStream.open(tablename, std::ios::out | std::ios::binary);
+    outStream.write((const char *) hashTable, sizeof(hashTable));
+    outStream.close();
+    Overlay::show_hint("Saving color scan table to file.");
     return true;
 }
 
-bool AimAssistant::restore_table() const {
-
-    std::ifstream infile("table.bin");
+bool AimAssistant::restore_table(std::string &tablename) const {
+    Overlay::show_hint("Restoring cached color scan table.");
+    std::ifstream inStream(tablename);
     size_t chars_read;
-    if (!(infile.read((char *) hashTable, sizeof(hashTable))))
-    {
-        if (!infile.eof()) {
+    if (!(inStream.read((char *) hashTable, sizeof(hashTable)))) {
+        if (!inStream.eof()) {
             return false;
         }
     }
-    chars_read = infile.gcount();
-    if (chars_read != sizeof(hashTable)) {
-        return false;
-    }
-    return true;
+    chars_read = inStream.gcount();
+    return chars_read == sizeof(hashTable);
 }
 
 void AimAssistant::find_healthbar_height() {
