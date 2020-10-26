@@ -12,6 +12,8 @@ enum Mode {
 
 class Manager {
 public:
+    void stop_thread_until_exit() const;
+    void pause_thread_if_not_running() const;
     Manager(const int width, const int height, const int left, const int top, const Coords &pFarHeadOffset, const Coords &pCloseHeadOffset, const float &sensitivity, const float &pStrength);
     ~Manager();
     bool is_running() const;
@@ -28,7 +30,7 @@ public:
     void increase_sensitivity();
     float sensitivity;
     std::atomic_bool enemyVisible;
-    std::atomic_bool screenshotHandled;
+    bool screenshotUpdatedAndEnemyVisible;
     bool flickReady;
     float strength;
     Mode mode = aim;

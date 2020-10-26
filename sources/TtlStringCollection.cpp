@@ -12,6 +12,7 @@ TtlStringCollection::TtlStringCollection(const int pMilliseconds) {
     using namespace std::chrono;
 
     for (;;) {
+        // TODO: Replace with locks
         std::this_thread::sleep_for(std::chrono::milliseconds(pCheckPeriod));
         if (data.empty()) continue;
         auto index = (int) data.size() - 1;

@@ -6,7 +6,13 @@
 #include <iostream>
 #include <fstream>
 #include <random>
+#include <mutex>
+#include <condition_variable>
 
+std::mutex terminate_thread_mutex;
+std::mutex screenshot_mutex;
+std::condition_variable terminate_thread_cond;
+std::condition_variable screenshot_cond;
 
 AimAssistant::AimAssistant(class Manager &pManager) : manager(pManager), input(manager) {
 
@@ -34,13 +40,12 @@ void AimAssistant::main_thread() {
     auto factory = ScreenshotFactory(manager);
 
     while (!manager.is_exit_requested()) {
-        while (!manager.is_running()) {
-            // std::this_thread::sleep_for(std::chrono::milliseconds(5));
-        }
+        manager.pause_thread_if_not_running();
         bool captured = factory.update_screenshot();
 #if DEBUG
         auto start = std::chrono::high_resolution_clock::now();
 #endif
+
         manager.enemyVisible = probe_healthbar_brute();
 
         //std::chrono::duration<double, std::milli> elapsed = std::chrono::high_resolution_clock::now() - start;
@@ -49,7 +54,9 @@ void AimAssistant::main_thread() {
             find_healthbar_height();
             find_healthbar_width();
         }
-        manager.screenshotHandled = false;
+        std::unique_lock<std::mutex> lck(screenshot_mutex);
+        manager.screenshotUpdatedAndEnemyVisible = manager.enemyVisible;
+        screenshot_cond.notify_all();
 
         //std::cout << std::endl;
 
@@ -287,13 +294,15 @@ void AimAssistant::find_healthbar_width() {
 void AimAssistant::input_thread() {
 
     while (!manager.is_exit_requested()) {
-        while (!manager.is_running()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-        while (manager.screenshotHandled || !manager.enemyVisible) {
+        manager.pause_thread_if_not_running();
+        std::unique_lock<std::mutex> lck(screenshot_mutex);
+        //while (suspendThreads) {}//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        while (!manager.screenshotUpdatedAndEnemyVisible) screenshot_cond.wait(lck);
+        /*while (manager.screenshotUpdatedAndEnemyVisible || !manager.enemyVisible) {
             // std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
+        }*/
         handle_screenshot();
+        manager.screenshotUpdatedAndEnemyVisible = false;
     }
 }
 
@@ -331,7 +340,8 @@ void AimAssistant::trigger_handler() const {
 
 void AimAssistant::flick_and_shot(const Coords &coords) {
     terminate_threads();
-    while (suspendThreads) {}//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::unique_lock<std::mutex> lck(terminate_thread_mutex);
+    while (suspendThreads) terminate_thread_cond.wait(lck); //while (suspendThreads) {}//std::this_thread::sleep_for(std::chrono::milliseconds(1));
     auto target = coords;
     threadCount++;
     apply_modifiers_common(target);
@@ -340,11 +350,13 @@ void AimAssistant::flick_and_shot(const Coords &coords) {
     input.lmb_click();
     suspendThreads = false;
     threadCount--;
+    terminate_thread_cond.notify_all();
 }
 
 void AimAssistant::flick_and_release(const Coords &coords) {
     terminate_threads();
-    while (suspendThreads) {}//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::unique_lock<std::mutex> lck(terminate_thread_mutex);
+    while (suspendThreads) terminate_thread_cond.wait(lck); //while (suspendThreads) {}//std::this_thread::sleep_for(std::chrono::milliseconds(1));
     auto target = coords;
     threadCount++;
     apply_modifiers_common(target);
@@ -353,11 +365,14 @@ void AimAssistant::flick_and_release(const Coords &coords) {
     input.lmb_release();
     suspendThreads = false;
     threadCount--;
+    terminate_thread_cond.notify_all();
 }
 
 void AimAssistant::move_by_smoothed(const Coords &coords) {
     terminate_threads();
-    while (suspendThreads) {}//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::unique_lock<std::mutex> lck(terminate_thread_mutex);
+    //while (suspendThreads) {}//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    while (suspendThreads) terminate_thread_cond.wait(lck);
     auto target = coords;
     threadCount++;
     apply_modifiers_common(target);
@@ -382,6 +397,7 @@ void AimAssistant::move_by_smoothed(const Coords &coords) {
     }
     suspendThreads = false;
     threadCount--;
+    terminate_thread_cond.notify_all();
 }
 
 void AimAssistant::terminate_threads() {
@@ -417,7 +433,6 @@ void AimAssistant::handle_screenshot() {
         default:
             break;
     }
-    manager.screenshotHandled = true;
 }
 
 void AimAssistant::apply_modifiers_smooth(Coords &coords) const {

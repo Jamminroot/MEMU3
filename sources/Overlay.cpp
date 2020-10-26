@@ -71,7 +71,7 @@ void sprite_transform_draw(LPDIRECT3DTEXTURE9 image, int x, int y, int width, in
     D3DXVECTOR2 scale(scaling, scaling);
 
     //Create a translate vector
-    D3DXVECTOR2 trans(x, y);
+    D3DXVECTOR2 trans((float)x, (float)y);
 
     //Set center by dividing width and height by two
     D3DXVECTOR2 center((float)(width * scaling) / 2, (float)(height * scaling)/2);

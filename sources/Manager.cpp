@@ -2,6 +2,14 @@
 #include "../headers/Utils.h"
 #include "../headers/Overlay.h"
 
+#include <condition_variable>
+#include <mutex>
+
+std::mutex exit_mutex;
+std::mutex pause_mutex;
+std::condition_variable exit_condition;
+std::condition_variable pause_condition;
+
 Manager::~Manager() {
 }
 
@@ -9,10 +17,6 @@ bool Manager::is_running() const {
     return running;
 }
 
-void Manager::set_running(const bool &state) {
-    running = state;
-    Overlay::show_hint(running?"Running":"Paused");
-}
 
 Manager::Manager(const int width, const int height, const int offsetLeft, const int offsetTop, const Coords &pFarHeadOffset, const Coords &pCloseHeadOffset,
                  const float &pSensitivity, const float &pStrength) : running(false), exitRequested(false), screenshot(ScreenshotData(width, height)), farHeadOffset(pFarHeadOffset),
@@ -34,10 +38,6 @@ bool Manager::is_exit_requested() const {
     return exitRequested;
 }
 
-void Manager::request_exit() {
-    running = false;
-    exitRequested = true;
-}
 
 void Manager::update_enemy_coords_with_local_coords(int x, int y) {
     auto dv = (clamp(((float) lastKnownBarSize.x / 2.0f + (float) lastKnownBarSize.y), 5.0f, 15.0f) - 5.0f) / 10.0f;
@@ -89,4 +89,28 @@ void Manager::toggle_mode() {
             Overlay::show_hint("Mode: Triggerbot");
             break;
     }
+}
+
+void Manager::stop_thread_until_exit() const {
+    std::unique_lock<std::mutex> lck(exit_mutex);
+    while (!is_exit_requested()) exit_condition.wait(lck);
+}
+
+void Manager::pause_thread_if_not_running() const {
+    std::unique_lock<std::mutex> lck(pause_mutex);
+    while (!is_running()) pause_condition.wait(lck);
+}
+
+void Manager::request_exit() {
+    std::unique_lock<std::mutex> lck(exit_mutex);
+    running = false;
+    exitRequested = true;
+    exit_condition.notify_all();
+}
+
+void Manager::set_running(const bool &state) {
+    std::unique_lock<std::mutex> lck(pause_mutex);
+    running = state;
+    pause_condition.notify_all();
+    Overlay::show_hint(running?"Running":"Paused");
 }
