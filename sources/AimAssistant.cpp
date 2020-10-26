@@ -69,7 +69,7 @@ void AimAssistant::initialize_color_table(const std::vector<RGBQUAD> &pColors, c
     //hashTable = BYTE[COLOR_HASHTABLE_SIZE];
     memset(hashTable, '\0', COLOR_HASHTABLE_SIZE);
     if (pUseCacheFile) {
-        if (read_table()) {
+        if (restore_table()) {
             return;
         }
     }
@@ -232,7 +232,7 @@ bool AimAssistant::dump_table() const {
     return true;
 }
 
-bool AimAssistant::read_table() const {
+bool AimAssistant::restore_table() const {
 
     std::ifstream infile("table.bin");
     size_t chars_read;
@@ -242,7 +242,7 @@ bool AimAssistant::read_table() const {
             return false;
         }
     }
-    chars_read = infile.gcount(); 
+    chars_read = infile.gcount();
     if (chars_read != sizeof(hashTable)) {
         return false;
     }
