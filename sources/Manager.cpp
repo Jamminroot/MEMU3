@@ -46,7 +46,7 @@ void Manager::update_enemy_coords_with_local_coords(int x, int y) {
 }
 
 bool Manager::is_crosshair_over_enemy() const {
-    return enemyCoords.length <= 15.0f;
+    return enemyCoords.length <= 20.0f;
 }
 
 void Manager::update_enemy_coords_with_local_coords(Coords coords) {

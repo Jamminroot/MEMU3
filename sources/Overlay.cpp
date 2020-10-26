@@ -383,9 +383,9 @@ void Overlay::render_ui() {
     draw_filled(5, 75, (manager.strength / 10.0f) * 80, 15, 25, 230, 25, 220);
     draw_string("STR:  " + to_string(manager.strength, 2), 10, 75, 220, 200, 100, true);
 
-    draw_filled(5, 100, 80, 15, 0, 0, 0, 220);
-    draw_filled(5, 100, (manager.sensitivity / 25.0f) * 80, 15, 25, 230, 25, 220);
-    draw_string(("SENS: " + to_string(manager.sensitivity, 2)), 10, 100, 220, 200, 100, true);
+    draw_filled(5, 90, 80, 15, 0, 0, 0, 220);
+    draw_filled(5, 90, (manager.sensitivity / 25.0f) * 80, 15, 25, 230, 25, 220);
+    draw_string(("SENS: " + to_string(manager.sensitivity, 2)), 10, 90, 220, 200, 100, true);
     dx_Sprite->End();
 }
 
