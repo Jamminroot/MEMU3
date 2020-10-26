@@ -87,10 +87,10 @@ bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke) {
             Overlay::toggle_debug_ui();
             break;
         case KeyCode::NumpadMinus:
-            manager.decrease_aim_strength();
+            manager.decrease_mode_value();
             break;
         case KeyCode::NumpadPlus:
-            manager.increase_aim_strength();
+            manager.increase_mode_value();
             break;
         case KeyCode::Numpad9:
             manager.increase_sensitivity();

@@ -1,7 +1,6 @@
 #pragma once
 
-class Rect {
-public:
+struct Rect {
     Rect() {};
     Rect(const int &, const int &, const int &, const int &);
     int width;

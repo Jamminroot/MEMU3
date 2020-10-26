@@ -17,10 +17,10 @@ bool Manager::is_running() const {
     return running;
 }
 
-
 Manager::Manager(const int width, const int height, const int offsetLeft, const int offsetTop, const Coords &pFarHeadOffset, const Coords &pCloseHeadOffset,
-                 const float &pSensitivity, const float &pStrength) : running(false), exitRequested(false), screenshot(ScreenshotData(width, height)), farHeadOffset(pFarHeadOffset),
-                                           closeHeadOffset(pCloseHeadOffset), sensitivity(pSensitivity), strength(pStrength) {
+                 const float &pSensitivity, const float &pStrength) : running(false), exitRequested(false), screenshot(ScreenshotData(width, height)),
+                                                                      farHeadOffset(pFarHeadOffset), closeHeadOffset(pCloseHeadOffset),
+                                                                      sensitivity(pSensitivity), strength(pStrength) {
     RECT desktop;
     const auto hDesktop = GetDesktopWindow();
     GetWindowRect(hDesktop, &desktop);
@@ -38,7 +38,6 @@ bool Manager::is_exit_requested() const {
     return exitRequested;
 }
 
-
 void Manager::update_enemy_coords_with_local_coords(int x, int y) {
     auto dv = (clamp(((float) lastKnownBarSize.x / 2.0f + (float) lastKnownBarSize.y), 5.0f, 15.0f) - 5.0f) / 10.0f;
     enemyCoords.set((int) lerp(dv, (float) closeHeadOffset.x, (float) farHeadOffset.x) + median.x + x,
@@ -46,7 +45,7 @@ void Manager::update_enemy_coords_with_local_coords(int x, int y) {
 }
 
 bool Manager::is_crosshair_over_enemy() const {
-    return enemyCoords.length <= 20.0f;
+    return enemyCoords.length <= triggerDistanceThreshold;
 }
 
 void Manager::update_enemy_coords_with_local_coords(Coords coords) {
@@ -54,7 +53,7 @@ void Manager::update_enemy_coords_with_local_coords(Coords coords) {
 }
 
 void Manager::increase_sensitivity() {
-    sensitivity = min(sensitivity + 0.1f, 25.0f);
+    sensitivity = min(sensitivity + 0.1f, MAXIMUM_SENSITIVITY_VALUE);
     Overlay::toggle_render();
     Overlay::show_hint("Sensitivity: " + to_string(sensitivity));
 }
@@ -65,16 +64,41 @@ void Manager::decrease_sensitivity() {
     Overlay::show_hint("Sensitivity: " + to_string(sensitivity));
 }
 
-void Manager::increase_aim_strength() {
-    strength = min(strength + 0.5f, 10.0f);
-    Overlay::toggle_render();
-    Overlay::show_hint("Strength: " + to_string(strength));
+void Manager::increase_mode_value() {
+    switch (mode) {
+        case flick:
+        case aim:
+            strength = min(strength + 0.5f, MAXIMUM_AIM_STRENGTH_VALUE);
+            Overlay::show_hint("Strength: " + to_string(strength));
+            break;
+        case trigger:
+            triggerDistanceThreshold = min (++triggerDistanceThreshold, MAXIMUM_TRIGGER_THRESHOLD_VALUE);
+            Overlay::show_hint("Distance: " + std::to_string(triggerDistanceThreshold));
+            break;
+        case hanzo:
+            hanzoVerticalOffset = min (++hanzoVerticalOffset, MAXIMUM_HANZO_VERTICAL_OFFSET_VALUE);
+            Overlay::show_hint("Offset: " + std::to_string(hanzoVerticalOffset));
+            break;
+    }
+
 }
 
-void Manager::decrease_aim_strength() {
-    strength = max(strength - 0.5f, 0.0f);
-    Overlay::toggle_render();
-    Overlay::show_hint("Strength: " + to_string(strength));
+void Manager::decrease_mode_value() {
+    switch (mode) {
+        case flick:
+        case aim:
+            strength = max(strength - 0.5f, 0.0f);
+            Overlay::show_hint("Strength: " + to_string(strength));
+            break;
+        case trigger:
+            triggerDistanceThreshold = max (--triggerDistanceThreshold, 1);
+            Overlay::show_hint("Distance: " + std::to_string(triggerDistanceThreshold));
+            break;
+        case hanzo:
+            hanzoVerticalOffset = max (--hanzoVerticalOffset, 0);
+            Overlay::show_hint("Offset: " + std::to_string(hanzoVerticalOffset));
+            break;
+    }
 }
 
 void Manager::toggle_mode() {
@@ -117,5 +141,5 @@ void Manager::set_running(const bool &state) {
     std::unique_lock<std::mutex> lck(pause_mutex);
     running = state;
     pause_condition.notify_all();
-    Overlay::show_hint(running?"Running":"Paused");
+    Overlay::show_hint(running ? "Running" : "Paused");
 }

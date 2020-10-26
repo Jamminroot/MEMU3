@@ -16,16 +16,17 @@ std::condition_variable screenshot_cond;
 
 AimAssistant::AimAssistant(class Manager &pManager) : manager(pManager), input(manager) {
     std::vector<RGBQUAD> colors = {{65,  38,  240, 34},
-                                   {114, 81,  235, 15},
-                                   {105, 70,  227, 15},
-                                   {145, 124, 253, 15},
-                                   {133, 99,  239, 15},
-                                   {111, 99,  223, 15},
-                                   {115, 103, 229, 15},
-                                   {58,  54,  219, 15},
-                                   {60,  58,  224, 15},
-                                   {46,  23,  212, 15},
-                                   {48,  41,  211, 15},};
+                                   {114, 81,  235, 16},
+                                   {105, 70,  227, 16},
+                                   {145, 124, 253, 16},
+                                   {133, 99,  239, 16},
+                                   {111, 99,  223, 16},
+                                   {115, 103, 229, 16},
+                                   {58,  54,  219, 16},
+                                   {60,  58,  224, 16},
+                                   {46,  23,  212, 16},
+                                   {48,  41,  211, 16},
+                                   {0,   10,  221, 16}};
     initialize_color_table(colors);
     std::thread mainThread(&AimAssistant::main_thread, this);
     SetThreadPriority(mainThread.native_handle(), THREAD_PRIORITY_ABOVE_NORMAL);
@@ -371,7 +372,8 @@ void AimAssistant::move_by_smoothed(const Coords &coords) {
     auto target = coords;
     threadCount++;
     apply_modifiers_common(target);
-    apply_modifiers_smooth(target);
+    apply_modifiers_distance(target);
+    apply_modifiers_strength(target);
 
     auto steps = 5.000f;
     auto divX = (float) target.x / (steps);
@@ -431,17 +433,22 @@ void AimAssistant::handle_screenshot() {
     }
 }
 
-void AimAssistant::apply_modifiers_smooth(Coords &coords) const {
-    float modDistance;
+void AimAssistant::apply_modifiers_distance(Coords &coords) const {
+    float distanceBasedMultiplier;
     if (coords.length <= 25.0f) {
-        modDistance = lerp(coords.length / 25.0f, 0.2f, 0.5f);
+        distanceBasedMultiplier = lerp(coords.length / 25.0f, 0.2f, 0.5f);
     } else if (coords.length <= 50) {
-        modDistance = lerp((coords.length - 25.0f) / 25.0f, 0.5f, 1.0f);
+        distanceBasedMultiplier = lerp((coords.length - 25.0f) / 25.0f, 0.5f, 1.0f);
     } else if (coords.length <= 100) {
-        modDistance = lerp((coords.length - 50.0f) / 50.0f, 1.0f, 0.3f);
+        distanceBasedMultiplier = lerp((coords.length - 50.0f) / 50.0f, 1.0f, 0.3f);
     } else {
-        modDistance = 0.25f;
+        distanceBasedMultiplier = 0.25f;
     }
-    coords.x = (int) ((float) coords.x * modDistance * (manager.strength / 10.0f));
-    coords.y = (int) ((float) coords.y * modDistance * (manager.strength / 20.0f));
+    coords.x = (int) ((float) coords.x * distanceBasedMultiplier);
+    coords.y = (int) ((float) coords.y * distanceBasedMultiplier);
+}
+
+void AimAssistant::apply_modifiers_strength(Coords &coords) const {
+    coords.x = (int) ((float) coords.x * (manager.strength / 10.0f));
+    coords.y = (int) ((float) coords.y * (manager.strength / 35.0f));
 }

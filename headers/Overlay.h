@@ -13,6 +13,7 @@ public:
     static void toggle_ui();
     static void toggle_debug_ui();
     static void toggle_render();
+    RECT activeOverlayArea = RECT{0, 0, 250, 100};
 private:
     static inline int renderEndTimePoint = (int) std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
     enum class DebugUiMode {
@@ -22,6 +23,11 @@ private:
     enum class UiMode {
         Full, InfoOnly, DebugOnly, Off
     };
+    void recalculate_active_overlay_area();
+    void overlay_area_top_left_info();
+    void overlay_area_bottom_right_info();
+    void overlay_area_top_left_debug();
+    void overlay_area_bottom_right_debug();
 
     static inline DebugUiMode debugUiMode = DebugUiMode::TargetOnly;
     static inline UiMode uiMode = UiMode::Full;
@@ -30,7 +36,7 @@ private:
     void render_debug_ui();
     int init_d3d(HWND hWnd);
     int render();
-    void render_clean();
+    void render_info_clean();
     void gradient(int x, int y, int w, int h, int r, int g, int b, int a);
     void draw_center_line(float x, float y, int r, int g, int b, int a);
     void draw_line(float x, float y, float xx, float yy, int r, int g, int b, int a);
@@ -50,4 +56,8 @@ private:
     int WINAPI run();
     Manager &manager;
     static inline Overlay *sharedInstance;
+    void draw_strength_ui(float y);
+    void draw_sensitivity_ui(float y);
+    void draw_hanzo_offset_ui(float y);
+    void draw_trigger_threshold_ui(float y);
 };

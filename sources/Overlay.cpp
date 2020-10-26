@@ -3,6 +3,7 @@
 #include "../headers/Overlay.h"
 #include "../headers/Utils.h"
 
+#include <string>
 #include <algorithm>
 #include <thread>
 #include <iostream>
@@ -308,7 +309,6 @@ int Overlay::init_d3d(HWND pHWnd) {
     D3DXCreateFont(dx_Device, 14, 0, FW_NORMAL, 2, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Consolas", &dx_FontSmall);
 
     return 0;
-
 }
 
 void Overlay::toggle_debug_ui() {
@@ -329,8 +329,29 @@ void Overlay::toggle_debug_ui() {
     }
 }
 
+void Overlay::overlay_area_top_left_info() {
+    activeOverlayArea.left = 0;
+    activeOverlayArea.top = 0;
+}
+
+void Overlay::overlay_area_top_left_debug() {
+    activeOverlayArea.left = 89;
+    activeOverlayArea.top = 23;
+}
+
+void Overlay::overlay_area_bottom_right_info() {
+    activeOverlayArea.right = 350;
+    activeOverlayArea.bottom = 400;
+}
+
+void Overlay::overlay_area_bottom_right_debug() {
+    activeOverlayArea.right = sharedInstance->manager.region.left + sharedInstance->manager.region.width + 1;
+    activeOverlayArea.bottom = sharedInstance->manager.region.top + sharedInstance->manager.region.height + 1;
+}
+
 void Overlay::toggle_ui() {
     uiMode = (UiMode) ((((int) uiMode) + 1) % sizeof(UiMode));
+    sharedInstance->recalculate_active_overlay_area();
     switch (uiMode) {
         case UiMode::DebugOnly:
             show_hint("UI: Debug only");
@@ -340,6 +361,7 @@ void Overlay::toggle_ui() {
             break;
         case UiMode::InfoOnly:
             show_hint("UI: Info only");
+
             break;
         case UiMode::Off:
             show_hint("UI: Off");
@@ -350,8 +372,8 @@ void Overlay::toggle_ui() {
 void Overlay::render_debug_ui() {
     if ((debugUiMode == DebugUiMode::TargetOnly || debugUiMode == DebugUiMode::Full) && manager.enemyVisible) {
         //draw_box((float) manager.enemyCoords.x - 15, (float) manager.enemyCoords.y-15, 30, 30, 2, 128, 255, 0, 255);
-        draw_circle((float) manager.enemyCoords.x + (float) manager.screenSize.x / 2, (float) manager.enemyCoords.y + (float) manager.screenSize.y / 2, 15, 128,
-                    255, 0, 200);
+        draw_circle((float) manager.enemyCoords.x + (float) manager.screenSize.x / 2, (float) manager.enemyCoords.y + (float) manager.screenSize.y / 2,
+                    (float) manager.triggerDistanceThreshold, 128, 255, 0, 200);
     }
     if (debugUiMode == DebugUiMode::FrameOnly || debugUiMode == DebugUiMode::Full) {
         draw_box((float) manager.region.left, (float) manager.region.top, (float) manager.region.width, (float) manager.region.height, 2, 50, 50, 240, 200);
@@ -359,11 +381,36 @@ void Overlay::render_debug_ui() {
 
 }
 
+void Overlay::draw_strength_ui(float y) {
+    draw_filled(5, y, 80, 15, 0, 0, 0, 220);
+    draw_filled(5, y, (manager.strength / 10.0f) * 80, 15, 25, 230, 25, 220);
+    draw_string("STR:   " + to_string(manager.strength, 1), 10, (int) y, 220, 200, 100, true);
+}
+
+void Overlay::draw_sensitivity_ui(float y) {
+    draw_filled(5, y, 80, 15, 0, 0, 0, 220);
+    draw_filled(5, y, (manager.sensitivity / Manager::MAXIMUM_SENSITIVITY_VALUE) * 80, 15, 25, 230, 25, 220);
+    draw_string(("SENS: " + to_string(manager.sensitivity, 1)), 10, (int) y, 220, 200, 100, true);
+}
+
+void Overlay::draw_hanzo_offset_ui(float y) {
+    draw_filled(5, y, 80, 15, 0, 0, 0, 220);
+    draw_filled(5, y, ((float) manager.hanzoVerticalOffset / Manager::MAXIMUM_HANZO_VERTICAL_OFFSET_VALUE) * 80, 15, 25, 230, 25, 220);
+    draw_string(("OFF.Y: " + std::to_string(manager.hanzoVerticalOffset)), 10, (int) y, 220, 200, 100, true);
+}
+
+void Overlay::draw_trigger_threshold_ui(float y) {
+    draw_filled(5, y, 80, 15, 0, 0, 0, 220);
+    draw_filled(5, y, ((float) manager.triggerDistanceThreshold / Manager::MAXIMUM_TRIGGER_THRESHOLD_VALUE) * 80, 15, 25, 230, 25, 220);
+    draw_string(("RAD.:  " + std::to_string(manager.triggerDistanceThreshold)), 10, (int) y, 220, 200, 100, true);
+}
+
 void Overlay::render_ui() {
     if (uiMode != UiMode::InfoOnly && uiMode != UiMode::Full) return;
     dx_Sprite->Begin(D3DXSPRITE_ALPHABLEND);
     const int x = 5;
     const int y = 24;
+
     switch (manager.mode) {
         case flick:
             sprite_transform_draw(dx_FlickTexture, x, y, 50, 50, 0, 1, 0, 1.0f, D3DCOLOR_XRGB(255, 255, 255));
@@ -378,14 +425,26 @@ void Overlay::render_ui() {
             sprite_transform_draw(dx_HanzoTexture, x, y, 50, 50, 0, 1, 0, 1.0f, D3DCOLOR_XRGB(255, 255, 255));
             break;
     }
+    if (manager.is_running()) {
+        draw_box(5, 24, 50, 50, 7, 30, 230, 30, 180);
+    } else {
+        draw_box(5, 24, 50, 50, 7, 230, 30, 30, 180);
+    }
 
-    draw_filled(5, 75, 80, 15, 0, 0, 0, 220);
-    draw_filled(5, 75, (manager.strength / 10.0f) * 80, 15, 25, 230, 25, 220);
-    draw_string("STR:  " + to_string(manager.strength, 2), 10, 75, 220, 200, 100, true);
-
-    draw_filled(5, 90, 80, 15, 0, 0, 0, 220);
-    draw_filled(5, 90, (manager.sensitivity / 25.0f) * 80, 15, 25, 230, 25, 220);
-    draw_string(("SENS: " + to_string(manager.sensitivity, 2)), 10, 90, 220, 200, 100, true);
+    switch (manager.mode) {
+        case flick:
+        case aim:
+            draw_sensitivity_ui(80.0f);
+            draw_strength_ui(100.0f);
+            break;
+        case trigger:
+            draw_trigger_threshold_ui(80.0f);
+            break;
+        case hanzo:
+            draw_sensitivity_ui(80.0f);
+            draw_hanzo_offset_ui(100.0f);
+            break;
+    }
     dx_Sprite->End();
 }
 
@@ -400,9 +459,11 @@ void Overlay::render_hints() {
 }
 
 int Overlay::render() {
+
     dx_Device->BeginScene();
     dx_Device->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
     render_hints();
+
     if (uiMode == UiMode::Full || uiMode == UiMode::DebugOnly) {
         render_debug_ui();
     }
@@ -410,7 +471,8 @@ int Overlay::render() {
         render_ui();
     }
     dx_Device->EndScene();
-    dx_Device->PresentEx(0, 0, 0, 0, 0);
+    dx_Device->PresentEx(&activeOverlayArea, &activeOverlayArea, 0, 0, 0);
+
     return 0;
 }
 
@@ -522,7 +584,7 @@ int WINAPI Overlay::run() {
     }
 
     int timePoint = 0;
-
+    recalculate_active_overlay_area();
     /*
     While we are not panicking, we will be enable our hack.
     */
@@ -545,12 +607,12 @@ int WINAPI Overlay::run() {
             DispatchMessage(&Message);
         }
 
-        if (timePoint<renderEndTimePoint || !hints.empty()){
+        if (timePoint < renderEndTimePoint || !hints.empty()) {
             render();
             //std::this_thread::sleep_for(std::chrono::milliseconds(100));
             ui_cond.wait_for(lock, std::chrono::milliseconds(100));
         } else {
-            render_clean();
+            render_info_clean();
             ui_cond.wait_for(lock, std::chrono::milliseconds(1000));
         }
     } // End of main Loop
@@ -575,14 +637,36 @@ Overlay::~Overlay() {
 
 void Overlay::toggle_render() {
     std::unique_lock lock(ui_mutex);
-    renderEndTimePoint = (int) (std::chrono::high_resolution_clock::now().time_since_epoch().count()/1000000) + 5000;
+    renderEndTimePoint = (int) (std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000) + 5000;
     ui_cond.notify_all();
 }
 
-void Overlay::render_clean() {
+void Overlay::render_info_clean() {
     dx_Device->BeginScene();
     dx_Device->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
+    render_ui();
     dx_Device->PresentEx(0, 0, 0, 0, 0);
     dx_Device->EndScene();
 }
 
+void Overlay::recalculate_active_overlay_area() {
+    switch (uiMode) {
+        case UiMode::DebugOnly:
+            sharedInstance->overlay_area_top_left_debug();
+            sharedInstance->overlay_area_bottom_right_debug();
+            break;
+        case UiMode::Full:
+            sharedInstance->overlay_area_top_left_info();
+            sharedInstance->overlay_area_bottom_right_debug();
+            break;
+        case UiMode::InfoOnly:
+            sharedInstance->overlay_area_top_left_info();
+            sharedInstance->overlay_area_bottom_right_info();
+
+            break;
+        case UiMode::Off:
+            sharedInstance->overlay_area_top_left_debug();
+            sharedInstance->overlay_area_bottom_right_info();
+            break;
+    }
+}

@@ -48,5 +48,6 @@ private:
     void terminate_threads();
     void apply_modifiers_common(Coords &coords) const;
     static void apply_modifiers_hanzo(Coords &coords);
-    void apply_modifiers_smooth(Coords &coords) const;
+    void apply_modifiers_distance(Coords &coords) const;
+    void apply_modifiers_strength(Coords &coords) const;
 };
