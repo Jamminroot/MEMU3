@@ -57,8 +57,6 @@ void InputController::handle_stroke(InterceptionStroke &pStroke, InterceptionDev
         InterceptionMouseStroke &mouseStroke = *(InterceptionMouseStroke *) &pStroke;
         if ((mouseStroke.flags & InterceptionMouseFlag::INTERCEPTION_MOUSE_CUSTOM) == 0) {
             skip = handle_mouse_stroke(mouseStroke);
-        } else {
-            Overlay::show_hint("Skipped custom event");
         }
     }
 

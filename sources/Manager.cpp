@@ -55,22 +55,26 @@ void Manager::update_enemy_coords_with_local_coords(Coords coords) {
 
 void Manager::increase_sensitivity() {
     sensitivity = min(sensitivity + 0.1f, 25.0f);
-    Overlay::show_hint("Sensitivity: " + std::to_string(sensitivity));
+    Overlay::toggle_render();
+    Overlay::show_hint("Sensitivity: " + to_string(sensitivity));
 }
 
 void Manager::decrease_sensitivity() {
     sensitivity = max(sensitivity - 0.1f, 0.1f);
-    Overlay::show_hint("Sensitivity: " + std::to_string(sensitivity));
+    Overlay::toggle_render();
+    Overlay::show_hint("Sensitivity: " + to_string(sensitivity));
 }
 
 void Manager::increase_aim_strength() {
     strength = min(strength + 0.5f, 10.0f);
-    Overlay::show_hint("Strength: " + std::to_string(strength));
+    Overlay::toggle_render();
+    Overlay::show_hint("Strength: " + to_string(strength));
 }
 
 void Manager::decrease_aim_strength() {
     strength = max(strength - 0.5f, 0.0f);
-    Overlay::show_hint("Strength: " + std::to_string(strength));
+    Overlay::toggle_render();
+    Overlay::show_hint("Strength: " + to_string(strength));
 }
 
 void Manager::toggle_mode() {
@@ -89,6 +93,7 @@ void Manager::toggle_mode() {
             Overlay::show_hint("Mode: Triggerbot");
             break;
     }
+    Overlay::toggle_render();
 }
 
 void Manager::stop_thread_until_exit() const {

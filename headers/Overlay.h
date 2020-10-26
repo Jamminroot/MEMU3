@@ -2,6 +2,7 @@
 
 #include "Manager.h"
 #include "TtlStringCollection.h"
+#include <string>
 
 class Overlay {
 
@@ -11,8 +12,9 @@ public:
     static inline TtlStringCollection hints = TtlStringCollection(250);
     static void toggle_ui();
     static void toggle_debug_ui();
+    static void toggle_render();
 private:
-
+    static inline int renderEndTimePoint = (int) std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
     enum class DebugUiMode {
         Full, FrameOnly, TargetOnly, Off
     };
@@ -28,6 +30,7 @@ private:
     void render_debug_ui();
     int init_d3d(HWND hWnd);
     int render();
+    void render_clean();
     void gradient(int x, int y, int w, int h, int r, int g, int b, int a);
     void draw_center_line(float x, float y, int r, int g, int b, int a);
     void draw_line(float x, float y, float xx, float yy, int r, int g, int b, int a);
@@ -35,10 +38,8 @@ private:
     void draw_circle(float x, float y, float radius, int r, int g, int b, int a);
     void draw_box(float x, float y, float width, float height, float px, int r, int g, int b, int a);
     void draw_gui_box(float x, float y, float w, float h, int r, int g, int b, int a, int rr, int gg, int bb, int aa);
-    void draw_healthbar(float x, float y, float w, float h, int r, int g, int b, int a);
-    void draw_healthbar_back(float x, float y, float w, float h, int a);
 
-    int draw_string(char *String, int x, int y, int r, int g, int b);
+    int draw_string(std::string msg, int x, int y, int r, int g, int b, bool smallFont = false);
     int draw_string_shadow(char *String, int x, int y, int r, int g, int b);
 
     LRESULT CALLBACK callback_proc_instance(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
@@ -47,7 +48,6 @@ private:
     Overlay(Manager &manager);
     ~Overlay();
     int WINAPI run();
-
     Manager &manager;
     static inline Overlay *sharedInstance;
 };

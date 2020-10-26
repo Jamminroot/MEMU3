@@ -18,6 +18,7 @@ public:
     TtlStringCollection(const int pMilliseconds);
     void add(std::string &msg, int timeout);
     std::vector<std::string> strings();
+    bool empty();
 private:
     std::mutex empty_mutex;
     std::condition_variable empty_cond;

@@ -58,3 +58,10 @@ std::string ws2s(const std::wstring &wstr) {
     return converterX.to_bytes(wstr);
 #endif
 }
+
+std::string to_string(float a_value, const int n) {
+    std::ostringstream out;
+    out.precision(n);
+    out << std::fixed << a_value;
+    return out.str();
+}

@@ -47,3 +47,7 @@ std::vector<std::string> TtlStringCollection::strings() {
     }
     return result;
 }
+
+bool TtlStringCollection::empty() {
+    return data.empty();
+}

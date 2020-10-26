@@ -9,6 +9,8 @@
 #include <dwmapi.h>
 #include <d3d9.h>
 #include <d3dx9core.h>
+#include <mutex>
+#include <condition_variable>
 
 #pragma comment(lib, "d3dx9.lib")
 #pragma comment(lib, "d3d9.lib")
@@ -29,6 +31,10 @@ IDirect3DTexture9 *dx_FlickTexture = nullptr;
 IDirect3DTexture9 *dx_HanzoTexture = nullptr;
 IDirect3DTexture9 *dx_TriggerTexture = nullptr;
 ID3DXFont *dx_Font = nullptr;
+ID3DXFont *dx_FontSmall = nullptr;
+
+std::mutex ui_mutex;
+std::condition_variable ui_cond;
 
 LPDIRECT3DTEXTURE9 load_texture(std::string filename, D3DCOLOR transcolor) {
     LPDIRECT3DTEXTURE9 texture = NULL;
@@ -79,15 +85,20 @@ sprite_transform_draw(LPDIRECT3DTEXTURE9 image, int x, int y, int width, int hei
     dx_Sprite->Draw(image, &srcRect, NULL, NULL, color);
 }
 
-int Overlay::draw_string(char *String, int x, int y, int r, int g, int b) {
+int Overlay::draw_string(std::string msg, int x, int y, int r, int g, int b, bool smallFont) {
     RECT ShadowPos;
     ShadowPos.left = x + 1;
     ShadowPos.top = y + 1;
     RECT FontPos;
     FontPos.left = x;
     FontPos.top = y;
-    dx_Font->DrawTextA(nullptr, String, (int) strlen(String), &ShadowPos, DT_NOCLIP, D3DCOLOR_ARGB(255, r / 3, g / 3, b / 3));
-    dx_Font->DrawTextA(nullptr, String, (int) strlen(String), &FontPos, DT_NOCLIP, D3DCOLOR_ARGB(255, r, g, b));
+    if (smallFont) {
+        dx_FontSmall->DrawTextA(nullptr, msg.c_str(), (int) msg.size(), &ShadowPos, DT_NOCLIP, D3DCOLOR_ARGB(255, r / 3, g / 3, b / 3));
+        dx_FontSmall->DrawTextA(nullptr, msg.c_str(), (int) msg.size(), &FontPos, DT_NOCLIP, D3DCOLOR_ARGB(255, r, g, b));
+    } else {
+        dx_Font->DrawTextA(nullptr, msg.c_str(), (int) msg.size(), &ShadowPos, DT_NOCLIP, D3DCOLOR_ARGB(255, r / 3, g / 3, b / 3));
+        dx_Font->DrawTextA(nullptr, msg.c_str(), (int) msg.size(), &FontPos, DT_NOCLIP, D3DCOLOR_ARGB(255, r, g, b));
+    }
     return 0;
 }
 
@@ -188,14 +199,6 @@ void Overlay::draw_box(float x, float y, float width, float height, float px, in
 void Overlay::draw_gui_box(float x, float y, float w, float h, int r, int g, int b, int a, int rr, int gg, int bb, int aa) {
     draw_box(x, y, w, h, 1, r, g, b, a);
     draw_filled(x, y, w, h, rr, gg, bb, aa);
-}
-
-void Overlay::draw_healthbar(float x, float y, float w, float h, int r, int g, int b, int a) {
-    draw_filled(x, y, w, h, r, g, b, a);
-}
-
-void Overlay::draw_healthbar_back(float x, float y, float w, float h, int a) {
-    draw_filled(x, y, w, h, 0, 0, 0, a);
 }
 
 void Overlay::draw_center_line(float x, float y, int width, int r, int g, int b) {
@@ -300,7 +303,9 @@ int Overlay::init_d3d(HWND pHWnd) {
     Verdana (LPCTSTR) is the string containing the typeface name (font style).
     dx_Font (LPD3DXFONT*) returns a pointer to an ID3DXFont interface, representing the created font object.
     */
-    D3DXCreateFont(dx_Device, 28, 0, FW_NORMAL, 2, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Consolas", &dx_Font);
+
+    D3DXCreateFont(dx_Device, 20, 0, FW_NORMAL, 2, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Consolas", &dx_Font);
+    D3DXCreateFont(dx_Device, 14, 0, FW_NORMAL, 2, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Consolas", &dx_FontSmall);
 
     return 0;
 
@@ -373,14 +378,23 @@ void Overlay::render_ui() {
             sprite_transform_draw(dx_HanzoTexture, x, y, 50, 50, 0, 1, 0, 1.0f, D3DCOLOR_XRGB(255, 255, 255));
             break;
     }
+
+    draw_filled(5, 75, 80, 15, 0, 0, 0, 220);
+    draw_filled(5, 75, (manager.strength / 10.0f) * 80, 15, 25, 230, 25, 220);
+    draw_string("STR:  " + to_string(manager.strength, 2), 10, 75, 220, 200, 100, true);
+
+    draw_filled(5, 100, 80, 15, 0, 0, 0, 220);
+    draw_filled(5, 100, (manager.sensitivity / 25.0f) * 80, 15, 25, 230, 25, 220);
+    draw_string(("SENS: " + to_string(manager.sensitivity, 2)), 10, 100, 220, 200, 100, true);
     dx_Sprite->End();
 }
 
 void Overlay::render_hints() {
+    if (hints.empty()) return;
     auto index = 0;
     for (auto &item: Overlay::hints.strings()) {
-        draw_filled(60, (float) 24 + (float) 30 * index, (float) max(item.size() * 15, 180) + 5.0f, 30, 10, 10, 10, 190);
-        draw_string((char *) item.c_str(), 65, 24 + 30 * index, 220, 200, 100); // Put Main procedure here like ESP etc.
+        draw_filled(90, (float) 24 + (float) 24 * index, 180.0f, 24, 10, 10, 10, 190);
+        draw_string((char *) item.c_str(), 95, 24 + 24 * index, 220, 200, 100); // Put Main procedure here like ESP etc.
         index++;
     }
 }
@@ -507,16 +521,21 @@ int WINAPI Overlay::run() {
         return 1;
     }
 
+    int timePoint = 0;
+
     /*
     While we are not panicking, we will be enable our hack.
     */
+    std::unique_lock lock(ui_mutex);
     while (!manager.is_exit_requested()) {
+        //std::unique_lock lock(ui_mutex);
+        timePoint = (int) (std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000);
         /*
         Dispatches incoming sent messages, checks the thread message queue for a posted message, and retrieves the message (if any exist). Messages are removed from the queue after processing due to PM_REMOVE.
         */
         if (PeekMessage(&Message, hWnd, 0, 0, PM_REMOVE)) {
             /*
-            Translates virtual-key messages into character messages.
+            Translates virtual-ke+y messages into character messages.9
             */
             TranslateMessage(&Message);
 
@@ -526,8 +545,14 @@ int WINAPI Overlay::run() {
             DispatchMessage(&Message);
         }
 
-        render();
-        std::this_thread::sleep_for(std::chrono::milliseconds(25));
+        if (timePoint<renderEndTimePoint || !hints.empty()){
+            render();
+            //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            ui_cond.wait_for(lock, std::chrono::milliseconds(100));
+        } else {
+            render_clean();
+            ui_cond.wait_for(lock, std::chrono::milliseconds(1000));
+        }
     } // End of main Loop
 
     /*
@@ -541,9 +566,23 @@ Overlay::Overlay(Manager &pManager) : manager(pManager) {}
 void Overlay::show_hint(std::string msg, int timeout) {
     if (sharedInstance == nullptr) return;
     hints.add(msg, timeout);
+    toggle_render();
 }
 
 Overlay::~Overlay() {
 
+}
+
+void Overlay::toggle_render() {
+    std::unique_lock lock(ui_mutex);
+    renderEndTimePoint = (int) (std::chrono::high_resolution_clock::now().time_since_epoch().count()/1000000) + 5000;
+    ui_cond.notify_all();
+}
+
+void Overlay::render_clean() {
+    dx_Device->BeginScene();
+    dx_Device->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0f, 0);
+    dx_Device->PresentEx(0, 0, 0, 0, 0);
+    dx_Device->EndScene();
 }
 
