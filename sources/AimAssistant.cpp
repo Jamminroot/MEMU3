@@ -14,7 +14,7 @@ std::mutex screenshot_mutex;
 std::condition_variable terminate_thread_cond;
 std::condition_variable screenshot_cond;
 
-AimAssistant::AimAssistant(class Manager &pManager) : manager(pManager), input(manager) {
+AimAssistant::AimAssistant(class Manager &pManager) : manager(pManager), input(manager), hashTable(pManager.colorHashTable) {
     std::vector<RGBQUAD> colors = {{65,  38,  240, 34},
                                    {114, 81,  235, 16},
                                    {105, 70,  227, 16},
@@ -26,8 +26,10 @@ AimAssistant::AimAssistant(class Manager &pManager) : manager(pManager), input(m
                                    {60,  58,  224, 16},
                                    {46,  23,  212, 16},
                                    {48,  41,  211, 16},
-                                   {0,   10,  221, 16}};
-    initialize_color_table(colors);
+                                   {0,   10,  221, 16},
+                                   };
+    manager.initialize_color_table(colors, true);
+    colors.clear();
     std::thread mainThread(&AimAssistant::main_thread, this);
     SetThreadPriority(mainThread.native_handle(), THREAD_PRIORITY_ABOVE_NORMAL);
     mainThread.detach();
@@ -58,56 +60,6 @@ void AimAssistant::main_thread() {
         manager.screenshotUpdatedAndEnemyVisible = manager.enemyVisible;
         screenshot_cond.notify_all();
     }
-}
-
-static bool probe_bytes_against_rgbquad(const BYTE r, const BYTE g, const BYTE b, const RGBQUAD targetColor) {
-    auto dR = r - targetColor.rgbRed;
-    auto dG = g - targetColor.rgbGreen;
-    auto dB = b - targetColor.rgbBlue;
-    auto checkResult = dR * dR + dG * dG + dB * dB <= targetColor.rgbReserved * targetColor.rgbReserved;
-    return checkResult;
-}
-
-std::string AimAssistant::hashtable_name(const std::vector<RGBQUAD> &pColors) {
-    std::string bytes;
-    for (auto targetColor : pColors) {
-        bytes.push_back(targetColor.rgbRed);
-        bytes.push_back(targetColor.rgbGreen);
-        bytes.push_back(targetColor.rgbBlue);
-        bytes.push_back(targetColor.rgbReserved);
-    }
-    return "ct_" + base64_encode(bytes) + ".bin";
-}
-
-void AimAssistant::initialize_color_table(const std::vector<RGBQUAD> &pColors, const bool pUseCacheFile) {
-    //hashTable = BYTE[COLOR_HASHTABLE_SIZE];
-    memset(hashTable, '\0', COLOR_HASHTABLE_SIZE);
-    auto tablename = hashtable_name(pColors);
-    if (pUseCacheFile) {
-        if (restore_table(tablename)) {
-            return;
-        }
-    }
-    Overlay::show_hint("Building color scan table.");
-    int colorIndex = 0;
-    for (auto targetColor : pColors) {
-        colorIndex++;
-        Overlay::show_hint("Color " + std::to_string(colorIndex) + "/" + std::to_string(pColors.size()));
-        for (unsigned int i = 0x000000u; i <= 0xFFFFFFu; i++) {
-            bool res = probe_bytes_against_rgbquad(((BYTE) ((i & 0xFF0000) >> 16)), ((BYTE) ((i & 0x00FF00) >> 8)), (BYTE) (i & 0x0000FF), targetColor);
-            hashTable[i / 8] |= (byte) (res << (i % 8));
-        }
-    }
-#if DEBUG
-    std::cout << "Checking colors against table.\n";
-    for (auto targetColor : pColors) {
-        std::cout << "Checking [" << (0xFF & targetColor.rgbRed) << "," << (0xFF & targetColor.rgbGreen) << "," << (0xFF & targetColor.rgbBlue) << "]: "
-                  << probe_color(targetColor) << ".\n";
-    }
-#endif
-    dump_table(tablename);
-    //Manager.WriteByteArray("colorHashTable.bin", hashTable);
-    //return hashTable;
 }
 
 bool AimAssistant::probe_color(const RGBQUAD &pColor) const {
@@ -243,28 +195,6 @@ bool AimAssistant::probe_handle(const int &index) const {
         }
 
     return successfulChecks * CHECK_COEFFICIENT >= SCANNING_THRESHOLD_PERCENT;
-}
-
-bool AimAssistant::dump_table(std::string &tablename) const {
-    std::ofstream outStream;
-    outStream.open(tablename, std::ios::out | std::ios::binary);
-    outStream.write((const char *) hashTable, sizeof(hashTable));
-    outStream.close();
-    Overlay::show_hint("Saving color scan table to file.");
-    return true;
-}
-
-bool AimAssistant::restore_table(std::string &tablename) const {
-    Overlay::show_hint("Restoring cached color scan table.");
-    std::ifstream inStream(tablename);
-    size_t chars_read;
-    if (!(inStream.read((char *) hashTable, sizeof(hashTable)))) {
-        if (!inStream.eof()) {
-            return false;
-        }
-    }
-    chars_read = inStream.gcount();
-    return chars_read == sizeof(hashTable);
 }
 
 void AimAssistant::find_healthbar_height() {
@@ -459,3 +389,4 @@ void AimAssistant::apply_modifiers_strength(Coords &coords) const {
     coords.x = (int) ((float) coords.x * (manager.strength / 10.0f));
     coords.y = (int) ((float) coords.y * (manager.strength / 35.0f));
 }
+

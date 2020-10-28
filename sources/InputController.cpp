@@ -98,6 +98,9 @@ bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke) {
         case KeyCode::Numpad3:
             manager.decrease_sensitivity();
             break;
+        case KeyCode::Numpad8:
+            manager.toggle_next_colorconfig();
+            break;
     }
     return false;
 }

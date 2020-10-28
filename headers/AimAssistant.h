@@ -7,14 +7,14 @@
 #include <atomic>
 
 class AimAssistant {
-#define COLOR_HASHTABLE_SIZE (0xFFFFFF + 1) / 8
+
 public:
     AimAssistant(class Manager &pManager);
 private:
     const int IGNORED_BORDER_SIZE = 5;
     const int SCANNING_THRESHOLD_PERCENT = 80;
     const int CHECK_COEFFICIENT = 100 / (IGNORED_BORDER_SIZE * IGNORED_BORDER_SIZE);
-    BYTE hashTable[COLOR_HASHTABLE_SIZE];
+    BYTE (&hashTable)[Manager::COLOR_HASHTABLE_SIZE];
     Manager &manager;
     InputController input;
     std::atomic_bool suspendThreads = false;
@@ -25,11 +25,7 @@ private:
     bool probe_region_spiral(int &offset, const int side = 25) const;
     bool locate_healthbar_handle_left(int &offset) const;
     bool probe_healthbar_brute() const;
-    void initialize_color_table(const std::vector<RGBQUAD> &pColors, const bool pUseCacheFile = true);
     bool probe_color(const RGBQUAD &pColor) const;
-    std::string hashtable_name(const std::vector<RGBQUAD> &pColors);
-    bool dump_table(std::string &tablename) const;
-    bool restore_table(std::string &tablename) const;
     Coords offset_to_coords(const int &offset) const;
     int coords_to_offset(const Coords &coords) const;
     int coords_to_offset(const int &pX, const int &pY) const;

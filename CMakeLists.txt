@@ -43,6 +43,10 @@ configure_file(Icons/Trigger.bmp Trigger.bmp COPYONLY)
 configure_file(Icons/Hanzo.bmp Hanzo.bmp COPYONLY)
 configure_file(Icons/Flick.bmp Flick.bmp COPYONLY)
 
+configure_file(SampleConfigs/red.colorset red.colorset COPYONLY)
+configure_file(SampleConfigs/red+neon.colorset red+neon.colorset COPYONLY)
+configure_file(SampleConfigs/neon.colorset neon.colorset COPYONLY)
+
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
 
 string(REPLACE "/W4" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
