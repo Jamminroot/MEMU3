@@ -125,10 +125,14 @@ bool AimAssistant::probe_healthbar_brute() const {
         manager.lastKnownIndex = index;
         return true;
     }
+    auto i = (IGNORED_BORDER_SIZE) + IGNORED_BORDER_SIZE * regionWidth;
 
-    for (auto x = IGNORED_BORDER_SIZE + 2; x < regionWidth - IGNORED_BORDER_SIZE - 2; x++)
-        for (auto y = IGNORED_BORDER_SIZE + 2; y < regionHeight - IGNORED_BORDER_SIZE - 2; y++) {
-            auto i = coords_to_offset(x, y);
+    // For Y we perform a reversed iteration - that is to address 0:0 being in _bottom_-left corner
+    for (auto y = regionHeight - IGNORED_BORDER_SIZE; y > IGNORED_BORDER_SIZE; --y) {
+        for (auto x = IGNORED_BORDER_SIZE; x < regionWidth - IGNORED_BORDER_SIZE; ++x) {
+            // Next i - vertically. Unchecked, since we should not exceed that with the loop bounds above.
+            i += 1;
+            //auto i = coords_to_offset(x, y);
             if (!probe_color(manager.screenshot.data[i])) continue;
             auto xx = x;
             while (xx > IGNORED_BORDER_SIZE && (probe_all_points_diagonal(i - 1) || probe_any_point_left(i - 3))) {
@@ -140,6 +144,9 @@ bool AimAssistant::probe_healthbar_brute() const {
             manager.lastKnownIndex = i;
             return true;
         }
+        // Reset to the beginning of a new line - "0" x (actually + 0+border_size) plus height*width
+        i = (IGNORED_BORDER_SIZE) + (y-1) * regionWidth;
+    }
     return false;
 }
 

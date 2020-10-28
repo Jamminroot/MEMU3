@@ -1,11 +1,12 @@
 #pragma once
 
 #include <Windows.h>
+#include "Rect.h"
 
 class ScreenshotData {
 public:
-    ScreenshotData(const int &pWidth, const int &pHeight);
+    ScreenshotData(const Rect &regionSize);
     ~ScreenshotData();
-    RGBQUAD data[600 * 500];
+    RGBQUAD data[600 * 500]{0};
     int size;
 };

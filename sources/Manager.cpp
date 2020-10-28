@@ -10,25 +10,23 @@ std::mutex pause_mutex;
 std::condition_variable exit_condition;
 std::condition_variable pause_condition;
 
-Manager::~Manager() {
-}
+Manager::~Manager() = default;
 
 bool Manager::is_running() const {
     return running;
 }
 
-Manager::Manager(const int width, const int height, const int offsetLeft, const int offsetTop, const Coords &pFarHeadOffset, const Coords &pCloseHeadOffset,
-                 const float &pSensitivity, const float &pStrength) : running(false), exitRequested(false), screenshot(ScreenshotData(width, height)),
-                                                                      farHeadOffset(pFarHeadOffset), closeHeadOffset(pCloseHeadOffset),
-                                                                      sensitivity(pSensitivity), strength(pStrength) {
+Manager::Manager(const Rect &pRegionSizeAndOffset, const Coords &pFarHeadOffset, const Coords &pCloseHeadOffset, const float &pSensitivity,
+                 const float &pStrength) : running(false), exitRequested(false), screenshot(ScreenshotData(pRegionSizeAndOffset)),
+                                           farHeadOffset(pFarHeadOffset), closeHeadOffset(pCloseHeadOffset), sensitivity(pSensitivity), strength(pStrength) {
     RECT desktop;
     const auto hDesktop = GetDesktopWindow();
     GetWindowRect(hDesktop, &desktop);
     screenSize.x = desktop.right;
     screenSize.y = desktop.bottom;
-    int left = screenSize.x / 2 + offsetLeft;
-    int top = screenSize.y / 2 + offsetTop;
-    region = Rect(width, height, left, top);
+    int left = screenSize.x / 2 + pRegionSizeAndOffset.left;
+    int top = screenSize.y / 2 + pRegionSizeAndOffset.top;
+    region = Rect(pRegionSizeAndOffset.width, pRegionSizeAndOffset.height, left, top);
     median.x = region.left - screenSize.x / 2;
     median.y = region.top + region.height - screenSize.y / 2;
     enemyCoords = Coords();

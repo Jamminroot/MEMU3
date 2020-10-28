@@ -18,7 +18,7 @@ public:
     static const int MAXIMUM_HANZO_VERTICAL_OFFSET_VALUE = 35;
     void stop_thread_until_exit() const;
     void pause_thread_if_not_running() const;
-    Manager(const int width, const int height, const int left, const int top, const Coords &pFarHeadOffset, const Coords &pCloseHeadOffset, const float &sensitivity, const float &pStrength);
+    Manager(const Rect &pRegionSizeAndOffset, const Coords &pFarHeadOffset, const Coords &pCloseHeadOffset, const float &sensitivity, const float &pStrength);
     ~Manager();
     bool is_running() const;
     bool is_exit_requested() const;
@@ -34,14 +34,14 @@ public:
     void increase_sensitivity();
     float sensitivity;
     std::atomic_bool enemyVisible;
-    bool screenshotUpdatedAndEnemyVisible;
+    bool screenshotUpdatedAndEnemyVisible = false;
+    bool flickReady = false;
+    bool triggered = false;
     int triggerDistanceThreshold = 15;
     int hanzoVerticalOffset = 20;
-    bool flickReady;
     float strength;
     Mode mode = aim;
     int mouseTriggerKeyStates = 0;
-    bool triggered;
     Coords enemyCoords;
     int lastKnownIndex = 0;
     Rect region;
