@@ -17,6 +17,8 @@ int next_random_user_delay();
 
 std::string to_string(float a_value, const int n = 2);
 
+std::string to_string(double a_value, const int n = 2);
+
 std::string base64_encode(const std::string &in);
 
 static std::vector<std::string> split_string(const std::string& s, char delimiter)

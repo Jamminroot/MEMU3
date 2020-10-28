@@ -47,15 +47,15 @@ void AimAssistant::main_thread() {
         if (!captured) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-#if DEBUG
         auto start = std::chrono::high_resolution_clock::now();
-#endif
-
         manager.enemyVisible = probe_healthbar_brute();
         if (manager.enemyVisible) {
             find_healthbar_height();
             find_healthbar_width();
         }
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> elapsed = std::chrono::high_resolution_clock::now() - start;
+        manager.elapsedScanTime = elapsed.count();
         std::unique_lock<std::mutex> lck(screenshot_mutex);
         manager.screenshotUpdatedAndEnemyVisible = manager.enemyVisible;
         screenshot_cond.notify_all();

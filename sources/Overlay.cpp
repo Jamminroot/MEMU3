@@ -312,7 +312,7 @@ int Overlay::init_d3d(HWND pHWnd) {
 }
 
 void Overlay::toggle_debug_ui() {
-    debugUiMode = (DebugUiMode) ((((int) debugUiMode) + 1) % sizeof(DebugUiMode));
+    debugUiMode = (DebugUiMode)((((int) debugUiMode) + 1) % sizeof(DebugUiMode));
     switch (debugUiMode) {
         case DebugUiMode::FrameOnly:
             show_hint("Debug UI: Frame only");
@@ -350,7 +350,7 @@ void Overlay::overlay_area_bottom_right_debug() {
 }
 
 void Overlay::toggle_ui() {
-    uiMode = (UiMode) ((((int) uiMode) + 1) % sizeof(UiMode));
+    uiMode = (UiMode)((((int) uiMode) + 1) % sizeof(UiMode));
     sharedInstance->recalculate_active_overlay_area();
     switch (uiMode) {
         case UiMode::DebugOnly:
@@ -378,7 +378,9 @@ void Overlay::render_debug_ui() {
     if (debugUiMode == DebugUiMode::FrameOnly || debugUiMode == DebugUiMode::Full) {
         draw_box((float) manager.region.left, (float) manager.region.top, (float) manager.region.width, (float) manager.region.height, 2, 50, 50, 240, 200);
     }
-
+    if (debugUiMode == DebugUiMode::Full) {
+        draw_string("SCAN: " + to_string(manager.elapsedScanTime, 5) + " RATIO (per sec): " + to_string(1000.0f / manager.elapsedScanTime, 2), 10, 5, 0, 255, 0, true);
+    }
 }
 
 void Overlay::draw_strength_ui(float y) {

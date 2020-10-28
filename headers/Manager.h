@@ -44,6 +44,7 @@ public:
     int hanzoVerticalOffset = 20;
     int mouseTriggerKeyStates = 0;
     int lastKnownIndex = 0;
+    double elapsedScanTime = 0.0;
     float sensitivity;
     float strength;
     Mode mode = aim;
