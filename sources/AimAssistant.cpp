@@ -26,8 +26,7 @@ AimAssistant::AimAssistant(class Manager &pManager) : manager(pManager), input(m
                                    {60,  58,  224, 16},
                                    {46,  23,  212, 16},
                                    {48,  41,  211, 16},
-                                   {0,   10,  221, 16},
-                                   };
+                                   {0,   10,  221, 16},};
     manager.initialize_color_table(colors, true);
     colors.clear();
     std::thread mainThread(&AimAssistant::main_thread, this);
@@ -97,7 +96,7 @@ bool AimAssistant::probe_healthbar_brute() const {
             return true;
         }
         // Reset to the beginning of a new line - "0" x (actually + 0+border_size) plus height*width
-        i = (IGNORED_BORDER_SIZE) + (y-1) * regionWidth;
+        i = (IGNORED_BORDER_SIZE) + (y - 1) * regionWidth;
     }
     return false;
 }
@@ -294,6 +293,7 @@ void AimAssistant::flick_and_release(const Coords &coords) {
     auto target = coords;
     threadCount++;
     apply_modifiers_common(target);
+    apply_modifiers_hanzo(target);
     input.move_by(target.x, target.y);
     std::this_thread::sleep_for(std::chrono::milliseconds(next_random_user_delay()));
     input.lmb_release();
@@ -371,18 +371,15 @@ void AimAssistant::handle_screenshot() {
 }
 
 void AimAssistant::apply_modifiers_distance(Coords &coords) const {
-    float distanceBasedMultiplier;
-    if (coords.length <= 25.0f) {
-        distanceBasedMultiplier = lerp(coords.length / 25.0f, 0.2f, 0.5f);
-    } else if (coords.length <= 50) {
-        distanceBasedMultiplier = lerp((coords.length - 25.0f) / 25.0f, 0.5f, 1.0f);
-    } else if (coords.length <= 100) {
-        distanceBasedMultiplier = lerp((coords.length - 50.0f) / 50.0f, 1.0f, 0.3f);
+    auto index = (int) coords.length;
+    float multiplier;
+    if (index >= Manager::MULTIPLIER_TABLE_SIZE) {
+        multiplier = 0.2f;
     } else {
-        distanceBasedMultiplier = 0.25f;
+        multiplier = manager.multiplierTable[index];
     }
-    coords.x = (int) ((float) coords.x * distanceBasedMultiplier);
-    coords.y = (int) ((float) coords.y * distanceBasedMultiplier);
+    coords.x = (int) ((float) coords.x * multiplier);
+    coords.y = (int) ((float) coords.y * multiplier);
 }
 
 void AimAssistant::apply_modifiers_strength(Coords &coords) const {

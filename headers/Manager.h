@@ -6,13 +6,13 @@
 #include <string>
 #include <vector>
 
-
 enum Mode {
     aim, trigger, flick, hanzo
 };
 
 class Manager {
 public:
+    static const int MULTIPLIER_TABLE_SIZE = 250;
     static const int COLOR_HASHTABLE_SIZE = (0xFFFFFF + 1) / 8;
     static const int MAXIMUM_TRIGGER_THRESHOLD_VALUE = 30;
     static inline const float MAXIMUM_AIM_STRENGTH_VALUE = 10.0f;
@@ -53,8 +53,10 @@ public:
     Coords enemyCoords;
     Coords screenSize;
     Coords lastKnownBarSize;
-    BYTE colorHashTable[COLOR_HASHTABLE_SIZE];
+    BYTE colorHashTable[COLOR_HASHTABLE_SIZE]{0};
+    float multiplierTable[MULTIPLIER_TABLE_SIZE]{0};
 private:
+    void fill_multiplier_table();
     static std::string hashtable_name(const std::vector<RGBQUAD> &pColors);
     bool dump_table(std::string &tablename) const;
     static bool probe_bytes_against_rgbquad(const BYTE r, const BYTE g, const BYTE b, const RGBQUAD targetColor);
@@ -62,7 +64,7 @@ private:
     bool read_next_colorconfig(std::vector<RGBQUAD> &colors, std::string &config);
     std::vector<std::string> list_files_by_mask(const std::string &mask);
     static RGBQUAD parse_rgbquad_from_string(const std::string &line);
-    int currentColorconfigIndex;
+    int currentColorconfigIndex = 0;
     Coords median;
     Coords farHeadOffset;
     Coords closeHeadOffset;

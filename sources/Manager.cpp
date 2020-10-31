@@ -31,6 +31,7 @@ Manager::Manager(const Rect &pRegionSizeAndOffset, const Coords &pFarHeadOffset,
     median.x = region.left - screenSize.x / 2;
     median.y = region.top + region.height - screenSize.y / 2;
     enemyCoords = Coords();
+    fill_multiplier_table();
 }
 
 bool Manager::is_exit_requested() const {
@@ -274,4 +275,19 @@ bool Manager::probe_bytes_against_rgbquad(const BYTE r, const BYTE g, const BYTE
     auto dB = b - targetColor.rgbBlue;
     auto checkResult = dR * dR + dG * dG + dB * dB <= targetColor.rgbReserved * targetColor.rgbReserved;
     return checkResult;
+}
+
+void Manager::fill_multiplier_table() {
+    for (auto i = 0; i < 25; ++i) {
+        multiplierTable[i] = lerp(i / 25.0f, 0.2f, 0.4f);
+    }
+    for (auto i = 25; i < 50; ++i) {
+        multiplierTable[i] = lerp(i / 25.0f, 0.4f, 1.0f);
+    }
+    for (auto i = 50; i < 100; ++i) {
+        multiplierTable[i] = lerp(i / 50.0f, 1.0f, 0.6f);
+    }
+    for (auto i = 100; i < MULTIPLIER_TABLE_SIZE; ++i) {
+        multiplierTable[i] = lerp((float) i / (MULTIPLIER_TABLE_SIZE - 100.0f), 0.6f, 0.2f);
+    }
 }
