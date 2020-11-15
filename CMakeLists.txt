@@ -47,7 +47,7 @@ configure_file(SampleConfigs/red.colorset red.colorset COPYONLY)
 configure_file(SampleConfigs/red+neon.colorset red+neon.colorset COPYONLY)
 configure_file(SampleConfigs/neon.colorset neon.colorset COPYONLY)
 
-add_executable(${TARGET_NAME} ${SOURCE_FILES})
+add_executable(${TARGET_NAME} ${SOURCE_FILES} app.o)
 
 string(REPLACE "/W4" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 string(REPLACE "/W3" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
