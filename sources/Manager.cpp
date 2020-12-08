@@ -223,7 +223,7 @@ bool Manager::restore_table(std::string &tablename) const {
             return false;
         }
     }
-    chars_read = inStream.gcount();
+    chars_read = (size_t)inStream.gcount();
     return chars_read == sizeof(colorHashTable);
 }
 
@@ -257,16 +257,7 @@ void Manager::initialize_color_table(const std::vector<RGBQUAD> &pColors, const 
             colorHashTable[i / 8] |= (byte) (res << (i % 8));
         }
     }
-#if DEBUG
-    std::cout << "Checking colors against table.\n";
-    for (auto targetColor : pColors) {
-        std::cout << "Checking [" << (0xFF & targetColor.rgbRed) << "," << (0xFF & targetColor.rgbGreen) << "," << (0xFF & targetColor.rgbBlue) << "]: "
-                  << probe_color(targetColor) << ".\n";
-    }
-#endif
     dump_table(tablename);
-    //Manager.WriteByteArray("colorHashTable.bin", hashTable);
-    //return hashTable;
 }
 
 bool Manager::probe_bytes_against_rgbquad(const BYTE r, const BYTE g, const BYTE b, const RGBQUAD targetColor) {

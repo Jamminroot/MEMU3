@@ -29,7 +29,7 @@ private:
     void overlay_area_top_left_debug();
     void overlay_area_bottom_right_debug();
 
-    static inline DebugUiMode debugUiMode = DebugUiMode::TargetOnly;
+static inline DebugUiMode debugUiMode = DebugUiMode::Off;
     static inline UiMode uiMode = UiMode::Full;
     void render_hints();
     void render_ui();
