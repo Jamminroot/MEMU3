@@ -252,8 +252,8 @@ void Manager::initialize_color_table(const std::vector<RGBQUAD> &pColors, const 
     for (auto targetColor : pColors) {
         colorIndex++;
         Overlay::show_hint("Color " + std::to_string(colorIndex) + "/" + std::to_string(pColors.size()));
-        for (unsigned int i = 0x000000u; i <= 0xFFFFFFu; i++) {
-            bool res = probe_bytes_against_rgbquad(((BYTE) ((i & 0xFF0000) >> 16)), ((BYTE) ((i & 0x00FF00) >> 8)), (BYTE) (i & 0x0000FF), targetColor);
+        for (auto i = 0x000000u; i <= 0xFFFFFFu; i++) {
+            bool res = probe_bytes_against_rgbquad(((BYTE) ((i & 0xFF0000u) >> 16)), ((BYTE) ((i & 0x00FF00u) >> 8)), (BYTE) (i & 0x0000FFu), targetColor);
             colorHashTable[i / 8] |= (byte) (res << (i % 8));
         }
     }
@@ -269,16 +269,26 @@ bool Manager::probe_bytes_against_rgbquad(const BYTE r, const BYTE g, const BYTE
 }
 
 void Manager::fill_multiplier_table() {
-    for (auto i = 0; i < 25; ++i) {
-        multiplierTable[i] = lerp(i / 25.0f, 0.2f, 0.4f);
+    int distance = 0;
+    auto bracketSize = 25;
+    for (auto i = 0; i < bracketSize; ++i) {
+        distance++;
+        if (distance > MULTIPLIER_TABLE_SIZE) break;
+        multiplierTable[distance] = lerp(float(distance) / float(bracketSize), 0.1f, 0.2f);
     }
-    for (auto i = 25; i < 50; ++i) {
-        multiplierTable[i] = lerp(i / 25.0f, 0.4f, 1.0f);
+    bracketSize = 50;
+    for (auto i = 0; i < bracketSize; ++i) {
+        distance++;
+        if (distance > MULTIPLIER_TABLE_SIZE) break;
+        multiplierTable[distance] = lerp(float(distance) / float(bracketSize), 0.2f, 1.0f);
     }
-    for (auto i = 50; i < 100; ++i) {
-        multiplierTable[i] = lerp(i / 50.0f, 1.0f, 0.6f);
+    bracketSize = 50;
+    for (auto i = 0; i < 50; ++i) {
+        distance++;
+        if (distance > MULTIPLIER_TABLE_SIZE) break;
+        multiplierTable[distance] = lerp(float(distance) / float(bracketSize), 1.0f, 0.8f);
     }
-    for (auto i = 100; i < MULTIPLIER_TABLE_SIZE; ++i) {
-        multiplierTable[i] = lerp((float) i / (MULTIPLIER_TABLE_SIZE - 100.0f), 0.6f, 0.2f);
+    for (auto i = distance; i < MULTIPLIER_TABLE_SIZE; ++i) {
+        multiplierTable[i] = lerp((float) i / (MULTIPLIER_TABLE_SIZE - 100.0f), 0.8f, 0.1f);
     }
 }

@@ -12,9 +12,9 @@ enum Mode {
 
 class Manager {
 public:
-    static const int MULTIPLIER_TABLE_SIZE = 250;
-    static const int COLOR_HASHTABLE_SIZE = (0xFFFFFF + 1) / 8;
-    static const int MAXIMUM_TRIGGER_THRESHOLD_VALUE = 30;
+    static const unsigned int MULTIPLIER_TABLE_SIZE = 300;
+    static const unsigned int COLOR_HASHTABLE_SIZE = (0xFFFFFF + 1) / 8;
+    static const unsigned int MAXIMUM_TRIGGER_THRESHOLD_VALUE = 30;
     static inline const float MAXIMUM_AIM_STRENGTH_VALUE = 10.0f;
     static inline const float MAXIMUM_SENSITIVITY_VALUE = 25.0f;
     static const int MAXIMUM_HANZO_VERTICAL_OFFSET_VALUE = 35;
@@ -39,6 +39,7 @@ public:
     bool enemyVisible = false;
     bool screenshotUpdatedAndEnemyVisible = false;
     bool flickReady = false;
+    bool readyForNextFlick = true;
     bool triggered = false;
     int triggerDistanceThreshold = 15;
     int hanzoVerticalOffset = 20;

@@ -121,8 +121,12 @@ bool InputController::handle_mouse_stroke(InterceptionMouseStroke &stroke) {
     bool hanzoSkip = false;
     switch (manager.mode) {
         case flick: {
-            if ((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_RIGHT_BUTTON_DOWN) != 0) { manager.flickReady = true; }
-            if ((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_RIGHT_BUTTON_UP) != 0) { manager.flickReady = false; }
+            if ((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_RIGHT_BUTTON_DOWN) != 0) {
+                manager.flickReady = true;
+            }
+            if ((stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_RIGHT_BUTTON_UP) != 0) {
+                manager.flickReady = false;
+            }
             break;
         }
         case hanzo: {
@@ -134,10 +138,12 @@ bool InputController::handle_mouse_stroke(InterceptionMouseStroke &stroke) {
             break;
         }
     }
+    if (manager.mode == flick && (stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_UP) != 0){
+        manager.readyForNextFlick = true;
+    }
     if (manager.mode != hanzo) {
         manager.triggered = (manager.mouseTriggerKeyStates & AimMouseDownKeys) > 0;
     }
-
     /* return manager.flickReady && manager.mouseKeyState && (manager.mode == flick || manager.mode == hanzo) && manager.enemyVisible &&
             (stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN) != 0;*/
     return hanzoSkip || manager.flickReady && manager.triggered && manager.enemyVisible &&

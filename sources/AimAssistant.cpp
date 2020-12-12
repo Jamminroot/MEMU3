@@ -1,10 +1,7 @@
 #include "../headers/AimAssistant.h"
 #include "../headers/ScreenshotFactory.h"
 #include "../headers/Utils.h"
-#include "../headers/Overlay.h"
 #include <thread>
-#include <iostream>
-#include <fstream>
 #include <random>
 #include <mutex>
 #include <condition_variable>
@@ -251,9 +248,11 @@ void AimAssistant::aim_handler() {
 void AimAssistant::flick_handler() {
     if (!manager.triggered) return;
     if (!manager.enemyVisible) return;
+    manager.readyForNextFlick = false;
     std::thread flickThread(&AimAssistant::flick_and_shot, this, manager.enemyCoords);
     flickThread.detach();
     std::this_thread::sleep_for(std::chrono::milliseconds(next_random_user_delay() * 5));
+
 }
 
 void AimAssistant::hanzo_handler() {
@@ -353,9 +352,9 @@ void AimAssistant::handle_screenshot() {
             aim_handler();
             break;
         case flick:
-            if (manager.flickReady) {
+            if (manager.triggered && manager.flickReady && manager.readyForNextFlick) {
                 flick_handler();
-            } else {
+            } else if (!manager.flickReady) {
                 aim_handler();
             }
             break;
