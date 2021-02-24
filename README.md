@@ -10,6 +10,8 @@ Feel free to use in any way you like - that's just a POC.
 
 F2 - Change mode
 
+F3 - Use different color settings (I'll add description later. For version 1.0 I've included pre-made settings for red (enemy) and neon (allies) colors)
+
 ALT - Toggle On/Off
 
 Num-Del - Change Debug UI mode
