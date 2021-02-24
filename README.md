@@ -1,6 +1,8 @@
 # MEMU3
 
-MEMU3 - Overwatch cheat, take three
+MEMU3 - Overwatch cheat, take three (pixelbot)
+
+Runs on Interception mouse filter driver and uses direct-x API for overlay (iirc)
 
 Feel free to use in any way you like - that's just a POC.
 
