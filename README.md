@@ -19,3 +19,12 @@ Num-0 - Change UI mode
 Num-Plus \ Num-Minus - Increase\decrease strength (or mode-specific value)
 
 Num-9 \ Num-3 - Increase\decrease sensitivity (affects flickshots)
+
+
+## Build:
+
+Build it with Cmake, should be straight-forward
+
+## Contribute:
+
+Feel free to fork\open PR if there's anything to improve. Cheers o/
