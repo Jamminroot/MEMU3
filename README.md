@@ -1,6 +1,6 @@
 # MEMU3
 
-MEMU3 - Software to look for specific color on screen, and emulate mouse actions through mouse driver. Might be used as an aim-assist, for example.
+MEMU3 - Software to look for specific color on screen, and emulate mouse actions through mouse driver. Might be used as an aim-assist, for example - in Overwatch.
 
 Runs on Interception mouse filter driver and uses direct-x API for overlay (iirc)
 
