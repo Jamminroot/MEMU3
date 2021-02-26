@@ -1,6 +1,6 @@
 # MEMU3
 
-MEMU3 - Overwatch pixelbot, take three
+MEMU3 - Software to look for specific color on screen, and emulate mouse actions through mouse driver. Might be used as an aim-assist, for example.
 
 Runs on Interception mouse filter driver and uses direct-x API for overlay (iirc)
 
