@@ -328,7 +328,7 @@ bool Manager::parse_config_file_line(Configuration &config, std::string &line) c
         config.strength = atof(value.c_str());
         return true;
     } else if (key == "sensitivity") {
-        config.strength = atof(value.c_str());
+        config.sensitivity = atof(value.c_str());
         return true;
     } else if (key == "far_offset_x") {
         config.far_offset_x = atoi(value.c_str());
