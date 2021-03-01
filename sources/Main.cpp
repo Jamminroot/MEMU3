@@ -4,7 +4,7 @@
 
 int main() {
     SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-    auto manager = Manager(Rect(400, 300, -200, -200), Coords(50, 60), Coords(65, 65), 3.0f, 2.0f);
+    auto manager = Manager();
     Overlay::init(manager);
     auto assistant = AimAssistant(manager);
     manager.set_running(true);
