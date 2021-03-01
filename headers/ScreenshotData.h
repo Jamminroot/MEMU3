@@ -5,6 +5,7 @@
 
 class ScreenshotData {
 public:
+    ScreenshotData();
     ScreenshotData(const Rect &regionSize);
     ~ScreenshotData();
     RGBQUAD data[600 * 500]{0};

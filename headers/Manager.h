@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Configuration.h"
 #include "Rect.h"
 #include "Coords.h"
 #include "ScreenshotData.h"
@@ -20,7 +21,7 @@ public:
     static const int MAXIMUM_HANZO_VERTICAL_OFFSET_VALUE = 35;
     void stop_thread_until_exit() const;
     void pause_thread_if_not_running() const;
-    Manager(const Rect &pRegionSizeAndOffset, const Coords &pFarHeadOffset, const Coords &pCloseHeadOffset, const float &sensitivity, const float &pStrength);
+    Manager();
     ~Manager();
     bool is_running() const;
     bool is_exit_requested() const;
@@ -57,6 +58,8 @@ public:
     BYTE colorHashTable[COLOR_HASHTABLE_SIZE]{0};
     float multiplierTable[MULTIPLIER_TABLE_SIZE]{0};
 private:
+    bool parse_config_file_line(Configuration &config, std::string &line) const;
+    Configuration read_configuration() const;
     void fill_multiplier_table();
     static std::string hashtable_name(const std::vector<RGBQUAD> &pColors);
     bool dump_table(std::string &tablename) const;

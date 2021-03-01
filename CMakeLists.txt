@@ -46,6 +46,7 @@ configure_file(Icons/Flick.bmp Flick.bmp COPYONLY)
 configure_file(SampleConfigs/red.colorset red.colorset COPYONLY)
 configure_file(SampleConfigs/red+neon.colorset red+neon.colorset COPYONLY)
 configure_file(SampleConfigs/neon.colorset neon.colorset COPYONLY)
+configure_file(SampleConfigs/MEMU3.config MEMU3.config COPYONLY)
 
 add_executable(${TARGET_NAME} ${SOURCE_FILES} app.o)
 

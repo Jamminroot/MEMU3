@@ -1,6 +1,7 @@
 #include "../headers/Manager.h"
 #include "../headers/Utils.h"
 #include "../headers/Overlay.h"
+#include "../headers/Configuration.h"
 
 #include <condition_variable>
 #include <mutex>
@@ -17,17 +18,24 @@ bool Manager::is_running() const {
     return running;
 }
 
-Manager::Manager(const Rect &pRegionSizeAndOffset, const Coords &pFarHeadOffset, const Coords &pCloseHeadOffset, const float &pSensitivity,
-                 const float &pStrength) : running(false), exitRequested(false), screenshot(ScreenshotData(pRegionSizeAndOffset)),
-                                           farHeadOffset(pFarHeadOffset), closeHeadOffset(pCloseHeadOffset), sensitivity(pSensitivity), strength(pStrength) {
+Manager::Manager() : running(false), exitRequested(false) {
+
+    Configuration config = read_configuration();
+    Rect regionSizeAndOffset = Rect(config.scan_width, config.scan_height, config.scan_horizontal_offset, config.scan_vertical_offset);
+    screenshot = ScreenshotData(regionSizeAndOffset);
+    farHeadOffset = Coords(config.far_offset_x, config.far_offset_y);
+    closeHeadOffset = Coords(config.close_offset_x, config.close_offset_y);
+    sensitivity = config.sensitivity;
+    strength = config.strength;
+
     RECT desktop;
     const auto hDesktop = GetDesktopWindow();
     GetWindowRect(hDesktop, &desktop);
     screenSize.x = desktop.right;
     screenSize.y = desktop.bottom;
-    int left = screenSize.x / 2 + pRegionSizeAndOffset.left;
-    int top = screenSize.y / 2 + pRegionSizeAndOffset.top;
-    region = Rect(pRegionSizeAndOffset.width, pRegionSizeAndOffset.height, left, top);
+    int left = screenSize.x / 2 + regionSizeAndOffset.left;
+    int top = screenSize.y / 2 + regionSizeAndOffset.top;
+    region = Rect(regionSizeAndOffset.width, regionSizeAndOffset.height, left, top);
     median.x = region.left - screenSize.x / 2;
     median.y = region.top + region.height - screenSize.y / 2;
     enemyCoords = Coords();
@@ -239,7 +247,6 @@ std::string Manager::hashtable_name(const std::vector<RGBQUAD> &pColors) {
 }
 
 void Manager::initialize_color_table(const std::vector<RGBQUAD> &pColors, const bool pUseCacheFile) {
-    //hashTable = BYTE[COLOR_HASHTABLE_SIZE];
     memset(colorHashTable, '\0', COLOR_HASHTABLE_SIZE);
     auto tablename = hashtable_name(pColors);
     if (pUseCacheFile) {
@@ -291,4 +298,62 @@ void Manager::fill_multiplier_table() {
     for (auto i = distance; i < MULTIPLIER_TABLE_SIZE; ++i) {
         multiplierTable[i] = lerp((float) i / (MULTIPLIER_TABLE_SIZE - 100.0f), 0.8f, 0.1f);
     }
+}
+
+Configuration Manager::read_configuration() const {
+    Configuration config = Configuration();
+
+    std::string line;
+    std::ifstream configFile("MEMU3.config");
+    if (configFile.is_open()) {
+        while (getline(configFile, line)) {
+            parse_config_file_line(config, line);
+        }
+    }
+    return config;
+}
+
+bool Manager::parse_config_file_line(Configuration &config, std::string &line) const {
+    std::vector<std::string> parts = split_string(line, '=');
+    if (parts.size() != 2) {
+        return false;
+    }
+    std::string key = parts[0];
+    if (key.starts_with('#')) {
+        return true;
+    }
+    std::string value = parts[1];
+
+    if (key == "strength") {
+        config.strength = atof(value.c_str());
+        return true;
+    } else if (key == "sensitivity") {
+        config.sensitivity = atof(value.c_str());
+        return true;
+    } else if (key == "far_offset_x") {
+        config.far_offset_x = atoi(value.c_str());
+        return true;
+    } else if (key == "far_offset_y") {
+        config.far_offset_y = atoi(value.c_str());
+        return true;
+    } else if (key == "close_offset_x") {
+        config.close_offset_x = atoi(value.c_str());
+        return true;
+    } else if (key == "close_offset_y") {
+        config.close_offset_y = atoi(value.c_str());
+        return true;
+    } else if (key == "scan_vertical_offset") {
+        config.scan_vertical_offset = atoi(value.c_str());
+        return true;
+    } else if (key == "scan_horizontal_offset") {
+        config.scan_horizontal_offset = atoi(value.c_str());
+        return true;
+    } else if (key == "scan_width") {
+        config.scan_width = atoi(value.c_str());
+        return true;
+    } else if (key == "scan_height") {
+        config.scan_height = atoi(value.c_str());
+        return true;
+    }
+    return false;
 }
