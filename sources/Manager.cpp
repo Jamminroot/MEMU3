@@ -325,10 +325,10 @@ bool Manager::parse_config_file_line(Configuration &config, std::string &line) c
     std::string value = parts[1];
 
     if (key == "strength") {
-        config.strength = atof(value.c_str());
+        config.strength = (float) atof(value.c_str());
         return true;
     } else if (key == "sensitivity") {
-        config.sensitivity = atof(value.c_str());
+        config.sensitivity = (float) atof(value.c_str());
         return true;
     } else if (key == "far_offset_x") {
         config.far_offset_x = atoi(value.c_str());
