@@ -5,3 +5,4 @@ cmake/
 .vs/
 *.7z
 *.zip
+x64/
