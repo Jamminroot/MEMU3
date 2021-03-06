@@ -57,6 +57,7 @@
   <ItemGroup>
     <None Include="SampleConfigs\MEMU3.config">
       <DeploymentContent>false</DeploymentContent>
+      <FileType>Text</FileType>
     </None>
     <None Include="SampleConfigs\neon.colorset">
       <DeploymentContent>false</DeploymentContent>
@@ -233,7 +234,7 @@ copy /Y $(SolutionDir)Icons\*.bmp $(OutputPath)</Command>
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>EnableAllWarnings</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -241,6 +242,10 @@ copy /Y $(SolutionDir)Icons\*.bmp $(OutputPath)</Command>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>Interception;$(DXSDK_DIR)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
