@@ -18,6 +18,32 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="headers\AimAssistant.h" />
+    <ClInclude Include="headers\Configuration.h" />
+    <ClInclude Include="headers\Coords.h" />
+    <ClInclude Include="headers\InputController.h" />
+    <ClInclude Include="headers\Manager.h" />
+    <ClInclude Include="headers\Overlay.h" />
+    <ClInclude Include="headers\Rect.h" />
+    <ClInclude Include="headers\ScreenshotData.h" />
+    <ClInclude Include="headers\ScreenshotFactory.h" />
+    <ClInclude Include="headers\TtlStringCollection.h" />
+    <ClInclude Include="headers\Utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="sources\AimAssistant.cpp" />
+    <ClCompile Include="sources\Coords.cpp" />
+    <ClCompile Include="sources\InputController.cpp" />
+    <ClCompile Include="sources\Main.cpp" />
+    <ClCompile Include="sources\Manager.cpp" />
+    <ClCompile Include="sources\Overlay.cpp" />
+    <ClCompile Include="sources\Rect.cpp" />
+    <ClCompile Include="sources\ScreenshotData.cpp" />
+    <ClCompile Include="sources\ScreenshotFactory.cpp" />
+    <ClCompile Include="sources\TtlStringCollection.cpp" />
+    <ClCompile Include="sources\Utils.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{C4E4BE94-B88E-44CD-B8C3-F507EED346EB}</ProjectGuid>
@@ -166,25 +192,6 @@
       <AdditionalLibraryDirectories>C:\DEV\MEMU3\Interception\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="sources\Coords.cpp" />
-    <ClCompile Include="sources\InputController.cpp" />
-    <ClCompile Include="sources\Main.cpp" />
-    <ClCompile Include="sources\Manager.cpp" />
-    <ClCompile Include="sources\Rect.cpp" />
-    <ClCompile Include="sources\Scanner.cpp" />
-    <ClCompile Include="sources\ScreenshotData.cpp" />
-    <ClCompile Include="sources\ScreenshotFactory.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="headers\Coords.h" />
-    <ClInclude Include="headers\InputController.h" />
-    <ClInclude Include="headers\Manager.h" />
-    <ClInclude Include="headers\Rect.h" />
-    <ClInclude Include="headers\Scanner.h" />
-    <ClInclude Include="headers\ScreenshotData.h" />
-    <ClInclude Include="headers\ScreenshotFactory.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
