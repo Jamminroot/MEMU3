@@ -30,6 +30,7 @@
     <ClInclude Include="headers\ScreenshotFactory.h" />
     <ClInclude Include="headers\TtlStringCollection.h" />
     <ClInclude Include="headers\Utils.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\AimAssistant.cpp" />
@@ -45,14 +46,11 @@
     <ClCompile Include="sources\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="app.ico" />
+    <Image Include="MEMU3.ico" />
     <Image Include="Icons\Aim.bmp" />
     <Image Include="Icons\Flick.bmp" />
     <Image Include="Icons\Hanzo.bmp" />
     <Image Include="Icons\Trigger.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="app.rc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="SampleConfigs\MEMU3.config">
@@ -71,6 +69,9 @@
       <DeploymentContent>false</DeploymentContent>
       <FileType>Text</FileType>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MEMU3.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

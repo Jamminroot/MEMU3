@@ -54,6 +54,9 @@
     <ClInclude Include="headers\Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\AimAssistant.cpp">
@@ -91,9 +94,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="app.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="Icons\Aim.bmp">
       <Filter>Images</Filter>
     </Image>
@@ -106,11 +106,9 @@
     <Image Include="Icons\Trigger.bmp">
       <Filter>Images</Filter>
     </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="app.rc">
+    <Image Include="MEMU3.ico">
       <Filter>Resource Files</Filter>
-    </ResourceCompile>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="SampleConfigs\MEMU3.config">
@@ -125,5 +123,10 @@
     <None Include="SampleConfigs\red.colorset">
       <Filter>Configs</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MEMU3.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
