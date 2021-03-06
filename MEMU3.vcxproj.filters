@@ -16,6 +16,9 @@
     <Filter Include="Configs">
       <UniqueIdentifier>{34ddfcca-c5c0-4c76-a3ac-942b050f65c6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Images">
+      <UniqueIdentifier>{110d06ba-1be9-4ef2-aa1d-b890a146d223}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\AimAssistant.h">
@@ -90,6 +93,18 @@
   <ItemGroup>
     <Image Include="app.ico">
       <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Icons\Aim.bmp">
+      <Filter>Images</Filter>
+    </Image>
+    <Image Include="Icons\Flick.bmp">
+      <Filter>Images</Filter>
+    </Image>
+    <Image Include="Icons\Hanzo.bmp">
+      <Filter>Images</Filter>
+    </Image>
+    <Image Include="Icons\Trigger.bmp">
+      <Filter>Images</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>

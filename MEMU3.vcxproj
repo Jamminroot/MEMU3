@@ -46,6 +46,10 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="app.ico" />
+    <Image Include="Icons\Aim.bmp" />
+    <Image Include="Icons\Flick.bmp" />
+    <Image Include="Icons\Hanzo.bmp" />
+    <Image Include="Icons\Trigger.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app.rc" />
@@ -168,7 +172,8 @@
     <PostBuildEvent />
     <PostBuildEvent>
       <Command>copy /Y $(SolutionDir)SampleConfigs\*.* $(OutputPath)
-copy /Y $(SolutionDir)Interception\x86\*.dll $(OutputPath)</Command>
+copy /Y $(SolutionDir)Interception\x86\*.dll $(OutputPath)
+copy /Y $(SolutionDir)Icons\*.bmp $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -191,7 +196,8 @@ copy /Y $(SolutionDir)Interception\x86\*.dll $(OutputPath)</Command>
     <PostBuildEvent />
     <PostBuildEvent>
       <Command>copy /Y $(SolutionDir)SampleConfigs\*.* $(OutputPath)
-copy /Y $(SolutionDir)Interception\x64\*.dll $(OutputPath)</Command>
+copy /Y $(SolutionDir)Interception\x64\*.dll $(OutputPath)
+copy /Y $(SolutionDir)Icons\*.bmp $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -219,7 +225,8 @@ copy /Y $(SolutionDir)Interception\x64\*.dll $(OutputPath)</Command>
     <PostBuildEvent />
     <PostBuildEvent>
       <Command>copy /Y $(SolutionDir)SampleConfigs\*.* $(OutputPath)
-copy /Y $(SolutionDir)Interception\x86\*.dll $(OutputPath)</Command>
+copy /Y $(SolutionDir)Interception\x86\*.dll $(OutputPath)
+copy /Y $(SolutionDir)Icons\*.bmp $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -246,7 +253,8 @@ copy /Y $(SolutionDir)Interception\x86\*.dll $(OutputPath)</Command>
     <PostBuildEvent />
     <PostBuildEvent>
       <Command>copy /Y $(SolutionDir)SampleConfigs\*.* $(OutputPath)
-copy /Y $(SolutionDir)Interception\x64\*.dll $(OutputPath)</Command>
+copy /Y $(SolutionDir)Interception\x64\*.dll $(OutputPath)
+copy /Y $(SolutionDir)Icons\*.bmp $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
