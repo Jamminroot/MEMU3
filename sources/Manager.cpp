@@ -319,7 +319,7 @@ bool Manager::parse_config_file_line(Configuration &config, std::string &line) c
         return false;
     }
     std::string key = parts[0];
-    if (key.starts_with('#')) {
+    if (key[0] == '#') {
         return true;
     }
     std::string value = parts[1];
