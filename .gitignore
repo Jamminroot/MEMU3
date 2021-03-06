@@ -6,3 +6,6 @@ cmake/
 *.7z
 *.zip
 x64/
+x86/
+Debug/
+Release/
