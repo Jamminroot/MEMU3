@@ -190,10 +190,10 @@ std::vector<std::string> Manager::list_files_by_mask(const std::string &mask) {
 RGBQUAD Manager::parse_rgbquad_from_string(const std::string &line) {
     RGBQUAD rgbquad;
     std::vector<std::string> parts = split_string(line, ',');
-    rgbquad.rgbBlue = std::stoi(parts.at(0));
-    rgbquad.rgbGreen = std::stoi(parts.at(1));
-    rgbquad.rgbRed = std::stoi(parts.at(2));
-    rgbquad.rgbReserved = std::stoi(parts.at(3));
+    rgbquad.rgbBlue = (BYTE) std::stoi(parts.at(0));
+    rgbquad.rgbGreen = (BYTE) std::stoi(parts.at(1));
+    rgbquad.rgbRed = (BYTE) std::stoi(parts.at(2));
+    rgbquad.rgbReserved = (BYTE) std::stoi(parts.at(3));
     return rgbquad;
 }
 
