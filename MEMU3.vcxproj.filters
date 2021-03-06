@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Configs">
+      <UniqueIdentifier>{34ddfcca-c5c0-4c76-a3ac-942b050f65c6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\AimAssistant.h">
@@ -83,5 +86,29 @@
     <ClCompile Include="sources\Utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="app.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="app.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SampleConfigs\MEMU3.config">
+      <Filter>Configs</Filter>
+    </None>
+    <None Include="SampleConfigs\neon.colorset">
+      <Filter>Configs</Filter>
+    </None>
+    <None Include="SampleConfigs\red+neon.colorset">
+      <Filter>Configs</Filter>
+    </None>
+    <None Include="SampleConfigs\red.colorset">
+      <Filter>Configs</Filter>
+    </None>
   </ItemGroup>
 </Project>
