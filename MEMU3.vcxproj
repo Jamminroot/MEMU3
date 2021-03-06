@@ -123,21 +123,29 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>C:\DEV\MEMU3\Interception\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\DEV\MEMU3\Interception\x86;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)output\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>C:\DEV\MEMU3\Interception\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\DEV\MEMU3\Interception\x64;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)output\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>C:\DEV\MEMU3\Interception\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\DEV\MEMU3\Interception\x86;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)output\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>C:\DEV\MEMU3\Interception\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\DEV\MEMU3\Interception\x64;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)output\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
