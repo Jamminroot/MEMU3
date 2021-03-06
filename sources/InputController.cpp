@@ -3,8 +3,8 @@
 #include "../headers/Utils.h"
 #include <thread>
 
-#if (TARGET_64)
-#pragma comment(lib, "../Interception/x64/interception.lib")
+#if (TARGET_64 || _WIN64)
+#pragma comment(lib, "Interception/x64/interception.lib")
 #else
 #pragma  comment(lib, "Interception/x86/interception.lib")
 #endif

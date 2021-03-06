@@ -3,7 +3,7 @@
 #include <random>
 #include <chrono>
 
-#if  !(WIN32 || !(_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING || _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS))
+#if  !(_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING || _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
 #include <locale>
 #include <codecvt>
 #endif
@@ -26,7 +26,7 @@ float lerp(float t, float min, float max) {
 }
 
 std::wstring s2ws(const std::string &str) {
-#if WIN32 || !(_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING || _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
+#if !(_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING || _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
     if( str.empty() ) return std::wstring();
     int size_needed = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
     std::wstring wstrTo( size_needed, 0 );
@@ -46,7 +46,7 @@ std::wstring s2ws(const std::string &str) {
 
 std::string ws2s(const std::wstring &wstr) {
 
-#if WIN32 || !(_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING || _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
+#if !(_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING || _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
     if( wstr.empty() ) return std::string();
     int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
     std::string strTo( size_needed, 0 );
@@ -88,4 +88,15 @@ std::string base64_encode(const std::string &in) {
     if (valb>-6) out.push_back("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"[((val<<8)>>(valb+8))&0x3F]);
     while (out.size()%4) out.push_back('=');
     return out;
+}
+
+std::vector<std::string> split_string(const std::string& s, char delimiter) {
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(s);
+    while (getline(tokenStream, token, delimiter))
+    {
+        tokens.push_back(token);
+    }
+    return tokens;
 }

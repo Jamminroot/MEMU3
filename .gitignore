@@ -5,3 +5,6 @@ cmake/
 .vs/
 *.7z
 *.zip
+output/
+intermediate/
+*.bin

@@ -18,6 +18,61 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="headers\AimAssistant.h" />
+    <ClInclude Include="headers\Configuration.h" />
+    <ClInclude Include="headers\Coords.h" />
+    <ClInclude Include="headers\InputController.h" />
+    <ClInclude Include="headers\Manager.h" />
+    <ClInclude Include="headers\Overlay.h" />
+    <ClInclude Include="headers\Rect.h" />
+    <ClInclude Include="headers\ScreenshotData.h" />
+    <ClInclude Include="headers\ScreenshotFactory.h" />
+    <ClInclude Include="headers\TtlStringCollection.h" />
+    <ClInclude Include="headers\Utils.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="sources\AimAssistant.cpp" />
+    <ClCompile Include="sources\Coords.cpp" />
+    <ClCompile Include="sources\InputController.cpp" />
+    <ClCompile Include="sources\Main.cpp" />
+    <ClCompile Include="sources\Manager.cpp" />
+    <ClCompile Include="sources\Overlay.cpp" />
+    <ClCompile Include="sources\Rect.cpp" />
+    <ClCompile Include="sources\ScreenshotData.cpp" />
+    <ClCompile Include="sources\ScreenshotFactory.cpp" />
+    <ClCompile Include="sources\TtlStringCollection.cpp" />
+    <ClCompile Include="sources\Utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="MEMU3.ico" />
+    <Image Include="Icons\Aim.bmp" />
+    <Image Include="Icons\Flick.bmp" />
+    <Image Include="Icons\Hanzo.bmp" />
+    <Image Include="Icons\Trigger.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SampleConfigs\MEMU3.config">
+      <DeploymentContent>false</DeploymentContent>
+      <FileType>Text</FileType>
+    </None>
+    <None Include="SampleConfigs\neon.colorset">
+      <DeploymentContent>false</DeploymentContent>
+      <FileType>Text</FileType>
+    </None>
+    <None Include="SampleConfigs\red+neon.colorset">
+      <DeploymentContent>false</DeploymentContent>
+      <FileType>Text</FileType>
+    </None>
+    <None Include="SampleConfigs\red.colorset">
+      <DeploymentContent>false</DeploymentContent>
+      <FileType>Text</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MEMU3.rc" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{C4E4BE94-B88E-44CD-B8C3-F507EED346EB}</ProjectGuid>
@@ -74,21 +129,29 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>C:\DEV\MEMU3\Interception\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\DEV\MEMU3\Interception\x86;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)output\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>C:\DEV\MEMU3\Interception\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\DEV\MEMU3\Interception\x64;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)output\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>C:\DEV\MEMU3\Interception\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\DEV\MEMU3\Interception\x86;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)output\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>C:\DEV\MEMU3\Interception\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\DEV\MEMU3\Interception\x64;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)output\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -98,15 +161,22 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\DEV\MEMU3\Interception;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Interception;$(DXSDK_DIR)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <StackReserveSize>4194304</StackReserveSize>
-      <AdditionalLibraryDirectories>C:\DEV\MEMU3\Interception\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <StackReserveSize>8388608</StackReserveSize>
+      <AdditionalLibraryDirectories>Interception\x86;%(AdditionalLibraryDirectories);$(DXSDK_DIR)Lib\x86</AdditionalLibraryDirectories>
       <ImportLibrary>C:\DEV\MEMU3\Interception\x86\interception.lib</ImportLibrary>
     </Link>
+    <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>copy /Y $(SolutionDir)SampleConfigs\*.* $(OutputPath)
+copy /Y $(SolutionDir)Interception\x86\*.dll $(OutputPath)
+copy /Y $(SolutionDir)Icons\*.bmp $(OutputPath)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -116,14 +186,21 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\DEV\MEMU3\Interception;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Interception;$(DXSDK_DIR)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <StackReserveSize>4194304</StackReserveSize>
-      <AdditionalLibraryDirectories>C:\DEV\MEMU3\Interception\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <StackReserveSize>8388608</StackReserveSize>
+      <AdditionalLibraryDirectories>Interception\x64;%(AdditionalLibraryDirectories);$(DXSDK_DIR)Lib\x64</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>copy /Y $(SolutionDir)SampleConfigs\*.* $(OutputPath)
+copy /Y $(SolutionDir)Interception\x64\*.dll $(OutputPath)
+copy /Y $(SolutionDir)Icons\*.bmp $(OutputPath)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -135,56 +212,57 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\DEV\MEMU3\Interception;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Interception;$(DXSDK_DIR)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\DEV\MEMU3\Interception\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>Interception\x86;%(AdditionalLibraryDirectories);$(DXSDK_DIR)Lib\x86</AdditionalLibraryDirectories>
       <ImportLibrary>C:\DEV\MEMU3\Interception\x86\interception.lib</ImportLibrary>
+      <StackReserveSize>8388608</StackReserveSize>
     </Link>
+    <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>copy /Y $(SolutionDir)SampleConfigs\*.* $(OutputPath)
+copy /Y $(SolutionDir)Interception\x86\*.dll $(OutputPath)
+copy /Y $(SolutionDir)Icons\*.bmp $(OutputPath)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\DEV\MEMU3\Interception;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Interception;$(DXSDK_DIR)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\DEV\MEMU3\Interception\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>Interception\x64;%(AdditionalLibraryDirectories);$(DXSDK_DIR)Lib\x64</AdditionalLibraryDirectories>
+      <StackReserveSize>8388608</StackReserveSize>
     </Link>
+    <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>copy /Y $(SolutionDir)SampleConfigs\*.* $(OutputPath)
+copy /Y $(SolutionDir)Interception\x64\*.dll $(OutputPath)
+copy /Y $(SolutionDir)Icons\*.bmp $(OutputPath)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="sources\Coords.cpp" />
-    <ClCompile Include="sources\InputController.cpp" />
-    <ClCompile Include="sources\Main.cpp" />
-    <ClCompile Include="sources\Manager.cpp" />
-    <ClCompile Include="sources\Rect.cpp" />
-    <ClCompile Include="sources\Scanner.cpp" />
-    <ClCompile Include="sources\ScreenshotData.cpp" />
-    <ClCompile Include="sources\ScreenshotFactory.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="headers\Coords.h" />
-    <ClInclude Include="headers\InputController.h" />
-    <ClInclude Include="headers\Manager.h" />
-    <ClInclude Include="headers\Rect.h" />
-    <ClInclude Include="headers\Scanner.h" />
-    <ClInclude Include="headers\ScreenshotData.h" />
-    <ClInclude Include="headers\ScreenshotFactory.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

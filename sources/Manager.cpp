@@ -190,10 +190,10 @@ std::vector<std::string> Manager::list_files_by_mask(const std::string &mask) {
 RGBQUAD Manager::parse_rgbquad_from_string(const std::string &line) {
     RGBQUAD rgbquad;
     std::vector<std::string> parts = split_string(line, ',');
-    rgbquad.rgbBlue = std::stoi(parts.at(0));
-    rgbquad.rgbGreen = std::stoi(parts.at(1));
-    rgbquad.rgbRed = std::stoi(parts.at(2));
-    rgbquad.rgbReserved = std::stoi(parts.at(3));
+    rgbquad.rgbBlue = (BYTE) std::stoi(parts.at(0));
+    rgbquad.rgbGreen = (BYTE) std::stoi(parts.at(1));
+    rgbquad.rgbRed = (BYTE) std::stoi(parts.at(2));
+    rgbquad.rgbReserved = (BYTE) std::stoi(parts.at(3));
     return rgbquad;
 }
 
@@ -319,7 +319,7 @@ bool Manager::parse_config_file_line(Configuration &config, std::string &line) c
         return false;
     }
     std::string key = parts[0];
-    if (key.starts_with('#')) {
+    if (key[0] == '#') {
         return true;
     }
     std::string value = parts[1];

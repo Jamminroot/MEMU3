@@ -21,14 +21,4 @@ std::string to_string(double a_value, const int n = 2);
 
 std::string base64_encode(const std::string &in);
 
-static std::vector<std::string> split_string(const std::string& s, char delimiter)
-{
-    std::vector<std::string> tokens;
-    std::string token;
-    std::istringstream tokenStream(s);
-    while (getline(tokenStream, token, delimiter))
-    {
-        tokens.push_back(token);
-    }
-    return tokens;
-}
+std::vector<std::string> split_string(const std::string& s, char delimiter);
