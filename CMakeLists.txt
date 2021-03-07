@@ -10,13 +10,12 @@ set(SUGGESTED_STACK_SIZE 10000000)
 string(TOUPPER "${CMAKE_BUILD_TYPE}" VARIANT)
 
 add_definitions(-DUNICODE)
+add_definitions(-DCMAKELISTS)
 
 message("Build variant:\t ${VARIANT}")
 
 if (VARIANT STREQUAL "DEBUG")
     add_definitions(-DDEBUG=1)
-else ()
-
 endif ()
 
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
@@ -25,6 +24,7 @@ set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall")
 #string(REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 
 set(SOURCE_FILES
+        MEMU3.rc
         sources/Main.cpp
         sources/Overlay.cpp
         sources/Rect.cpp
@@ -48,7 +48,7 @@ configure_file(SampleConfigs/red+neon.colorset red+neon.colorset COPYONLY)
 configure_file(SampleConfigs/neon.colorset neon.colorset COPYONLY)
 configure_file(SampleConfigs/MEMU3.config MEMU3.config COPYONLY)
 
-add_executable(${TARGET_NAME} ${SOURCE_FILES} app.o)
+add_executable(${TARGET_NAME} ${SOURCE_FILES})
 
 string(REPLACE "/W4" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 string(REPLACE "/W3" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")

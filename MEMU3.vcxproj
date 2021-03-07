@@ -214,15 +214,17 @@ copy /Y $(SolutionDir)Icons\*.bmp $(OutputPath)</Command>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>Interception;$(DXSDK_DIR)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>Interception\x86;%(AdditionalLibraryDirectories);$(DXSDK_DIR)Lib\x86</AdditionalLibraryDirectories>
       <ImportLibrary>C:\DEV\MEMU3\Interception\x86\interception.lib</ImportLibrary>
       <StackReserveSize>8388608</StackReserveSize>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent />
     <PostBuildEvent>
@@ -243,7 +245,7 @@ copy /Y $(SolutionDir)Icons\*.bmp $(OutputPath)</Command>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>Interception;$(DXSDK_DIR)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <DebugInformationFormat>None</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -252,9 +254,10 @@ copy /Y $(SolutionDir)Icons\*.bmp $(OutputPath)</Command>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>Interception\x64;%(AdditionalLibraryDirectories);$(DXSDK_DIR)Lib\x64</AdditionalLibraryDirectories>
       <StackReserveSize>8388608</StackReserveSize>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent />
     <PostBuildEvent>
