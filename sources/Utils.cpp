@@ -21,7 +21,7 @@ float clamp(float val, float min, float max) {
     return val;
 }
 
-float lerp(float t, float min, float max) {
+float lerp_value(float t, float min, float max) {
     return min + t * (max - min);
 }
 

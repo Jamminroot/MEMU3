@@ -7,7 +7,7 @@
 
 float clamp(float val, float min, float max);
 
-float lerp(float t, float min, float max);
+float lerp_value(float t, float min, float max);
 
 std::wstring s2ws(const std::string &str);
 

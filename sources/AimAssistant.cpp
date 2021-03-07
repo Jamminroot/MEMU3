@@ -104,8 +104,8 @@ bool AimAssistant::probe_region_spiral(int &offset, const int side) const {
     auto regionHeight = manager.region.height;
 
     // Possibly swap region width and height places
-    if (abs(min(startCoords.x, regionHeight - startCoords.x) - (side / 2 + 1)) <= IGNORED_BORDER_SIZE + 2) return false;
-    if (abs(min(startCoords.y, regionWidth - startCoords.y) - (side / 2 + 1)) <= IGNORED_BORDER_SIZE + 2) return false;
+    if (fabs(fmin(startCoords.x, regionHeight - startCoords.x) - (side / 2 + 1)) <= IGNORED_BORDER_SIZE + 2) return false;
+    if (fabs(fmin(startCoords.y, regionWidth - startCoords.y) - (side / 2 + 1)) <= IGNORED_BORDER_SIZE + 2) return false;
     if (probe_color(manager.screenshot.data[offset])) return true;
     auto directionSign = -1;
 
@@ -205,7 +205,7 @@ void AimAssistant::find_healthbar_height() {
             if (!redsFound && res) redsFound = true;
             if (redsFound && !res) break;
             check += res;
-        } catch (_exception) {
+        } catch (...) {
         }
     }
     manager.lastKnownBarSize.x = check;
@@ -222,7 +222,7 @@ void AimAssistant::find_healthbar_width() {
             if (!redsFound && res) redsFound = true;
             if (redsFound && !res) break;
             check += res;
-        } catch (_exception) {
+        } catch (...) {
         }
     }
     manager.lastKnownBarSize.y = check;

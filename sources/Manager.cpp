@@ -6,6 +6,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <fstream>
+#include <math.h>
 
 std::mutex exit_mutex;
 std::mutex pause_mutex;
@@ -48,8 +49,8 @@ bool Manager::is_exit_requested() const {
 
 void Manager::update_enemy_coords_with_local_coords(int x, int y) {
     auto dv = (clamp(((float) lastKnownBarSize.x / 2.0f + (float) lastKnownBarSize.y), 5.0f, 15.0f) - 5.0f) / 10.0f;
-    enemyCoords.set((int) lerp(dv, (float) closeHeadOffset.x, (float) farHeadOffset.x) + median.x + x,
-                    (int) lerp(dv, (float) closeHeadOffset.y, (float) farHeadOffset.y) + median.y - y);
+    enemyCoords.set((int) lerp_value(dv, (float) closeHeadOffset.x, (float) farHeadOffset.x) + median.x + x,
+                    (int) lerp_value(dv, (float) closeHeadOffset.y, (float) farHeadOffset.y) + median.y - y);
 }
 
 bool Manager::is_crosshair_over_enemy() const {
@@ -61,13 +62,13 @@ void Manager::update_enemy_coords_with_local_coords(Coords coords) {
 }
 
 void Manager::increase_sensitivity() {
-    sensitivity = min(sensitivity + 0.1f, MAXIMUM_SENSITIVITY_VALUE);
+    sensitivity = fmin(sensitivity + 0.1f, MAXIMUM_SENSITIVITY_VALUE);
     Overlay::toggle_render();
     Overlay::show_hint("Sensitivity: " + to_string(sensitivity));
 }
 
 void Manager::decrease_sensitivity() {
-    sensitivity = max(sensitivity - 0.1f, 0.1f);
+    sensitivity = fmax(sensitivity - 0.1f, 0.1f);
     Overlay::toggle_render();
     Overlay::show_hint("Sensitivity: " + to_string(sensitivity));
 }
@@ -76,15 +77,15 @@ void Manager::increase_mode_value() {
     switch (mode) {
         case flick:
         case aim:
-            strength = min(strength + 0.5f, MAXIMUM_AIM_STRENGTH_VALUE);
+            strength = fmin(strength + 0.5f, MAXIMUM_AIM_STRENGTH_VALUE);
             Overlay::show_hint("Strength: " + to_string(strength));
             break;
         case trigger:
-            triggerDistanceThreshold = min (++triggerDistanceThreshold, MAXIMUM_TRIGGER_THRESHOLD_VALUE);
+            triggerDistanceThreshold = (int) fmin (++triggerDistanceThreshold, MAXIMUM_TRIGGER_THRESHOLD_VALUE);
             Overlay::show_hint("Distance: " + std::to_string(triggerDistanceThreshold));
             break;
         case hanzo:
-            hanzoVerticalOffset = min (++hanzoVerticalOffset, MAXIMUM_HANZO_VERTICAL_OFFSET_VALUE);
+            hanzoVerticalOffset = (int) fmin (++hanzoVerticalOffset, MAXIMUM_HANZO_VERTICAL_OFFSET_VALUE);
             Overlay::show_hint("Offset: " + std::to_string(hanzoVerticalOffset));
             break;
     }
@@ -95,15 +96,15 @@ void Manager::decrease_mode_value() {
     switch (mode) {
         case flick:
         case aim:
-            strength = max(strength - 0.5f, 0.0f);
+            strength = fmax(strength - 0.5f, 0.0f);
             Overlay::show_hint("Strength: " + to_string(strength));
             break;
         case trigger:
-            triggerDistanceThreshold = max (--triggerDistanceThreshold, 1);
+            triggerDistanceThreshold = (int) fmax (--triggerDistanceThreshold, 1);
             Overlay::show_hint("Distance: " + std::to_string(triggerDistanceThreshold));
             break;
         case hanzo:
-            hanzoVerticalOffset = max (--hanzoVerticalOffset, 0);
+            hanzoVerticalOffset = (int) fmax (--hanzoVerticalOffset, 0);
             Overlay::show_hint("Offset: " + std::to_string(hanzoVerticalOffset));
             break;
     }
@@ -281,22 +282,22 @@ void Manager::fill_multiplier_table() {
     for (auto i = 0; i < bracketSize; ++i) {
         distance++;
         if (distance > MULTIPLIER_TABLE_SIZE) break;
-        multiplierTable[distance] = lerp(float(distance) / float(bracketSize), 0.1f, 0.2f);
+        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), 0.1f, 0.2f);
     }
     bracketSize = 50;
     for (auto i = 0; i < bracketSize; ++i) {
         distance++;
         if (distance > MULTIPLIER_TABLE_SIZE) break;
-        multiplierTable[distance] = lerp(float(distance) / float(bracketSize), 0.2f, 1.0f);
+        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), 0.2f, 1.0f);
     }
     bracketSize = 50;
     for (auto i = 0; i < 50; ++i) {
         distance++;
         if (distance > MULTIPLIER_TABLE_SIZE) break;
-        multiplierTable[distance] = lerp(float(distance) / float(bracketSize), 1.0f, 0.8f);
+        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), 1.0f, 0.8f);
     }
     for (auto i = distance; i < MULTIPLIER_TABLE_SIZE; ++i) {
-        multiplierTable[i] = lerp((float) i / (MULTIPLIER_TABLE_SIZE - 100.0f), 0.8f, 0.1f);
+        multiplierTable[i] = lerp_value((float) i / (MULTIPLIER_TABLE_SIZE - 100.0f), 0.8f, 0.1f);
     }
 }
 

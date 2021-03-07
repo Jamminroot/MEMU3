@@ -3,11 +3,24 @@
 #include "../headers/Utils.h"
 #include <thread>
 
-#if (TARGET_64 || _WIN64)
+
+#if defined(TARGET_64) || defined(_WIN64)
+
+#if defined(CMAKELISTS)
+#pragma comment(lib, "../Interception/x64/interception.lib")
+#else
 #pragma comment(lib, "Interception/x64/interception.lib")
+#endif //defined(CMAKELISTS)
+
+#else
+
+#if defined(CMAKELISTS)
+#pragma  comment(lib, "../Interception/x86/interception.lib")
 #else
 #pragma  comment(lib, "Interception/x86/interception.lib")
-#endif
+#endif //defined(CMAKELISTS)
+
+#endif //defined(TARGET_64) || defined(_WIN64)
 
 const int AimMouseDownKeys = InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_5_DOWN | InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_4_DOWN |
                              InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN;
