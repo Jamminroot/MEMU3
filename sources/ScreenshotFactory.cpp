@@ -1,9 +1,9 @@
 #include "../headers/ScreenshotFactory.h"
 #include <Windows.h>
 #include <WinUser.h>
-#include <Ole2.h>
-#include <OleCtl.h>
 #include <iostream>
+
+#pragma comment(lib, "Gdi32.lib")
 
 using namespace std;
 
