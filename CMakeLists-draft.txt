@@ -6,10 +6,8 @@ set(TARGET_NAME MEMU3)
 
 set(CMAKE_CXX_STANDARD 20)
 set(SUGGESTED_STACK_SIZE 10000000)
-
 if (TARGET_64)
     set(ARCH_STRING x64)
-    add_definitions(-DTARGET_64=1)
 else()
     set(ARCH_STRING x86)
 endif()
@@ -59,19 +57,13 @@ add_executable(${TARGET_NAME} ${SOURCE_FILES})
 
 #set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /W3 /WX")
 
-#string(REPLACE "/W4" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-#string(REPLACE "/W3" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+string(REPLACE "/W4" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+string(REPLACE "/W3" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
 
 if (MSVC)
     message("MSVC Compiler detected. Setting stack size to ${SUGGESTED_STACK_SIZE}b")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:${SUGGESTED_STACK_SIZE}")
-
-    set(MSVC_ROOT "$ENV{ProgramFiles\(x86\)}\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Tools\\MSVC\\14.28.29910")
-    set(MSVC_LIB_ROOT "${MSVC_ROOT}\\lib\\${ARCH_STRING}")
-    set(MSVC_INCLUDE_ROOT "${MSVC_ROOT}\\include")
-
-    target_link_directories(${TARGET_NAME} PUBLIC ${MSVC_LIB_ROOT})
-    include_directories(${MSVC_INCLUDE_ROOT})
 else ()
     message("Other linker detected. Make sure to increase stack size is increased to ${SUGGESTED_STACK_SIZE}b!")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--stack,${SUGGESTED_STACK_SIZE}")
@@ -79,27 +71,25 @@ endif ()
 
 include_directories(Interception/)
 
-link_directories(Interception\\${ARCH_STRING}/)
+if (TARGET_64)
+    add_definitions(-DTARGET_64=1)
+endif ()
 
-string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-string(REPLACE "/MDd" "/MTd" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+link_directories(Interception\\${ARCH_STRING}/)
 
 # Direct X
 
 set(DirectX_INCLUDE_DIRS "$ENV{DXSDK_DIR}Include")
-set(DirectX_LIB_ROOT_DIR "$ENV{DXSDK_DIR}lib\\${ARCH_STRING}")
+set(DirectX_LIB_ROOT_DIR "$ENV{DXSDK_DIR}lib")
 
 include_directories(${DirectX_INCLUDE_DIRS})
 
 #add_definitions(-DD3D9LIBPATH=${DirectX_LIB_ROOT_DIR}\\${ARCH_STRING}\\d3d9.lib)
 #add_definitions(-DD3DX9LIBPATH=${DirectX_LIB_ROOT_DIR}\\${ARCH_STRING}\\d3dx9.lib)
 
-#link_directories(${DirectX_LIB_ROOT_DIR})
-
-target_link_libraries(${TARGET_NAME} PUBLIC \"${DirectX_LIB_ROOT_DIR}\\d3d9\")
-target_link_libraries(${TARGET_NAME} PUBLIC \"${DirectX_LIB_ROOT_DIR}\\d3dx9\")
-
-#target_link_libraries(${TARGET_NAME} \"${DirectX_LIB_ROOT_DIR}/d3d9.lib\" \"${DirectX_LIB_ROOT_DIR}/d3dx9.lib\")
+#target_link_libraries(${TARGET_NAME} "${DirectX_LIB_ROOT_DIR}\\${ARCH_STRING}\\d3d9.lib")
+#target_link_libraries(${TARGET_NAME} "${DirectX_LIB_ROOT_DIR}\\${ARCH_STRING}\\d3dx9.lib")
+target_link_libraries(${TARGET_NAME} \"${DirectX_LIB_ROOT_DIR}\\${ARCH_STRING}\\d3d9.lib\" \"${DirectX_LIB_ROOT_DIR}\\${ARCH_STRING}\\d3dx9.lib\")
 
 # Output flags
 message("CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")

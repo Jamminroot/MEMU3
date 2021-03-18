@@ -129,9 +129,11 @@ void Manager::toggle_mode() {
     Overlay::toggle_render();
 }
 
-void Manager::stop_thread_until_exit() const {
+void Manager::stop_thread_until_exit(HANDLE &handle) const {
     std::unique_lock<std::mutex> lck(exit_mutex);
     while (!is_exit_requested()) exit_condition.wait(lck);
+    ReleaseMutex(handle);
+    CloseHandle(handle);
 }
 
 void Manager::pause_thread_if_not_running() const {

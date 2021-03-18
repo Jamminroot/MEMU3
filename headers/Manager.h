@@ -19,7 +19,7 @@ public:
     static inline const float MAXIMUM_AIM_STRENGTH_VALUE = 10.0f;
     static inline const float MAXIMUM_SENSITIVITY_VALUE = 25.0f;
     static const int MAXIMUM_HANZO_VERTICAL_OFFSET_VALUE = 35;
-    void stop_thread_until_exit() const;
+    void stop_thread_until_exit(HANDLE& handle) const;
     void pause_thread_if_not_running() const;
     Manager();
     ~Manager();
