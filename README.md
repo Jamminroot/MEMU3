@@ -1,5 +1,9 @@
 # MEMU3 - (M)ouse (EMU)lator, v.3
 
+## Discussion
+
+[Discussion thread on UC](https://www.unknowncheats.me/forum/overwatch/442474-memu3-overwatch-pixlebot-sources-using-mouse_event-3.html)
+
 ## About
 
 MEMU3 - Software to look for specific color on screen, and emulate mouse actions through mouse driver. Might be used as an aim-assist, for example - in Overwatch.
