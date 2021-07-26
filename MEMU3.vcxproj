@@ -127,29 +127,29 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\DEV\MEMU3\Interception\;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\DEV\MEMU3\Interception\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>.\Interception\;$(IncludePath)</IncludePath>
+    <LibraryPath>.\Interception\x86;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)output\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\DEV\MEMU3\Interception\;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\DEV\MEMU3\Interception\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>.\Interception\;$(IncludePath)</IncludePath>
+    <LibraryPath>.\Interception\x64;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)output\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\DEV\MEMU3\Interception\;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\DEV\MEMU3\Interception\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>.\Interception\;$(IncludePath)</IncludePath>
+    <LibraryPath>.\Interception\x86;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)output\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\DEV\MEMU3\Interception\;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\DEV\MEMU3\Interception\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>.\Interception\;$(IncludePath)</IncludePath>
+    <LibraryPath>.\Interception\x64;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)output\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)intermediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -169,7 +169,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <StackReserveSize>8388608</StackReserveSize>
       <AdditionalLibraryDirectories>Interception\x86;%(AdditionalLibraryDirectories);$(DXSDK_DIR)Lib\x86</AdditionalLibraryDirectories>
-      <ImportLibrary>C:\DEV\MEMU3\Interception\x86\interception.lib</ImportLibrary>
+      <ImportLibrary>.\Interception\x86\interception.lib</ImportLibrary>
     </Link>
     <PostBuildEvent />
     <PostBuildEvent>
@@ -222,7 +222,7 @@ copy /Y $(SolutionDir)Icons\*.bmp $(OutputPath)</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>Interception\x86;%(AdditionalLibraryDirectories);$(DXSDK_DIR)Lib\x86</AdditionalLibraryDirectories>
-      <ImportLibrary>C:\DEV\MEMU3\Interception\x86\interception.lib</ImportLibrary>
+      <ImportLibrary>.\Interception\x86\interception.lib</ImportLibrary>
       <StackReserveSize>8388608</StackReserveSize>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
