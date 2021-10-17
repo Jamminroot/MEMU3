@@ -20,7 +20,6 @@ bool Manager::is_running() const {
 }
 
 Manager::Manager() : running(false), exitRequested(false) {
-
     Configuration config = read_configuration();
     Rect regionSizeAndOffset = Rect(config.scan_width, config.scan_height, config.scan_horizontal_offset, config.scan_vertical_offset);
     screenshot = ScreenshotData(regionSizeAndOffset);
@@ -284,15 +283,15 @@ void Manager::fill_multiplier_table() {
     for (auto i = 0; i < bracketSize; ++i) {
         distance++;
         if (distance > MULTIPLIER_TABLE_SIZE) break;
-        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), 0.1f, 0.2f);
+        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), 0.1f, 0.3f);
     }
-    bracketSize = 50;
+    bracketSize = 75;
     for (auto i = 0; i < bracketSize; ++i) {
         distance++;
         if (distance > MULTIPLIER_TABLE_SIZE) break;
-        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), 0.2f, 1.0f);
+        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), 0.3f, 1.0f);
     }
-    bracketSize = 50;
+    bracketSize = 25;
     for (auto i = 0; i < 50; ++i) {
         distance++;
         if (distance > MULTIPLIER_TABLE_SIZE) break;

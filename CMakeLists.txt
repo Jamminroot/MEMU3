@@ -10,9 +10,9 @@ set(SUGGESTED_STACK_SIZE 10000000)
 if (TARGET_64)
     set(ARCH_STRING x64)
     add_definitions(-DTARGET_64=1)
-else()
+else ()
     set(ARCH_STRING x86)
-endif()
+endif ()
 
 string(TOUPPER "${CMAKE_BUILD_TYPE}" VARIANT)
 
@@ -66,7 +66,7 @@ if (MSVC)
     message("MSVC Compiler detected. Setting stack size to ${SUGGESTED_STACK_SIZE}b")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:${SUGGESTED_STACK_SIZE}")
 
-    set(MSVC_ROOT "$ENV{ProgramFiles\(x86\)}\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Tools\\MSVC\\14.28.29910")
+    set(MSVC_ROOT "$ENV{ProgramFiles\(x86\)}\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30037")
     set(MSVC_LIB_ROOT "${MSVC_ROOT}\\lib\\${ARCH_STRING}")
     set(MSVC_INCLUDE_ROOT "${MSVC_ROOT}\\include")
 
@@ -87,7 +87,9 @@ string(REPLACE "/MDd" "/MTd" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 # Direct X
 
 set(DirectX_INCLUDE_DIRS "$ENV{DXSDK_DIR}Include")
-set(DirectX_LIB_ROOT_DIR "$ENV{DXSDK_DIR}lib\\${ARCH_STRING}")
+set(DirectX_LIB_ROOT_DIR "$ENV{DXSDK_DIR}Lib\\${ARCH_STRING}")
+message("DX ENV Variable : $ENV{DXSDK_DIR}")
+message("DirectX_LIB_ROOT_DIR : ${DirectX_LIB_ROOT_DIR}")
 
 include_directories(${DirectX_INCLUDE_DIRS})
 
