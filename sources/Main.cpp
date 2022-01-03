@@ -9,6 +9,7 @@
 
 void HideConsole()
 {
+    FreeConsole();
     ShowWindow(GetConsoleWindow(), SW_HIDE);
 }
 

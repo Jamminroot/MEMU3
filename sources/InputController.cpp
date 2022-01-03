@@ -150,6 +150,7 @@ bool InputController::handle_mouse_stroke(InterceptionMouseStroke &stroke) {
             }
             break;
         }
+        default: break;
     }
     if (manager.mode == flick && (stroke.state & InterceptionMouseState::INTERCEPTION_MOUSE_LEFT_BUTTON_UP) != 0){
         manager.readyForNextFlick = true;

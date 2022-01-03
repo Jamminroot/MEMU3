@@ -283,15 +283,15 @@ void Manager::fill_multiplier_table() {
     for (auto i = 0; i < bracketSize; ++i) {
         distance++;
         if (distance > MULTIPLIER_TABLE_SIZE) break;
-        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), 0.1f, 0.3f);
+        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), 0.15f, 0.3f);
     }
-    bracketSize = 75;
+    bracketSize = 20;
     for (auto i = 0; i < bracketSize; ++i) {
         distance++;
         if (distance > MULTIPLIER_TABLE_SIZE) break;
         multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), 0.3f, 1.0f);
     }
-    bracketSize = 25;
+    bracketSize = 50;
     for (auto i = 0; i < 50; ++i) {
         distance++;
         if (distance > MULTIPLIER_TABLE_SIZE) break;

@@ -383,6 +383,6 @@ void AimAssistant::apply_modifiers_distance(Coords &coords) const {
 
 void AimAssistant::apply_modifiers_strength(Coords &coords) const {
     coords.x = (int) ((float) coords.x * (manager.strength / 10.0f));
-    coords.y = (int) ((float) coords.y * (manager.strength / 20.0f));
+    coords.y = (int) ((float) coords.y * (manager.strength / 30.0f));
 }
 
