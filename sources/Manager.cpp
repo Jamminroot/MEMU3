@@ -21,12 +21,26 @@ bool Manager::is_running() const {
 
 Manager::Manager() : running(false), exitRequested(false) {
     Configuration config = read_configuration();
-    Rect regionSizeAndOffset = Rect(config.scan_width, config.scan_height, config.scan_horizontal_offset, config.scan_vertical_offset);
+    Rect regionSizeAndOffset = Rect(config.scan_width, config.scan_height, config.scan_horizontal_offset,
+                                    config.scan_vertical_offset);
     screenshot = ScreenshotData(regionSizeAndOffset);
     farHeadOffset = Coords(config.far_offset_x, config.far_offset_y);
     closeHeadOffset = Coords(config.close_offset_x, config.close_offset_y);
     sensitivity = config.sensitivity;
     strength = config.strength;
+    x_multiplier = config.x_multiplier;
+    y_multiplier = config.y_multiplier;
+
+    point_a_distance = config.point_a_distance;
+    point_a_b_distance = config.point_a_b_distance;
+    point_b_c_distance = config.point_b_c_distance;
+
+    multiplier_at_closest = config.multiplier_at_closest;
+    multiplier_point_at_point_a = config.multiplier_point_at_point_a;
+    multiplier_point_at_point_b = config.multiplier_point_at_point_b;
+    multiplier_point_at_point_c = config.multiplier_point_at_point_c;
+    multiplier_at_furthest = config.multiplier_at_furthest;
+
 
     RECT desktop;
     const auto hDesktop = GetDesktopWindow();
@@ -80,11 +94,11 @@ void Manager::increase_mode_value() {
             Overlay::show_hint("Strength: " + to_string(strength));
             break;
         case trigger:
-            triggerDistanceThreshold = (int) fmin (++triggerDistanceThreshold, MAXIMUM_TRIGGER_THRESHOLD_VALUE);
+            triggerDistanceThreshold = (int) fmin(++triggerDistanceThreshold, MAXIMUM_TRIGGER_THRESHOLD_VALUE);
             Overlay::show_hint("Distance: " + std::to_string(triggerDistanceThreshold));
             break;
         case hanzo:
-            hanzoVerticalOffset = (int) fmin (++hanzoVerticalOffset, MAXIMUM_HANZO_VERTICAL_OFFSET_VALUE);
+            hanzoVerticalOffset = (int) fmin(++hanzoVerticalOffset, MAXIMUM_HANZO_VERTICAL_OFFSET_VALUE);
             Overlay::show_hint("Offset: " + std::to_string(hanzoVerticalOffset));
             break;
     }
@@ -99,11 +113,11 @@ void Manager::decrease_mode_value() {
             Overlay::show_hint("Strength: " + to_string(strength));
             break;
         case trigger:
-            triggerDistanceThreshold = (int) fmax (--triggerDistanceThreshold, 1);
+            triggerDistanceThreshold = (int) fmax(--triggerDistanceThreshold, 1);
             Overlay::show_hint("Distance: " + std::to_string(triggerDistanceThreshold));
             break;
         case hanzo:
-            hanzoVerticalOffset = (int) fmax (--hanzoVerticalOffset, 0);
+            hanzoVerticalOffset = (int) fmax(--hanzoVerticalOffset, 0);
             Overlay::show_hint("Offset: " + std::to_string(hanzoVerticalOffset));
             break;
     }
@@ -233,13 +247,13 @@ bool Manager::restore_table(std::string &tablename) const {
             return false;
         }
     }
-    chars_read = (size_t)inStream.gcount();
+    chars_read = (size_t) inStream.gcount();
     return chars_read == sizeof(colorHashTable);
 }
 
 std::string Manager::hashtable_name(const std::vector<RGBQUAD> &pColors) {
     std::string bytes;
-    for (auto targetColor : pColors) {
+    for (auto targetColor: pColors) {
         bytes.push_back(targetColor.rgbRed);
         bytes.push_back(targetColor.rgbGreen);
         bytes.push_back(targetColor.rgbBlue);
@@ -258,11 +272,12 @@ void Manager::initialize_color_table(const std::vector<RGBQUAD> &pColors, const 
     }
     Overlay::show_hint("Building color scan table.");
     int colorIndex = 0;
-    for (auto targetColor : pColors) {
+    for (auto targetColor: pColors) {
         colorIndex++;
         Overlay::show_hint("Color " + std::to_string(colorIndex) + "/" + std::to_string(pColors.size()));
         for (auto i = 0x000000u; i <= 0xFFFFFFu; i++) {
-            bool res = probe_bytes_against_rgbquad(((BYTE) ((i & 0xFF0000u) >> 16)), ((BYTE) ((i & 0x00FF00u) >> 8)), (BYTE) (i & 0x0000FFu), targetColor);
+            bool res = probe_bytes_against_rgbquad(((BYTE) ((i & 0xFF0000u) >> 16)), ((BYTE) ((i & 0x00FF00u) >> 8)),
+                                                   (BYTE) (i & 0x0000FFu), targetColor);
             colorHashTable[i / 8] |= (byte) (res << (i % 8));
         }
     }
@@ -279,26 +294,33 @@ bool Manager::probe_bytes_against_rgbquad(const BYTE r, const BYTE g, const BYTE
 
 void Manager::fill_multiplier_table() {
     int distance = 0;
-    auto bracketSize = 25;
+    auto bracketSize = point_a_distance;
     for (auto i = 0; i < bracketSize; ++i) {
         distance++;
         if (distance > MULTIPLIER_TABLE_SIZE) break;
-        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), 0.15f, 0.3f);
+        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), multiplier_at_closest,
+                                               multiplier_point_at_point_a);
     }
-    bracketSize = 20;
+    bracketSize = point_a_b_distance;
+
     for (auto i = 0; i < bracketSize; ++i) {
         distance++;
         if (distance > MULTIPLIER_TABLE_SIZE) break;
-        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), 0.3f, 1.0f);
+        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), multiplier_point_at_point_a,
+                                               multiplier_point_at_point_b);
     }
-    bracketSize = 50;
+    bracketSize = point_b_c_distance;
     for (auto i = 0; i < 50; ++i) {
         distance++;
         if (distance > MULTIPLIER_TABLE_SIZE) break;
-        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), 1.0f, 0.8f);
+        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), multiplier_point_at_point_b,
+                                               multiplier_point_at_point_c);
     }
     for (auto i = distance; i < MULTIPLIER_TABLE_SIZE; ++i) {
-        multiplierTable[i] = lerp_value((float) i / (MULTIPLIER_TABLE_SIZE - 100.0f), 0.8f, 0.1f);
+        multiplierTable[i] = lerp_value((float) i / (MULTIPLIER_TABLE_SIZE -
+                                                     (float) (point_a_distance + point_a_b_distance +
+                                                              point_b_c_distance)), multiplier_point_at_point_c,
+                                        multiplier_at_furthest);
     }
 }
 
@@ -332,6 +354,12 @@ bool Manager::parse_config_file_line(Configuration &config, std::string &line) c
     } else if (key == "sensitivity") {
         config.sensitivity = (float) atof(value.c_str());
         return true;
+    } else if (key == "x_multiplier") {
+        config.x_multiplier = (float) atof(value.c_str());
+        return true;
+    } else if (key == "y_multiplier") {
+        config.y_multiplier = (float) atof(value.c_str());
+        return true;
     } else if (key == "far_offset_x") {
         config.far_offset_x = atoi(value.c_str());
         return true;
@@ -355,6 +383,30 @@ bool Manager::parse_config_file_line(Configuration &config, std::string &line) c
         return true;
     } else if (key == "scan_height") {
         config.scan_height = atoi(value.c_str());
+        return true;
+    } else if (key == "multiplier_at_closest") {
+        config.multiplier_at_closest = atof(value.c_str());
+        return true;
+    } else if (key == "multiplier_point_at_point_a") {
+        config.multiplier_point_at_point_a = atof(value.c_str());
+        return true;
+    } else if (key == "multiplier_point_at_point_b") {
+        config.multiplier_point_at_point_b = atof(value.c_str());
+        return true;
+    } else if (key == "multiplier_point_at_point_c") {
+        config.multiplier_point_at_point_c = atof(value.c_str());
+        return true;
+    } else if (key == "multiplier_at_furthest") {
+        config.multiplier_at_furthest = atof(value.c_str());
+        return true;
+    } else if (key == "point_a_distance") {
+        config.point_a_distance = atoi(value.c_str());
+        return true;
+    } else if (key == "point_a_b_distance") {
+        config.point_a_b_distance = atoi(value.c_str());
+        return true;
+    } else if (key == "point_b_c_distance") {
+        config.point_b_c_distance = atoi(value.c_str());
         return true;
     }
     return false;

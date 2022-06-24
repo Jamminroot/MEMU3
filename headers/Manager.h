@@ -13,7 +13,7 @@ enum Mode {
 
 class Manager {
 public:
-    static const unsigned int MULTIPLIER_TABLE_SIZE = 300;
+    static const unsigned int MULTIPLIER_TABLE_SIZE = 512;
     static const unsigned int COLOR_HASHTABLE_SIZE = (0xFFFFFF + 1) / 8;
     static const unsigned int MAXIMUM_TRIGGER_THRESHOLD_VALUE = 30;
     static inline const float MAXIMUM_AIM_STRENGTH_VALUE = 10.0f;
@@ -49,6 +49,19 @@ public:
     double elapsedScanTime = 0.0;
     float sensitivity;
     float strength;
+    float x_multiplier;
+    float y_multiplier;
+
+    float multiplier_at_closest=0.01f;
+    float multiplier_point_at_point_a=0.4f;
+    float multiplier_point_at_point_b=1.0f;
+    float multiplier_point_at_point_c=0.8f;
+    float multiplier_at_furthest=0.2f;
+
+    int point_a_distance = 25;
+    int point_a_b_distance = 25;
+    int point_b_c_distance = 50;
+
     Mode mode = aim;
     Rect region;
     ScreenshotData screenshot;

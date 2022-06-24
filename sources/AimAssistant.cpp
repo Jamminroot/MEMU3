@@ -371,18 +371,18 @@ void AimAssistant::handle_screenshot() {
 
 void AimAssistant::apply_modifiers_distance(Coords &coords) const {
     auto index = (int) coords.length;
-    float multiplier;
+    float distance_multiplier;
     if (index >= Manager::MULTIPLIER_TABLE_SIZE) {
-        multiplier = 0.2f;
+        distance_multiplier = 0.2f;
     } else {
-        multiplier = manager.multiplierTable[index];
+        distance_multiplier = manager.multiplierTable[index];
     }
-    coords.x = (int) ((float) coords.x * multiplier);
-    coords.y = (int) ((float) coords.y * multiplier);
+    coords.x = (int) ((float) coords.x * distance_multiplier);
+    coords.y = (int) ((float) coords.y * distance_multiplier);
 }
 
 void AimAssistant::apply_modifiers_strength(Coords &coords) const {
-    coords.x = (int) ((float) coords.x * (manager.strength / 10.0f));
-    coords.y = (int) ((float) coords.y * (manager.strength / 30.0f));
+    coords.x = (int) ((float) coords.x * manager.strength * manager.x_multiplier);
+    coords.y = (int) ((float) coords.y * manager.strength * manager.y_multiplier);
 }
 

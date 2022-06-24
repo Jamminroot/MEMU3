@@ -3,6 +3,7 @@
 #include "../headers/Utils.h"
 #include <thread>
 
+#include <iostream>
 
 #if defined(TARGET_64) || defined(_WIN64)
 
@@ -91,6 +92,8 @@ bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke) {
             manager.toggle_mode();
             break;
         case KeyCode::NumLock:
+        case KeyCode::End:
+        //case KeyCode::Backspace:
             manager.request_exit();
             break;
         case KeyCode::Numpad0:
@@ -100,9 +103,11 @@ bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke) {
             Overlay::toggle_debug_ui();
             break;
         case KeyCode::NumpadMinus:
+        case KeyCode::DashUnderscore:
             manager.decrease_mode_value();
             break;
         case KeyCode::NumpadPlus:
+        case KeyCode::PlusEquals:
             manager.increase_mode_value();
             break;
         case KeyCode::Numpad9:
@@ -114,6 +119,8 @@ bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke) {
         case KeyCode::Numpad8:
             manager.toggle_next_colorconfig();
             break;
+        default:
+            std::cout << "Unknown keycode: "<< stroke.code << std::endl;
     }
     return false;
 }
