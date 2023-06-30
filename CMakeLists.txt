@@ -79,7 +79,7 @@ endif ()
 
 include_directories(Interception/)
 
-link_directories(Interception\\${ARCH_STRING}/)
+link_directories(Interception\\${ARCH_STRING})
 
 string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 string(REPLACE "/MDd" "/MTd" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")

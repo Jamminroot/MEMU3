@@ -42,8 +42,9 @@ private:
     void flick_handler();
     void hanzo_handler();
     void terminate_threads();
-    void apply_modifiers_common(Coords &coords) const;
+    void apply_modifiers_sensitivity(Coords &coords) const;
     static void apply_modifiers_hanzo(Coords &coords);
     void apply_modifiers_distance(Coords &coords) const;
     void apply_modifiers_strength(Coords &coords) const;
+    void apply_modifiers_strength_map(Coords &coords) const;
 };

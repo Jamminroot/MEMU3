@@ -19,6 +19,9 @@ public:
     static inline const float MAXIMUM_AIM_STRENGTH_VALUE = 10.0f;
     static inline const float MAXIMUM_SENSITIVITY_VALUE = 25.0f;
     static const int MAXIMUM_HANZO_VERTICAL_OFFSET_VALUE = 35;
+    static const int STRENGTH_MAP_HEIGHT = 600;
+    static const int STRENGTH_MAP_WIDTH = 800;
+
     void stop_thread_until_exit(HANDLE& handle) const;
     void pause_thread_if_not_running() const;
     Manager();
@@ -36,6 +39,7 @@ public:
     void decrease_sensitivity();
     void increase_sensitivity();
     void toggle_next_colorconfig();
+    void toggle_next_strengthmap();
     void initialize_color_table(const std::vector<RGBQUAD> &pColors, const bool pUseCacheFile);
     bool enemyVisible = false;
     bool screenshotUpdatedAndEnemyVisible = false;
@@ -46,6 +50,8 @@ public:
     int hanzoVerticalOffset = 20;
     int mouseTriggerKeyStates = 0;
     int lastKnownIndex = 0;
+    int scan_vertical_offset = 0;
+    int scan_horizontal_offset = 0;
     double elapsedScanTime = 0.0;
     float sensitivity;
     float strength;
@@ -69,19 +75,25 @@ public:
     Coords screenSize;
     Coords lastKnownBarSize;
     BYTE colorHashTable[COLOR_HASHTABLE_SIZE]{0};
+    BYTE strengthMap[STRENGTH_MAP_WIDTH][STRENGTH_MAP_HEIGHT]{0};
     float multiplierTable[MULTIPLIER_TABLE_SIZE]{0};
+    bool strength_map_ready;
 private:
-    bool parse_config_file_line(Configuration &config, std::string &line) const;
-    Configuration read_configuration() const;
+    void save_config() const;
+    bool parse_config_file_line(Configuration &config, std::string &line);
+    Configuration read_configuration();
+
     void fill_multiplier_table();
     static std::string hashtable_name(const std::vector<RGBQUAD> &pColors);
     bool dump_table(std::string &tablename) const;
     static bool probe_bytes_against_rgbquad(const BYTE r, const BYTE g, const BYTE b, const RGBQUAD targetColor);
     bool restore_table(std::string &tablename) const;
     bool read_next_colorconfig(std::vector<RGBQUAD> &colors, std::string &config);
+    bool read_next_strength_map(std::string &map);
     std::vector<std::string> list_files_by_mask(const std::string &mask);
     static RGBQUAD parse_rgbquad_from_string(const std::string &line);
     int currentColorconfigIndex = 0;
+    int currentStrengthMapIndex = 0;
     Coords median;
     Coords farHeadOffset;
     Coords closeHeadOffset;

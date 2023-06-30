@@ -75,51 +75,86 @@ void Manager::update_enemy_coords_with_local_coords(Coords coords) {
 }
 
 void Manager::increase_sensitivity() {
-    sensitivity = fmin(sensitivity + 0.1f, MAXIMUM_SENSITIVITY_VALUE);
+    auto new_val = fmin(sensitivity + 0.1f, MAXIMUM_SENSITIVITY_VALUE);
     Overlay::toggle_render();
+    if (new_val == sensitivity) return;
+    sensitivity = new_val;
+    save_config();
     Overlay::show_hint("Sensitivity: " + to_string(sensitivity));
 }
 
 void Manager::decrease_sensitivity() {
-    sensitivity = fmax(sensitivity - 0.1f, 0.1f);
+    auto new_val = fmax(sensitivity - 0.1f, 0.1f);
     Overlay::toggle_render();
+    if (new_val == sensitivity) return;
+    sensitivity = new_val;
+    save_config();
     Overlay::show_hint("Sensitivity: " + to_string(sensitivity));
 }
 
 void Manager::increase_mode_value() {
     switch (mode) {
         case flick:
-        case aim:
-            strength = fmin(strength + 0.5f, MAXIMUM_AIM_STRENGTH_VALUE);
+        case aim: {
+            auto new_val = fmin(strength + 0.1f, MAXIMUM_AIM_STRENGTH_VALUE);
+            if (new_val == strength)
+                break;
+            strength = new_val;
+            save_config();
             Overlay::show_hint("Strength: " + to_string(strength));
             break;
-        case trigger:
-            triggerDistanceThreshold = (int) fmin(++triggerDistanceThreshold, MAXIMUM_TRIGGER_THRESHOLD_VALUE);
+        }
+        case trigger: {
+            auto new_val = (int) fmin(++triggerDistanceThreshold, MAXIMUM_TRIGGER_THRESHOLD_VALUE);
+            if (new_val == triggerDistanceThreshold)
+                break;
+            triggerDistanceThreshold = new_val;
+            save_config();
             Overlay::show_hint("Distance: " + std::to_string(triggerDistanceThreshold));
             break;
-        case hanzo:
-            hanzoVerticalOffset = (int) fmin(++hanzoVerticalOffset, MAXIMUM_HANZO_VERTICAL_OFFSET_VALUE);
+        }
+        case hanzo: {
+            auto new_val = (int) fmin(++hanzoVerticalOffset, MAXIMUM_HANZO_VERTICAL_OFFSET_VALUE);
+            if (new_val == hanzoVerticalOffset)
+                break;
+            hanzoVerticalOffset = new_val;
+            save_config();
             Overlay::show_hint("Offset: " + std::to_string(hanzoVerticalOffset));
             break;
+        }
     }
-
 }
 
 void Manager::decrease_mode_value() {
     switch (mode) {
         case flick:
-        case aim:
-            strength = fmax(strength - 0.5f, 0.0f);
+        case aim: {
+            auto new_val = fmax(strength - 0.1f, 0.1f);
+            if (new_val == strength)
+                break;
+            strength = new_val;
+            save_config();
             Overlay::show_hint("Strength: " + to_string(strength));
             break;
-        case trigger:
-            triggerDistanceThreshold = (int) fmax(--triggerDistanceThreshold, 1);
+        }
+        case trigger: {
+            auto new_val = (int) fmax(--triggerDistanceThreshold, 1);
+            if (new_val == triggerDistanceThreshold)
+                break;
+            triggerDistanceThreshold = new_val;
+            save_config();
             Overlay::show_hint("Distance: " + std::to_string(triggerDistanceThreshold));
             break;
-        case hanzo:
-            hanzoVerticalOffset = (int) fmax(--hanzoVerticalOffset, 0);
+        }
+        case hanzo: {
+            auto new_val = (int) fmax(--hanzoVerticalOffset, 0);
+            if (new_val == hanzoVerticalOffset)
+                break;
+            hanzoVerticalOffset = new_val;
+            save_config();
             Overlay::show_hint("Offset: " + std::to_string(hanzoVerticalOffset));
             break;
+        }
     }
 }
 
@@ -184,6 +219,29 @@ bool Manager::read_next_colorconfig(std::vector<RGBQUAD> &colors, std::string &c
     return true;
 }
 
+bool Manager::read_next_strength_map(std::string &map) {
+    auto maps = list_files_by_mask("*.bmp");
+    if (maps.empty()) return false;
+
+    currentStrengthMapIndex = (currentStrengthMapIndex + 1) % maps.size();
+    map = maps[currentStrengthMapIndex];
+    std::string line;
+    std::ifstream configFile(map);
+    if (configFile.is_open()) {
+        // iterate through pixels of a bitmap
+        for (int y = 0; y < STRENGTH_MAP_HEIGHT; y++) {
+            for (int x = 0; x < STRENGTH_MAP_WIDTH; x++) {
+                // get x and y pixel, get rgbRed divided by 255.0 and put to strength_map
+                RGBQUAD pixel;
+                configFile.read((char *) &pixel, sizeof(RGBQUAD));
+                strengthMap[x][y] = pixel.rgbRed;
+            }
+        }
+    }
+    return true;
+}
+
+
 std::vector<std::string> Manager::list_files_by_mask(const std::string &mask) {
     std::vector<std::string> configs = std::vector<std::string>();
     try {
@@ -223,6 +281,22 @@ void Manager::toggle_next_colorconfig() {
         initialize_color_table(colors, true);
     } else {
         Overlay::show_hint("Can't toggle colorset");
+    }
+    if (runningCache) {
+        set_running(runningCache, true);
+    }
+}
+void Manager::toggle_next_strengthmap() {
+    auto runningCache = is_running();
+    set_running(false, true);
+
+    std::string fname;
+    if (read_next_strength_map(fname)) {
+        Overlay::show_hint("Strength map: " + split_string(fname, '.').at(0));
+        strength_map_ready = true;
+    } else {
+        Overlay::show_hint("Can't toggle strength map");
+        strength_map_ready = false;
     }
     if (runningCache) {
         set_running(runningCache, true);
@@ -324,7 +398,7 @@ void Manager::fill_multiplier_table() {
     }
 }
 
-Configuration Manager::read_configuration() const {
+Configuration Manager::read_configuration() {
     Configuration config = Configuration();
 
     std::string line;
@@ -337,7 +411,27 @@ Configuration Manager::read_configuration() const {
     return config;
 }
 
-bool Manager::parse_config_file_line(Configuration &config, std::string &line) const {
+
+void Manager::save_config() const {
+    std::ofstream configFile("MEMU3.config");
+    configFile << "strength=" << strength << std::endl;
+    configFile << "sensitivity=" << sensitivity << std::endl;
+    configFile << "x_multiplier=" << x_multiplier << std::endl;
+    configFile << "y_multiplier=" << y_multiplier << std::endl;
+    configFile << "point_a_distance=" << point_a_distance << std::endl;
+    configFile << "point_a_b_distance=" << point_a_b_distance << std::endl;
+    configFile << "point_b_c_distance=" << point_b_c_distance << std::endl;
+    configFile << "multiplier_at_closest=" << multiplier_at_closest << std::endl;
+    configFile << "multiplier_point_at_point_a=" << multiplier_point_at_point_a << std::endl;
+    configFile << "multiplier_point_at_point_b=" << multiplier_point_at_point_b << std::endl;
+    configFile << "multiplier_point_at_point_c=" << multiplier_point_at_point_c << std::endl;
+    configFile << "multiplier_at_furthest=" << multiplier_at_furthest << std::endl;
+    configFile << "scan_horizontal_offset=" << scan_horizontal_offset << std::endl;
+    configFile << "scan_vertical_offset=" << scan_vertical_offset << std::endl;
+    configFile.close();
+}
+
+bool Manager::parse_config_file_line(Configuration &config, std::string &line) {
     std::vector<std::string> parts = split_string(line, '=');
     if (parts.size() != 2) {
         return false;
@@ -374,9 +468,11 @@ bool Manager::parse_config_file_line(Configuration &config, std::string &line) c
         return true;
     } else if (key == "scan_vertical_offset") {
         config.scan_vertical_offset = atoi(value.c_str());
+        scan_vertical_offset = config.scan_vertical_offset;
         return true;
     } else if (key == "scan_horizontal_offset") {
         config.scan_horizontal_offset = atoi(value.c_str());
+        scan_horizontal_offset = config.scan_horizontal_offset;
         return true;
     } else if (key == "scan_width") {
         config.scan_width = atoi(value.c_str());
@@ -385,19 +481,19 @@ bool Manager::parse_config_file_line(Configuration &config, std::string &line) c
         config.scan_height = atoi(value.c_str());
         return true;
     } else if (key == "multiplier_at_closest") {
-        config.multiplier_at_closest = atof(value.c_str());
+        config.multiplier_at_closest = (float) atof(value.c_str());
         return true;
     } else if (key == "multiplier_point_at_point_a") {
-        config.multiplier_point_at_point_a = atof(value.c_str());
+        config.multiplier_point_at_point_a = (float)atof(value.c_str());
         return true;
     } else if (key == "multiplier_point_at_point_b") {
-        config.multiplier_point_at_point_b = atof(value.c_str());
+        config.multiplier_point_at_point_b = (float)atof(value.c_str());
         return true;
     } else if (key == "multiplier_point_at_point_c") {
-        config.multiplier_point_at_point_c = atof(value.c_str());
+        config.multiplier_point_at_point_c = (float)atof(value.c_str());
         return true;
     } else if (key == "multiplier_at_furthest") {
-        config.multiplier_at_furthest = atof(value.c_str());
+        config.multiplier_at_furthest = (float)atof(value.c_str());
         return true;
     } else if (key == "point_a_distance") {
         config.point_a_distance = atoi(value.c_str());
