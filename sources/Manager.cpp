@@ -525,14 +525,16 @@ void Manager::save_config() const {
     configFileStream << "sensitivity=" << config.sensitivity << std::endl;
     configFileStream << "x_multiplier=" << config.x_multiplier << std::endl;
     configFileStream << "y_multiplier=" << config.y_multiplier << std::endl;
-    configFileStream << "point_a_distance=" << config.point_a_distance << std::endl;
-    configFileStream << "point_a_b_distance=" << config.point_a_b_distance << std::endl;
-    configFileStream << "point_b_c_distance=" << config.point_b_c_distance << std::endl;
-    configFileStream << "multiplier_at_closest=" << config.multiplier_at_closest << std::endl;
-    configFileStream << "multiplier_point_at_point_a=" << config.multiplier_point_at_point_a << std::endl;
-    configFileStream << "multiplier_point_at_point_b=" << config.multiplier_point_at_point_b << std::endl;
-    configFileStream << "multiplier_point_at_point_c=" << config.multiplier_point_at_point_c << std::endl;
-    configFileStream << "multiplier_at_furthest=" << config.multiplier_at_furthest << std::endl;
+
+    // configFileStream << "point_a_distance=" << config.point_a_distance << std::endl;
+    // configFileStream << "point_a_b_distance=" << config.point_a_b_distance << std::endl;
+    // configFileStream << "point_b_c_distance=" << config.point_b_c_distance << std::endl;
+    // configFileStream << "multiplier_at_closest=" << config.multiplier_at_closest << std::endl;
+    // configFileStream << "multiplier_point_at_point_a=" << config.multiplier_point_at_point_a << std::endl;
+    // configFileStream << "multiplier_point_at_point_b=" << config.multiplier_point_at_point_b << std::endl;
+    // configFileStream << "multiplier_point_at_point_c=" << config.multiplier_point_at_point_c << std::endl;
+    // configFileStream << "multiplier_at_furthest=" << config.multiplier_at_furthest << std::endl;
+
     configFileStream << "scan_horizontal_offset=" << config.scan_horizontal_offset << std::endl;
     configFileStream << "scan_vertical_offset=" << config.scan_vertical_offset << std::endl;
     configFileStream << "close_offset_x=" << config.close_offset_x << std::endl;
@@ -592,30 +594,31 @@ bool Manager::parse_config_file_line(Configuration &config, std::string &line) {
     } else if (key == "scan_height") {
         config.scan_height = atoi(value.c_str());
         return true;
-    } else if (key == "multiplier_at_closest") {
-        config.multiplier_at_closest = (float) atof(value.c_str());
-        return true;
-    } else if (key == "multiplier_point_at_point_a") {
-        config.multiplier_point_at_point_a = (float)atof(value.c_str());
-        return true;
-    } else if (key == "multiplier_point_at_point_b") {
-        config.multiplier_point_at_point_b = (float)atof(value.c_str());
-        return true;
-    } else if (key == "multiplier_point_at_point_c") {
-        config.multiplier_point_at_point_c = (float)atof(value.c_str());
-        return true;
-    } else if (key == "multiplier_at_furthest") {
-        config.multiplier_at_furthest = (float)atof(value.c_str());
-        return true;
-    } else if (key == "point_a_distance") {
-        config.point_a_distance = atoi(value.c_str());
-        return true;
-    } else if (key == "point_a_b_distance") {
-        config.point_a_b_distance = atoi(value.c_str());
-        return true;
-    } else if (key == "point_b_c_distance") {
-        config.point_b_c_distance = atoi(value.c_str());
-        return true;
     }
+    //} else if (key == "multiplier_at_closest") {
+    //    config.multiplier_at_closest = (float) atof(value.c_str());
+    //    return true;
+    //} else if (key == "multiplier_point_at_point_a") {
+    //    config.multiplier_point_at_point_a = (float)atof(value.c_str());
+    //    return true;
+    //} else if (key == "multiplier_point_at_point_b") {
+    //    config.multiplier_point_at_point_b = (float)atof(value.c_str());
+    //    return true;
+    //} else if (key == "multiplier_point_at_point_c") {
+    //    config.multiplier_point_at_point_c = (float)atof(value.c_str());
+    //    return true;
+    //} else if (key == "multiplier_at_furthest") {
+    //    config.multiplier_at_furthest = (float)atof(value.c_str());
+    //    return true;
+    //} else if (key == "point_a_distance") {
+    //    config.point_a_distance = atoi(value.c_str());
+    //    return true;
+    //} else if (key == "point_a_b_distance") {
+    //    config.point_a_b_distance = atoi(value.c_str());
+    //    return true;
+    //} else if (key == "point_b_c_distance") {
+    //    config.point_b_c_distance = atoi(value.c_str());
+    //    return true;
+    //}
     return false;
 }
