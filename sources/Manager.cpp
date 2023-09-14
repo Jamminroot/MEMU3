@@ -7,6 +7,8 @@
 #include <mutex>
 #include <fstream>
 #include <math.h>
+#include <iostream>
+#include <windows.h>
 
 std::mutex exit_mutex;
 std::mutex pause_mutex;
@@ -26,21 +28,6 @@ Manager::Manager() : running(false), exitRequested(false) {
     screenshot = ScreenshotData(regionSizeAndOffset);
     farHeadOffset = Coords(config.far_offset_x, config.far_offset_y);
     closeHeadOffset = Coords(config.close_offset_x, config.close_offset_y);
-    sensitivity = config.sensitivity;
-    strength = config.strength;
-    x_multiplier = config.x_multiplier;
-    y_multiplier = config.y_multiplier;
-
-    point_a_distance = config.point_a_distance;
-    point_a_b_distance = config.point_a_b_distance;
-    point_b_c_distance = config.point_b_c_distance;
-
-    multiplier_at_closest = config.multiplier_at_closest;
-    multiplier_point_at_point_a = config.multiplier_point_at_point_a;
-    multiplier_point_at_point_b = config.multiplier_point_at_point_b;
-    multiplier_point_at_point_c = config.multiplier_point_at_point_c;
-    multiplier_at_furthest = config.multiplier_at_furthest;
-
 
     RECT desktop;
     const auto hDesktop = GetDesktopWindow();
@@ -75,33 +62,33 @@ void Manager::update_enemy_coords_with_local_coords(Coords coords) {
 }
 
 void Manager::increase_sensitivity() {
-    auto new_val = fmin(sensitivity + 0.1f, MAXIMUM_SENSITIVITY_VALUE);
+    auto new_val = fmin(config.sensitivity + 0.1f, MAXIMUM_SENSITIVITY_VALUE);
     Overlay::toggle_render();
-    if (new_val == sensitivity) return;
-    sensitivity = new_val;
+    if (new_val == config.sensitivity) return;
+    config.sensitivity = new_val;
     save_config();
-    Overlay::show_hint("Sensitivity: " + to_string(sensitivity));
+    Overlay::show_hint("Sensitivity: " + to_string(config.sensitivity));
 }
 
 void Manager::decrease_sensitivity() {
-    auto new_val = fmax(sensitivity - 0.1f, 0.1f);
+    auto new_val = fmax(config.sensitivity - 0.1f, 0.1f);
     Overlay::toggle_render();
-    if (new_val == sensitivity) return;
-    sensitivity = new_val;
+    if (new_val == config.sensitivity) return;
+    config.sensitivity = new_val;
     save_config();
-    Overlay::show_hint("Sensitivity: " + to_string(sensitivity));
+    Overlay::show_hint("Sensitivity: " + to_string(config.sensitivity));
 }
 
 void Manager::increase_mode_value() {
     switch (mode) {
         case flick:
         case aim: {
-            auto new_val = fmin(strength + 0.1f, MAXIMUM_AIM_STRENGTH_VALUE);
-            if (new_val == strength)
+            auto new_val = fmin(config.strength + 0.1f, MAXIMUM_AIM_STRENGTH_VALUE);
+            if (new_val == config.strength)
                 break;
-            strength = new_val;
+            config.strength = new_val;
             save_config();
-            Overlay::show_hint("Strength: " + to_string(strength));
+            Overlay::show_hint("Strength: " + to_string(config.strength));
             break;
         }
         case trigger: {
@@ -129,12 +116,12 @@ void Manager::decrease_mode_value() {
     switch (mode) {
         case flick:
         case aim: {
-            auto new_val = fmax(strength - 0.1f, 0.1f);
-            if (new_val == strength)
+            auto new_val = fmax(config.strength - 0.1f, 0.1f);
+            if (new_val == config.strength)
                 break;
-            strength = new_val;
+            config.strength = new_val;
             save_config();
-            Overlay::show_hint("Strength: " + to_string(strength));
+            Overlay::show_hint("Strength: " + to_string(config.strength));
             break;
         }
         case trigger: {
@@ -219,25 +206,145 @@ bool Manager::read_next_colorconfig(std::vector<RGBQUAD> &colors, std::string &c
     return true;
 }
 
-bool Manager::read_next_strength_map(std::string &map) {
-    auto maps = list_files_by_mask("*.bmp");
-    if (maps.empty()) return false;
+bool Manager::read_next_strength_map(std::string &message) {
+    auto maps = list_files_by_mask("maps/*.bmp");
+    if (maps.empty()) {
+        message = "No strength maps found";
+        return false;
+    }
 
     currentStrengthMapIndex = (currentStrengthMapIndex + 1) % maps.size();
-    map = maps[currentStrengthMapIndex];
+    auto map = maps[currentStrengthMapIndex];
     std::string line;
-    std::ifstream configFile(map);
-    if (configFile.is_open()) {
-        // iterate through pixels of a bitmap
-        for (int y = 0; y < STRENGTH_MAP_HEIGHT; y++) {
-            for (int x = 0; x < STRENGTH_MAP_WIDTH; x++) {
-                // get x and y pixel, get rgbRed divided by 255.0 and put to strength_map
-                RGBQUAD pixel;
-                configFile.read((char *) &pixel, sizeof(RGBQUAD));
-                strengthMap[x][y] = pixel.rgbRed;
+    std::ifstream bmpFile("maps/" + map);
+    int distribution[255] {0};
+
+    HBITMAP hBitmap = (HBITMAP)LoadImageA(NULL, ("maps/"+map).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+    if (hBitmap == NULL) {
+#if DEBUG
+        std::cout << "Failed to open strength map: " << map << std::endl;
+#endif
+        message = "Failed to open strength map: " + map;
+        return false;
+    }
+
+    BITMAP bitmap;
+    GetObject(hBitmap, sizeof(bitmap), &bitmap);
+
+    if (bitmap.bmHeight != STRENGTH_MAP_HEIGHT || bitmap.bmWidth != STRENGTH_MAP_WIDTH) {
+#if DEBUG
+        std::cout << "Invalid strength map size: " << map << std::endl;
+#endif
+        message = "Invalid strength map size: " + map;
+        return false;
+    }
+
+    // Create a buffer to hold the pixel data
+    std::vector<RGBQUAD> pixels(bitmap.bmWidth * bitmap.bmHeight);
+
+    // Get the device context
+    HDC hdc = GetDC(NULL);
+
+    // Select the bitmap into the device context
+    HBITMAP hOldBitmap = (HBITMAP)SelectObject(hdc, hBitmap);
+
+    // Get the pixel data
+    BITMAPINFO bmi = { 0 };
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = bitmap.bmWidth;
+    bmi.bmiHeader.biHeight = - bitmap.bmHeight; // top-down
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32; // BGRA
+    bmi.bmiHeader.biCompression = BI_RGB;
+    GetDIBits(hdc, hBitmap, 0, bitmap.bmHeight, pixels.data(), &bmi, DIB_RGB_COLORS);
+
+    // Revert the device context
+    SelectObject(hdc, hOldBitmap);
+
+    // Release the device context
+    ReleaseDC(NULL, hdc);
+
+    // Delete the bitmap
+    DeleteObject(hBitmap);
+
+    // Filter the pixels
+    std::vector<RGBQUAD> filteredPixels;
+    auto x = 0;
+    auto y = 0;
+    for (const RGBQUAD& pixel : pixels) {
+
+        x ++;
+        if (x >= bitmap.bmWidth) {
+            x = 0;
+            y ++;
+        }
+        auto px = pixel.rgbRed;
+        strengthMap[x][y] = px;
+        distribution[px]++;
+    }
+
+
+#if DEBUG
+    std::vector <int> buckets;
+    std::cout << "Strength map: " << map << std::endl;
+    const int bucket_size = 10;
+    auto bucket_total = 0;
+    auto max = 0;
+    for(int i = 0; i < 255; i++) {
+        bucket_total += distribution[i];
+        if (i % bucket_size == 0) {
+
+            std::cout << i << ": " << bucket_total << "\t";
+
+            buckets.push_back(bucket_total);
+            if (bucket_total > max) {
+                max = bucket_total;
             }
+            bucket_total = 0;
         }
     }
+    buckets.push_back(bucket_total);
+    const int max_draw_length = 200;
+    std::cout << std::endl;
+    for(int i = 0; i < buckets.size(); i++) {
+        auto bucket = buckets[i];
+        auto bucket_size = bucket / (max/max_draw_length);
+        std::cout << i * 10 << "\t: ";
+        for(int j = 0; j < bucket_size; j++) {
+            std::cout << "#";
+        }
+        std::cout << "\t\t\t(" << bucket << ")" << std::endl;
+    }
+
+    std::cout << std::endl;
+#endif
+    auto minimums = distribution[0] + distribution[1] + distribution[2];
+    auto maximums = distribution[255] + distribution[254] + distribution[253] + distribution[252] + distribution[251];
+
+#if DEBUG
+    std::cout << "Minimums: " << minimums << std::endl;
+    std::cout << "Maximums: " << maximums << std::endl;
+#endif
+    auto size = STRENGTH_MAP_HEIGHT * STRENGTH_MAP_WIDTH;
+    if (minimums >= (int) (size * 0.97f)) {
+        // Too many zeros
+        message = "Too many minimums" + std::to_string(minimums) +" max=" + std::to_string((int)(size * 0.99f));
+        return false;
+    }
+    if (maximums >= (int) (size * 0.97f)) {
+        // Too many maximums
+        message = "Too many maximums: " + std::to_string(maximums) +" max=" + std::to_string((int)(size * 0.99f));
+        return false;
+    }
+    if (maximums < 1) {
+        // Too few maximums
+        message = "White pixel (red>250) not found";
+        return false;
+    }
+    message =  split_string(map, '.').at(0);
+#if DEBUG
+    std::cout << "Strength map loaded: " << map << std::endl;
+#endif
     return true;
 }
 
@@ -289,13 +396,12 @@ void Manager::toggle_next_colorconfig() {
 void Manager::toggle_next_strengthmap() {
     auto runningCache = is_running();
     set_running(false, true);
-
-    std::string fname;
-    if (read_next_strength_map(fname)) {
-        Overlay::show_hint("Strength map: " + split_string(fname, '.').at(0));
+    std::string message;
+    if (read_next_strength_map(message)) {
+        Overlay::show_hint("Strength map loaded: " + message);
         strength_map_ready = true;
     } else {
-        Overlay::show_hint("Can't toggle strength map");
+        Overlay::show_hint("Can't load strength map: " + message);
         strength_map_ready = false;
     }
     if (runningCache) {
@@ -368,33 +474,33 @@ bool Manager::probe_bytes_against_rgbquad(const BYTE r, const BYTE g, const BYTE
 
 void Manager::fill_multiplier_table() {
     int distance = 0;
-    auto bracketSize = point_a_distance;
+    auto bracketSize = config.point_a_distance;
     for (auto i = 0; i < bracketSize; ++i) {
         distance++;
         if (distance > MULTIPLIER_TABLE_SIZE) break;
-        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), multiplier_at_closest,
-                                               multiplier_point_at_point_a);
+        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), config.multiplier_at_closest,
+                                               config.multiplier_point_at_point_a);
     }
-    bracketSize = point_a_b_distance;
+    bracketSize = config.point_a_b_distance;
 
     for (auto i = 0; i < bracketSize; ++i) {
         distance++;
         if (distance > MULTIPLIER_TABLE_SIZE) break;
-        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), multiplier_point_at_point_a,
-                                               multiplier_point_at_point_b);
+        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), config.multiplier_point_at_point_a,
+                                               config.multiplier_point_at_point_b);
     }
-    bracketSize = point_b_c_distance;
+    bracketSize = config.point_b_c_distance;
     for (auto i = 0; i < 50; ++i) {
         distance++;
         if (distance > MULTIPLIER_TABLE_SIZE) break;
-        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), multiplier_point_at_point_b,
-                                               multiplier_point_at_point_c);
+        multiplierTable[distance] = lerp_value(float(distance) / float(bracketSize), config.multiplier_point_at_point_b,
+                                               config.multiplier_point_at_point_c);
     }
     for (auto i = distance; i < MULTIPLIER_TABLE_SIZE; ++i) {
         multiplierTable[i] = lerp_value((float) i / (MULTIPLIER_TABLE_SIZE -
-                                                     (float) (point_a_distance + point_a_b_distance +
-                                                              point_b_c_distance)), multiplier_point_at_point_c,
-                                        multiplier_at_furthest);
+                                                     (float) (config.point_a_distance + config.point_a_b_distance +
+                                                             config.point_b_c_distance)), config.multiplier_point_at_point_c,
+                                        config.multiplier_at_furthest);
     }
 }
 
@@ -413,22 +519,30 @@ Configuration Manager::read_configuration() {
 
 
 void Manager::save_config() const {
-    std::ofstream configFile("MEMU3.config");
-    configFile << "strength=" << strength << std::endl;
-    configFile << "sensitivity=" << sensitivity << std::endl;
-    configFile << "x_multiplier=" << x_multiplier << std::endl;
-    configFile << "y_multiplier=" << y_multiplier << std::endl;
-    configFile << "point_a_distance=" << point_a_distance << std::endl;
-    configFile << "point_a_b_distance=" << point_a_b_distance << std::endl;
-    configFile << "point_b_c_distance=" << point_b_c_distance << std::endl;
-    configFile << "multiplier_at_closest=" << multiplier_at_closest << std::endl;
-    configFile << "multiplier_point_at_point_a=" << multiplier_point_at_point_a << std::endl;
-    configFile << "multiplier_point_at_point_b=" << multiplier_point_at_point_b << std::endl;
-    configFile << "multiplier_point_at_point_c=" << multiplier_point_at_point_c << std::endl;
-    configFile << "multiplier_at_furthest=" << multiplier_at_furthest << std::endl;
-    configFile << "scan_horizontal_offset=" << scan_horizontal_offset << std::endl;
-    configFile << "scan_vertical_offset=" << scan_vertical_offset << std::endl;
-    configFile.close();
+    std::ofstream configFileStream("MEMU3.config");
+
+    configFileStream << "strength=" << config.strength << std::endl;
+    configFileStream << "sensitivity=" << config.sensitivity << std::endl;
+    configFileStream << "x_multiplier=" << config.x_multiplier << std::endl;
+    configFileStream << "y_multiplier=" << config.y_multiplier << std::endl;
+    configFileStream << "point_a_distance=" << config.point_a_distance << std::endl;
+    configFileStream << "point_a_b_distance=" << config.point_a_b_distance << std::endl;
+    configFileStream << "point_b_c_distance=" << config.point_b_c_distance << std::endl;
+    configFileStream << "multiplier_at_closest=" << config.multiplier_at_closest << std::endl;
+    configFileStream << "multiplier_point_at_point_a=" << config.multiplier_point_at_point_a << std::endl;
+    configFileStream << "multiplier_point_at_point_b=" << config.multiplier_point_at_point_b << std::endl;
+    configFileStream << "multiplier_point_at_point_c=" << config.multiplier_point_at_point_c << std::endl;
+    configFileStream << "multiplier_at_furthest=" << config.multiplier_at_furthest << std::endl;
+    configFileStream << "scan_horizontal_offset=" << config.scan_horizontal_offset << std::endl;
+    configFileStream << "scan_vertical_offset=" << config.scan_vertical_offset << std::endl;
+    configFileStream << "close_offset_x=" << config.close_offset_x << std::endl;
+    configFileStream << "close_offset_y=" << config.close_offset_y << std::endl;
+    configFileStream << "far_offset_x=" << config.far_offset_x << std::endl;
+    configFileStream << "far_offset_y=" << config.far_offset_y << std::endl;
+    configFileStream << "scan_width=" << config.scan_width << std::endl;
+    configFileStream << "scan_height=" << config.scan_height << std::endl;
+
+    configFileStream.close();
 }
 
 bool Manager::parse_config_file_line(Configuration &config, std::string &line) {
@@ -468,11 +582,9 @@ bool Manager::parse_config_file_line(Configuration &config, std::string &line) {
         return true;
     } else if (key == "scan_vertical_offset") {
         config.scan_vertical_offset = atoi(value.c_str());
-        scan_vertical_offset = config.scan_vertical_offset;
         return true;
     } else if (key == "scan_horizontal_offset") {
         config.scan_horizontal_offset = atoi(value.c_str());
-        scan_horizontal_offset = config.scan_horizontal_offset;
         return true;
     } else if (key == "scan_width") {
         config.scan_width = atoi(value.c_str());

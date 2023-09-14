@@ -120,10 +120,11 @@ bool InputController::handle_keyboard_stroke(InterceptionKeyStroke &stroke) {
             manager.toggle_next_colorconfig();
             break;
         case KeyCode::NumpadDivide:
+        case KeyCode::F3:
             manager.toggle_next_strengthmap();
             break;
         default:
-            std::cout << "Unknown keycode: "<< stroke.code << std::endl;
+            break;
     }
     return false;
 }

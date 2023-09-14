@@ -12,7 +12,7 @@ public:
     AimAssistant(class Manager &pManager);
 private:
     const int IGNORED_BORDER_SIZE = 5;
-    const int SCANNING_THRESHOLD_PERCENT = 80;
+    const int SCANNING_THRESHOLD_PERCENT = 83;
     const int CHECK_COEFFICIENT = 100 / (IGNORED_BORDER_SIZE * IGNORED_BORDER_SIZE);
     BYTE (&hashTable)[Manager::COLOR_HASHTABLE_SIZE];
     Manager &manager;

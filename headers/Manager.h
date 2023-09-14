@@ -50,23 +50,9 @@ public:
     int hanzoVerticalOffset = 20;
     int mouseTriggerKeyStates = 0;
     int lastKnownIndex = 0;
-    int scan_vertical_offset = 0;
-    int scan_horizontal_offset = 0;
     double elapsedScanTime = 0.0;
-    float sensitivity;
-    float strength;
-    float x_multiplier;
-    float y_multiplier;
 
-    float multiplier_at_closest=0.01f;
-    float multiplier_point_at_point_a=0.4f;
-    float multiplier_point_at_point_b=1.0f;
-    float multiplier_point_at_point_c=0.8f;
-    float multiplier_at_furthest=0.2f;
-
-    int point_a_distance = 25;
-    int point_a_b_distance = 25;
-    int point_b_c_distance = 50;
+    Configuration config;
 
     Mode mode = aim;
     Rect region;
@@ -75,7 +61,7 @@ public:
     Coords screenSize;
     Coords lastKnownBarSize;
     BYTE colorHashTable[COLOR_HASHTABLE_SIZE]{0};
-    BYTE strengthMap[STRENGTH_MAP_WIDTH][STRENGTH_MAP_HEIGHT]{0};
+    BYTE strengthMap[STRENGTH_MAP_WIDTH][STRENGTH_MAP_HEIGHT]{0 };
     float multiplierTable[MULTIPLIER_TABLE_SIZE]{0};
     bool strength_map_ready;
 private:

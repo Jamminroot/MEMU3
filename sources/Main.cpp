@@ -20,7 +20,7 @@ int main() {
         return 0;
     }
     SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-    //HideConsole();
+    HideConsole();
     auto manager = Manager();
     Overlay::init(manager);
     auto assistant = AimAssistant(manager);

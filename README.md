@@ -20,6 +20,8 @@ In order for software itself to work you'd need to install interception mouse dr
 
 F2 - Change mode
 
+F3 - Change strength pattern (refer to [maps directory](./maps)) 
+
 Num-8 - Use different color settings (For version 1.0 I've included pre-calculated settings for red (enemy) and neon (allies) colors) (it's those obnoxious files 2mb files)
 
 ALT - Toggle On/Off
@@ -28,9 +30,11 @@ Num-Del - Change Debug UI mode
 
 Num-0 - Change UI mode
 
+Num-1 - Shutdown 
+
 Num-Plus \ Num-Minus - Increase\decrease strength (or mode-specific value)
 
-Num-9 \ Num-3 - Increase\decrease sensitivity (affects flickshots)
+Num-9 \ Num-3 - Increase\decrease sensitivity (match it with your in-game sensitivity)
 
 ---
 

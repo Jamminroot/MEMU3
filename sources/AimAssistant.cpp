@@ -26,6 +26,7 @@ AimAssistant::AimAssistant(class Manager &pManager) : manager(pManager), input(m
                                    {48,  41,  211, 16},
                                    {0,   10,  221, 16},};
     manager.initialize_color_table(colors, true);
+    manager.toggle_next_strengthmap();
     colors.clear();
     std::thread mainThread(&AimAssistant::main_thread, this);
     SetThreadPriority(mainThread.native_handle(), THREAD_PRIORITY_ABOVE_NORMAL);
@@ -292,8 +293,8 @@ void AimAssistant::flick_and_release(const Coords &coords) {
     if (suspendThreads) terminate_thread_cond.wait(lck);
     auto target = coords;
     threadCount++;
-    apply_modifiers_sensitivity(target);
     apply_modifiers_hanzo(target);
+    apply_modifiers_sensitivity(target);
     input.move_by(target.x, target.y);
     std::this_thread::sleep_for(std::chrono::milliseconds(next_random_user_delay()));
     input.lmb_release();
@@ -311,10 +312,10 @@ void AimAssistant::move_by_smoothed(const Coords &coords) {
     if (manager.strength_map_ready){
         apply_modifiers_strength_map(target);
     }
+    apply_modifiers_strength(target);
     //apply_modifiers_distance(target);
     apply_modifiers_sensitivity(target);
 
-    apply_modifiers_strength(target);
 
     auto steps = 5.000f;
     auto divX = (float) target.x / (steps);
@@ -343,9 +344,8 @@ void AimAssistant::terminate_threads() {
 }
 
 void AimAssistant::apply_modifiers_sensitivity(Coords &coords) const {
-    coords.x = (int) ((float) coords.x * manager.sensitivity);
-    coords.y = (int) ((float) coords.y * manager.sensitivity);
-}
+    coords.x = (int) ((float) coords.x * manager.config.sensitivity);
+    coords.y = (int) ((float) coords.y * manager.config.sensitivity);}
 
 void AimAssistant::apply_modifiers_hanzo(Coords &coords) {
     coords.y -= 15;
@@ -374,6 +374,7 @@ void AimAssistant::handle_screenshot() {
     }
 }
 
+// That is outdated, and only here for reference
 void AimAssistant::apply_modifiers_distance(Coords &coords) const {
     auto index = (int) coords.length;
     float distance_multiplier;
@@ -387,23 +388,16 @@ void AimAssistant::apply_modifiers_distance(Coords &coords) const {
 }
 
 void AimAssistant::apply_modifiers_strength_map(Coords &coords) const {
-    auto index = (int) coords.length;
-    float distance_multiplier;
-    if (index >= Manager::MULTIPLIER_TABLE_SIZE) {
-        distance_multiplier = 0.2f;
-    } else {
-        distance_multiplier = manager.multiplierTable[index];
-    }
 
-    BYTE b = manager.strengthMap[coords.x][coords.y];
-    std::cout<<"Multiplying by by "<< (int)b << " pixels, target at " << coords.x << ":" << coords.y << std::endl;
+    BYTE b = manager.strengthMap[coords.x + manager.STRENGTH_MAP_WIDTH/2][coords.y + manager.STRENGTH_MAP_HEIGHT / 2];
+
     auto str = static_cast<float>(b) / 255.0f;
     coords.x = (int) ((float) coords.x * str);
     coords.y = (int) ((float) coords.y * str);
 }
 
 void AimAssistant::apply_modifiers_strength(Coords &coords) const {
-    coords.x = (int) ((float) coords.x * manager.strength * manager.x_multiplier);
-    coords.y = (int) ((float) coords.y * manager.strength * manager.y_multiplier);
+    coords.x = (int) ((float) coords.x * manager.config.strength * manager.config.x_multiplier);
+    coords.y = (int) ((float) coords.y * manager.config.strength * manager.config.y_multiplier);
 }
 

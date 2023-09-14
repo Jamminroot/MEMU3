@@ -385,14 +385,14 @@ void Overlay::render_debug_ui() {
 
 void Overlay::draw_strength_ui(float y) {
     draw_filled(5, y, 80, 15, 0, 0, 0, 220);
-    draw_filled(5, y, (manager.strength / 10.0f) * 80, 15, 25, 230, 25, 220);
-    draw_string("STR:   " + to_string(manager.strength, 1), 10, (int) y, 220, 200, 100, true);
+    draw_filled(5, y, (manager.config.strength / 10.0f) * 80, 15, 25, 230, 25, 220);
+    draw_string("STR:   " + to_string(manager.config.strength, 1), 10, (int) y, 220, 200, 100, true);
 }
 
 void Overlay::draw_sensitivity_ui(float y) {
     draw_filled(5, y, 80, 15, 0, 0, 0, 220);
-    draw_filled(5, y, (manager.sensitivity / Manager::MAXIMUM_SENSITIVITY_VALUE) * 80, 15, 25, 230, 25, 220);
-    draw_string(("SENS: " + to_string(manager.sensitivity, 1)), 10, (int) y, 220, 200, 100, true);
+    draw_filled(5, y, (manager.config.sensitivity / Manager::MAXIMUM_SENSITIVITY_VALUE) * 80, 15, 25, 230, 25, 220);
+    draw_string(("SENS: " + to_string(manager.config.sensitivity, 1)), 10, (int) y, 220, 200, 100, true);
 }
 
 void Overlay::draw_hanzo_offset_ui(float y) {
@@ -454,7 +454,8 @@ void Overlay::render_hints() {
     if (hints.empty()) return;
     auto index = 0;
     for (auto &item: Overlay::hints.strings()) {
-        draw_filled(90, (float) 24 + (float) 24 * index, 180.0f, 24, 10, 10, 10, 190);
+        auto len = (float) item.length();
+        draw_filled(90, (float) 24 + (float) 24 * index, len * 10, 24, 10, 10, 10, 190);
         draw_string((char *) item.c_str(), 95, 24 + 24 * index, 220, 200, 100); // Put Main procedure here like ESP etc.
         index++;
     }
@@ -608,8 +609,9 @@ int WINAPI Overlay::run() {
             */
             DispatchMessage(&Message);
         }
-
-        if (timePoint < renderEndTimePoint || !hints.empty()) {
+        if ((uiMode == UiMode::Full || uiMode == UiMode::DebugOnly) && ( debugUiMode != DebugUiMode::Off)) {
+            render();
+        } else if (timePoint < renderEndTimePoint || !hints.empty()) {
             render();
             //std::this_thread::sleep_for(std::chrono::milliseconds(100));
             ui_cond.wait_for(lock, std::chrono::milliseconds(100));

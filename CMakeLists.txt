@@ -10,8 +10,10 @@ set(SUGGESTED_STACK_SIZE 10000000)
 if (TARGET_64)
     set(ARCH_STRING x64)
     add_definitions(-DTARGET_64=1)
+    message("64 bit target detected")
 else ()
     set(ARCH_STRING x86)
+    message("32 bit target detected")
 endif ()
 
 string(TOUPPER "${CMAKE_BUILD_TYPE}" VARIANT)
@@ -50,10 +52,13 @@ configure_file(Icons/Trigger.bmp Trigger.bmp COPYONLY)
 configure_file(Icons/Hanzo.bmp Hanzo.bmp COPYONLY)
 configure_file(Icons/Flick.bmp Flick.bmp COPYONLY)
 
-configure_file(SampleConfigs/red.colorset red.colorset COPYONLY)
-configure_file(SampleConfigs/red+neon.colorset red+neon.colorset COPYONLY)
-configure_file(SampleConfigs/neon.colorset neon.colorset COPYONLY)
-configure_file(SampleConfigs/MEMU3.config MEMU3.config COPYONLY)
+# Copy maps folder on every build
+file(COPY "maps" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+configure_file(Configs/red.colorset red.colorset COPYONLY)
+configure_file(Configs/red+neon.colorset red+neon.colorset COPYONLY)
+configure_file(Configs/neon.colorset neon.colorset COPYONLY)
+configure_file(Configs/MEMU3.config MEMU3.config COPYONLY)
 
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
 
@@ -80,6 +85,9 @@ endif ()
 include_directories(Interception/)
 
 link_directories(Interception\\${ARCH_STRING})
+
+file(COPY "Interception\\${ARCH_STRING}\\interception.dll" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 
 string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 string(REPLACE "/MDd" "/MTd" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
