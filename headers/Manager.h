@@ -67,7 +67,7 @@ public:
 private:
     void save_config() const;
     bool parse_config_file_line(Configuration &config, std::string &line);
-    Configuration read_configuration();
+    bool read_configuration(Configuration &config);
 
     void fill_multiplier_table();
     static std::string hashtable_name(const std::vector<RGBQUAD> &pColors);

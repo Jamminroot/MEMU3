@@ -22,7 +22,7 @@ bool Manager::is_running() const {
 }
 
 Manager::Manager() : running(false), exitRequested(false) {
-    Configuration config = read_configuration();
+    read_configuration(config);
     Rect regionSizeAndOffset = Rect(config.scan_width, config.scan_height, config.scan_horizontal_offset,
                                     config.scan_vertical_offset);
     screenshot = ScreenshotData(regionSizeAndOffset);
@@ -504,17 +504,17 @@ void Manager::fill_multiplier_table() {
     }
 }
 
-Configuration Manager::read_configuration() {
-    Configuration config = Configuration();
-
+bool Manager::read_configuration(Configuration &config) {
     std::string line;
     std::ifstream configFile("MEMU3.config");
     if (configFile.is_open()) {
         while (getline(configFile, line)) {
             parse_config_file_line(config, line);
         }
+        configFile.close();
+        return true;
     }
-    return config;
+    return false;
 }
 
 
