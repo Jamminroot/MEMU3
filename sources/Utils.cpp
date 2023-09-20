@@ -124,3 +124,14 @@ std::vector<std::string> list_files_by_mask(const std::string &mask, const std::
     }
     return files;
 }
+
+BITMAPINFO create_bitmap_info_struct(int width, int height, int bitCount) {
+    BITMAPINFO bmpInfo = {0};
+    bmpInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmpInfo.bmiHeader.biWidth = width;
+    bmpInfo.bmiHeader.biHeight = height;
+    bmpInfo.bmiHeader.biPlanes = 1;
+    bmpInfo.bmiHeader.biBitCount = bitCount;
+    bmpInfo.bmiHeader.biCompression = BI_RGB;
+    return bmpInfo;
+}

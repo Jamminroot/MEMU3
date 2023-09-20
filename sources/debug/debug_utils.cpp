@@ -2,10 +2,10 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "../headers/debug/stb_image.h"
+#include "../../headers/Utils.h"
 
-void print_bitmap_console(BITMAP &bitmap) {
-    static constexpr int scale_x = 1;
-    static constexpr int scale_y = 3;
+
+void print_bitmap_console(BITMAP &bitmap, int scale_x, int scale_y) {
 
     int width = bitmap.bmWidth;
     int height = bitmap.bmHeight;
@@ -37,14 +37,19 @@ void print_bitmap_console(BITMAP &bitmap) {
     }
 }
 
-bool dump_bitmap(HBITMAP &hBitmap, LPCTSTR lpszFileName) {
+void print_hbitmap_console(HBITMAP &hbitmap, int scale_x, int scale_y) {
+    BITMAP bitmap;
+    GetObject(hbitmap, sizeof(BITMAP), &bitmap);
+    print_bitmap_console(bitmap, scale_x, scale_y);
+}
+
+bool dump_bitmap(HBITMAP &hBitmap, const std::string &filename) {
     HDC hDC;
     int iBits;
     WORD wBitCount;
     DWORD dwPaletteSize = 0, dwBmBitsSize = 0, dwDIBSize = 0, dwWritten = 0;
     BITMAP Bitmap0;
     BITMAPFILEHEADER bmfHdr;
-    BITMAPINFOHEADER bi;
     LPBITMAPINFOHEADER lpbi;
     HANDLE fh, hDib, hPal, hOldPal2 = nullptr;
     hDC = CreateDC(TEXT("DISPLAY"), nullptr, nullptr, nullptr);
@@ -59,12 +64,7 @@ bool dump_bitmap(HBITMAP &hBitmap, LPCTSTR lpszFileName) {
     else
         wBitCount = 24;
     GetObject(hBitmap, sizeof(Bitmap0), (LPSTR)&Bitmap0);
-    bi.biSize = sizeof(BITMAPINFOHEADER);
-    bi.biWidth = Bitmap0.bmWidth;
-    bi.biHeight = -Bitmap0.bmHeight;
-    bi.biPlanes = 1;
-    bi.biBitCount = wBitCount;
-    bi.biCompression = BI_RGB;
+    BITMAPINFOHEADER bi = create_bitmap_info_struct(Bitmap0.bmWidth, -Bitmap0.bmHeight, wBitCount).bmiHeader;
     bi.biSizeImage = 0;
     bi.biXPelsPerMeter = 0;
     bi.biYPelsPerMeter = 0;
@@ -95,7 +95,7 @@ bool dump_bitmap(HBITMAP &hBitmap, LPCTSTR lpszFileName) {
         ReleaseDC(nullptr, hDC);
     }
 
-    fh = CreateFile(lpszFileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+    fh = CreateFileA(filename.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
                     FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
 
     if (fh == INVALID_HANDLE_VALUE)
@@ -117,11 +117,6 @@ bool dump_bitmap(HBITMAP &hBitmap, LPCTSTR lpszFileName) {
     return TRUE;
 }
 
-void print_hbitmap_console(HBITMAP &hbitmap) {
-    BITMAP bitmap;
-    GetObject(hbitmap, sizeof(BITMAP), &bitmap);
-    print_bitmap_console(bitmap);
-}
 
 void print_pixel_console(unsigned char r, unsigned char g, unsigned char b) {
     static std::string asciiChars = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'.";
@@ -136,8 +131,39 @@ void print_pixel_console(unsigned char r, unsigned char g, unsigned char b) {
     std::cout << "\033[0m";
 }
 
-bool debug_print_layers(const std::vector<std::vector<Coords>> &layers, HBITMAP &hBitmap) {
+bool debug_print_layers(const std::vector<std::vector<Coords>> &layers, const HDC &hdc, const std::vector<COLORREF> &colors) {
+    for (auto i = 0; i < layers.size(); ++i){
+        debug_print_layer(layers[i], hdc, colors[i%colors.size()]);
+    }
     return true;
+}
+
+bool debug_print_layer(const std::vector<Coords> &layer, const HDC &hdc, const COLORREF &color){
+    for(auto &coords : layer) {
+        SetPixel(hdc, coords.x, coords.y, color);
+    }
+    return true;
+}
+
+void debug_print_grey_background(const HDC &p_hdc, const HBITMAP &p_hbitmap, double d) {
+
+    HDC hdc = CreateCompatibleDC(p_hdc);
+    SelectObject(hdc, p_hbitmap);
+
+    BITMAP bitmap;
+    GetObject(p_hbitmap, sizeof(BITMAP), &bitmap);
+    int width = bitmap.bmWidth;
+    int height = bitmap.bmHeight;
+
+
+    for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {
+            auto color = GetPixel(hdc, i, j);
+            auto bg_color = RGB((int) GetRValue(color) * d, (int)  GetGValue(color) * d, (int)  GetBValue(color) * d);
+            SetPixel(p_hdc, i, j, bg_color);
+        }
+    }
+    DeleteDC(hdc);
 }
 
 bool load_image_offset_region(const std::string &filename, const Rect &offset_region, HBITMAP &bitmap) {
@@ -165,25 +191,19 @@ bool load_image_offset_region(const std::string &filename, const Rect &offset_re
         return false;
     }
 
-    BITMAPINFO bmi = {};
-    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-    bmi.bmiHeader.biWidth = region.width;
-    bmi.bmiHeader.biHeight = -region.height; // Top-down DIB
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = channels * 8;
-    bmi.bmiHeader.biCompression = BI_RGB;
+    BITMAPINFO bmi = create_bitmap_info_struct(region.width, region.height, channels * 8);
 
     void* bits;
-    HBITMAP hBmpDest = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+    bitmap = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
 
-    if(!hBmpDest) {
+    if(!bitmap) {
         std::cerr << "Could not create destination bitmap\n";
         DeleteObject(hBmpSource);
         stbi_image_free(img);
         return false;
     }
     HDC hdc = CreateCompatibleDC(nullptr);
-    SelectObject(hdc, hBmpDest);
+    SelectObject(hdc, bitmap);
     for(int y = region.top; y < region.height + region.top; ++y) {
         for(int x = region.left; x < region.left + region.width; ++x) {
             unsigned char* pixel = img + (y * width + x) * channels;
@@ -193,7 +213,6 @@ bool load_image_offset_region(const std::string &filename, const Rect &offset_re
             SetPixel(hdc, x - region.left, y - region.top, RGB(r, g, b));
         }
     }
-    bitmap = hBmpDest;
     stbi_image_free(img);
     DeleteDC(hdc);
     DeleteObject(hBmpSource);

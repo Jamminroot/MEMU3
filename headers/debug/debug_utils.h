@@ -6,14 +6,18 @@
 #include "../Coords.h"
 #include "../Rect.h"
 
-void print_bitmap_console(BITMAP &bitmap);
+void print_bitmap_console(BITMAP &bitmap, int scale_x = 1, int scale_y = 3);
 
-bool dump_bitmap(HBITMAP &hBitmap, LPCTSTR lpszFileName);
+bool dump_bitmap(HBITMAP &hBitmap, const std::string &filename);
 
 void print_pixel_console(unsigned char r, unsigned char g, unsigned char b);
 
-void print_hbitmap_console(HBITMAP &hbitmap);
+void print_hbitmap_console(HBITMAP &hbitmap, int scale_x = 1, int scale_y = 3);
 
-bool debug_print_layers(const std::vector<std::vector<Coords>> &layers, HBITMAP &hBitmap);
+bool debug_print_layers(const std::vector<std::vector<Coords>> &layers, const HDC &hdc, const std::vector<COLORREF> &colors);
+
+bool debug_print_layer(const std::vector<Coords> &layer, const HDC &hdc, const COLORREF &color);
 
 bool load_image_offset_region(const std::string &filename, const Rect &offset_region, HBITMAP &bitmap);
+
+void debug_print_grey_background(const HDC &p_hdc, const HBITMAP &p_hbitmap, double d);

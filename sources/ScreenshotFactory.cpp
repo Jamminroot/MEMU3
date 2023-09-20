@@ -43,7 +43,8 @@ bool ScreenshotFactory::update_screenshot_from_region_bitmap(ScreenshotData &scr
         return false;
     }
 
-    release(hdc, captureDC, hBmp);
+    DeleteDC(hdc);
+    DeleteDC(captureDC);
 
     return true;
 }

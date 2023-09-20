@@ -9,21 +9,44 @@
 ConsoleLogger l;
 
 auto brute = ScreenshotProbeHashTableBrute();
+std::vector<COLORREF> colors = {RGB(255, 0, 0), RGB(0, 255, 0), RGB(0, 0, 255), RGB(0, 255, 255), RGB(255, 255, 0), RGB(255, 0, 255)};
 
+int check_image(const Rect &offset_region, const std::string &dir, const std::string &fname){
+    auto screenshot = ScreenshotData(offset_region);
 
-int check_image(ScreenshotData &screenshot, const std::string &file, bool dbg = false){
+    std::string full_path = dir + "\\" + fname;
+    std::string dump_path = dir + "\\dump\\" + fname + "\\";
 
-    Rect region = screenshot.region;
+    CreateDirectoryA((dir + "\\dump\\").c_str(), NULL);
+    CreateDirectoryA(dump_path.c_str(), NULL);
 
     HBITMAP bitmap;
 
-    load_image_offset_region(file, region, bitmap);
-    print_hbitmap_console(bitmap);
-    dump_bitmap(bitmap, L"test.bmp");
+    load_image_offset_region(full_path, offset_region, bitmap);
+    //print_hbitmap_console(bitmap);
+    dump_bitmap(bitmap, dump_path + "_region.bmp");
     ScreenshotFactory::update_screenshot_from_region_bitmap(screenshot, bitmap );
 
-    DeleteObject(bitmap);
     auto layers = brute.debug_probe_feature_layers(screenshot);
+
+    BITMAPINFO bmi = create_bitmap_info_struct(offset_region.width, -offset_region.height, 24);
+
+    VOID *pvBits;
+    HDC hdc = CreateCompatibleDC(nullptr);
+    HBITMAP result = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &pvBits, NULL, 0);
+    SelectObject(hdc, result);
+
+    debug_print_grey_background(hdc, bitmap, 0.2);
+    DeleteObject(bitmap);
+
+    for(int i = 0; i < layers.size(); i++) {
+        std::cout<<"Layer " << i << " size: " << layers[i].size() << "\n";
+        debug_print_layer(layers[i], hdc, colors[i % colors.size()]);
+        dump_bitmap(result, dump_path + "layer" + std::to_string(i) + ".bmp");
+    }
+
+    DeleteObject(result);
+    DeleteDC(hdc);
 
     if (brute.probe(screenshot)) {
         std::cout<<"Brute: " << brute.get_probe_result().coords.x << ", " << brute.get_probe_result().coords.y << "\n";
@@ -32,6 +55,7 @@ int check_image(ScreenshotData &screenshot, const std::string &file, bool dbg = 
     }
     return 0;
 }
+
 
 int main(int c, char** args) {
     std::cout<< "Starting..." << std::endl;
@@ -50,12 +74,8 @@ int main(int c, char** args) {
     // list all files in folder
     auto files = list_files_by_mask(".jpg", dir);
     auto rect = Rect(400, 300, -200, -200);
-
-
-    auto screenshot = ScreenshotData(rect);
     for(auto file: files) {
-        std::string full_path = dir + "\\" + file;
-        check_image(screenshot, full_path, true);
+        check_image(rect, dir, file);
         break;
     }
 
