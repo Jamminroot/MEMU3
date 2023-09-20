@@ -44,14 +44,14 @@ void InputController::input_thread_handler() {
     while ((!mouse_captured || !keyboard_captured) && interception_receive(context, device = interception_wait(context), &stroke, 1) > 0) {
         if (interception_is_mouse(device) && !mouse_captured) {
 #if DEBUG || _DEBUG
-            Overlay::show_hint("Mouse device initialized");
+            Logger::show("Mouse device initialized");
 #endif
             mouse_captured = true;
             mouse = device;
         }
         if (interception_is_keyboard(device) && !keyboard_captured) {
 #if DEBUG || _DEBUG
-            Overlay::show_hint("Keyboard device initialized");
+            Logger::show("Keyboard device initialized");
 #endif
             keyboard_captured = true;
             keyboard = device;

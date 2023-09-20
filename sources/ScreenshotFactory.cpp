@@ -1,41 +1,44 @@
 #include "../headers/ScreenshotFactory.h"
 #include <Windows.h>
-#include <WinUser.h>
 #include <iostream>
 
 #pragma comment(lib, "Gdi32.lib")
+#pragma comment(lib, "user32.lib")
 
 using namespace std;
 
-ScreenshotFactory::ScreenshotFactory(class Manager &pManager) : manager(pManager) { }
-bool ScreenshotFactory::update_screenshot() {
+ScreenshotFactory::ScreenshotFactory(class Rect &coords) : region(coords) { }
 
-    HDC hdc = GetDC(nullptr);
-    HDC captureDC = CreateCompatibleDC(hdc);
-    HBITMAP hBmp = CreateCompatibleBitmap(hdc, manager.region.width, manager.region.height);
-    SelectObject(captureDC, hBmp);
-
-    if (!BitBlt(captureDC, 0, 0, manager.region.width, manager.region.height, hdc, manager.region.left, manager.region.top, SRCCOPY | CAPTUREBLT)) {
-        cout << "ERROR: bit-block transfer failed!" << endl;
-        release(hdc, captureDC, hBmp);
+bool ScreenshotFactory::update_screenshot_data(ScreenshotData &screenshot) {
+    HBITMAP hBmp = capture_region();
+    if (!hBmp) {
+        cout << "ERROR: Bitmap creation failed!" << endl;
         return false;
     }
 
+    return update_screenshot_from_region_bitmap(screenshot, hBmp);
+}
+
+bool ScreenshotFactory::update_screenshot_from_region_bitmap(ScreenshotData &screenshot, HBITMAP &hBmp) {
+    HDC hdc = GetDC(nullptr);
+    HDC captureDC = CreateCompatibleDC(hdc);
     SelectObject(captureDC, hBmp);
+
+
+    BITMAP bitmap;
+    GetObject(hBmp, sizeof(BITMAP), &bitmap);
 
     BITMAPINFO bmpInfo = {0};
     bmpInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    if (!GetDIBits(hdc, hBmp, 0, 0, nullptr, &bmpInfo, DIB_RGB_COLORS)) //get bmpInfo
-    {
-        cout << "ERROR: Failed to get Bitmap Info." << endl;
-        release(hdc, captureDC, hBmp);
-        return false;
-    }
-
+    bmpInfo.bmiHeader.biWidth = bitmap.bmWidth;
+    bmpInfo.bmiHeader.biHeight = bitmap.bmHeight;
+    bmpInfo.bmiHeader.biPlanes = 1;
+    bmpInfo.bmiHeader.biBitCount = 32;
     bmpInfo.bmiHeader.biCompression = BI_RGB;
 
-    if (!GetDIBits(hdc, hBmp, 0, bmpInfo.bmiHeader.biHeight, (LPVOID) manager.screenshot.data, &bmpInfo, DIB_RGB_COLORS)) {
-        cout << "ERROR: Getting the bitmap buffer!" << endl;
+    GetDIBits(hdc, hBmp, 0, bitmap.bmHeight, (LPVOID) screenshot.data, &bmpInfo, DIB_RGB_COLORS);
+    if (GetLastError() != ERROR_SUCCESS) {
+        cerr << "ERROR: Getting the bitmap buffer!" << endl;
         release(hdc, captureDC, hBmp);
         return false;
     }
@@ -45,10 +48,32 @@ bool ScreenshotFactory::update_screenshot() {
     return true;
 }
 
+HBITMAP ScreenshotFactory::capture_region() {
+    HDC hdc = GetDC(nullptr);
+    HBITMAP hBmp = CreateCompatibleBitmap(hdc, region.width, region.height);
+
+    if (!hBmp) {
+        release(hdc, hdc, hBmp);
+        return nullptr;
+    }
+
+    HDC captureDC = CreateCompatibleDC(hdc);
+    SelectObject(captureDC, hBmp);
+
+    if (!BitBlt(captureDC, 0, 0, region.width, region.height, hdc, region.left, region.top, SRCCOPY | CAPTUREBLT)) {
+        cout << "ERROR: bit-block transfer failed!" << endl;
+        release(hdc, captureDC, hBmp);
+        return nullptr;
+    }
+
+    release(hdc, captureDC, hBmp);
+    return hBmp;
+}
+
 void ScreenshotFactory::release(HDC &hdc, HDC &captureDC, HBITMAP &hBmp) {
     DeleteObject(hBmp);
     DeleteDC(captureDC);
-    DeleteDC(hdc);
+    ReleaseDC(nullptr, hdc);
 }
 
-
+const Rect &ScreenshotFactory::get_region() const { return region; }

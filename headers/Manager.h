@@ -4,8 +4,10 @@
 #include "Rect.h"
 #include "Coords.h"
 #include "ScreenshotData.h"
+#include "probe/ScreenshotProbe.h"
 #include <string>
 #include <vector>
+#include <memory>
 
 enum Mode {
     aim, trigger, flick, hanzo
@@ -24,7 +26,7 @@ public:
 
     void stop_thread_until_exit(HANDLE& handle) const;
     void pause_thread_if_not_running() const;
-    Manager();
+    Manager(std::unique_ptr<ScreenshotProbe> pScreenshotProbe);
     ~Manager();
     bool is_running() const;
     bool is_exit_requested() const;
@@ -40,7 +42,6 @@ public:
     void increase_sensitivity();
     void toggle_next_colorconfig();
     void toggle_next_strengthmap();
-    void initialize_color_table(const std::vector<RGBQUAD> &pColors, const bool pUseCacheFile);
     bool enemyVisible = false;
     bool screenshotUpdatedAndEnemyVisible = false;
     bool flickReady = false;
@@ -64,20 +65,8 @@ public:
     BYTE strengthMap[STRENGTH_MAP_WIDTH][STRENGTH_MAP_HEIGHT]{0 };
     float multiplierTable[MULTIPLIER_TABLE_SIZE]{0};
     bool strength_map_ready;
+    std::unique_ptr<ScreenshotProbe> screenshotProbe;
 private:
-    void save_config() const;
-    bool parse_config_file_line(Configuration &config, std::string &line);
-    bool read_configuration(Configuration &config);
-
-    void fill_multiplier_table();
-    static std::string hashtable_name(const std::vector<RGBQUAD> &pColors);
-    bool dump_table(std::string &tablename) const;
-    static bool probe_bytes_against_rgbquad(const BYTE r, const BYTE g, const BYTE b, const RGBQUAD targetColor);
-    bool restore_table(std::string &tablename) const;
-    bool read_next_colorconfig(std::vector<RGBQUAD> &colors, std::string &config);
-    bool read_next_strength_map(std::string &map);
-    std::vector<std::string> list_files_by_mask(const std::string &mask);
-    static RGBQUAD parse_rgbquad_from_string(const std::string &line);
     int currentColorconfigIndex = 0;
     int currentStrengthMapIndex = 0;
     Coords median;
@@ -85,4 +74,13 @@ private:
     Coords closeHeadOffset;
     bool running;
     bool exitRequested;
+
+    void save_config() const;
+    bool parse_config_file_line(Configuration &config, std::string &line);
+    bool read_configuration(Configuration &config);
+
+    void fill_multiplier_table();
+    bool read_next_colorconfig(std::vector<RGBQUAD> &colors, std::string &config);
+    bool read_next_strength_map(std::string &map);
+    static RGBQUAD parse_rgbquad_from_string(const std::string &line);
 };

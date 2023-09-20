@@ -2,11 +2,13 @@
 #include "../headers/Utils.h"
 #include "../headers/Overlay.h"
 #include "../headers/Configuration.h"
+#include "../headers/logging/logger.h"
+#include "../headers/probe/ScreenshotProbeHashTableBrute.h"
 
 #include <condition_variable>
 #include <mutex>
 #include <fstream>
-#include <math.h>
+#include <cmath>
 #include <iostream>
 #include <windows.h>
 
@@ -21,7 +23,7 @@ bool Manager::is_running() const {
     return running;
 }
 
-Manager::Manager() : running(false), exitRequested(false) {
+Manager::Manager(std::unique_ptr<ScreenshotProbe> probe) : running(false), exitRequested(false), screenshotProbe(std::move(probe)) {
     read_configuration(config);
     Rect regionSizeAndOffset = Rect(config.scan_width, config.scan_height, config.scan_horizontal_offset,
                                     config.scan_vertical_offset);
@@ -67,7 +69,7 @@ void Manager::increase_sensitivity() {
     if (new_val == config.sensitivity) return;
     config.sensitivity = new_val;
     save_config();
-    Overlay::show_hint("Sensitivity: " + to_string(config.sensitivity));
+    Logger::show("Sensitivity: " + to_string(config.sensitivity));
 }
 
 void Manager::decrease_sensitivity() {
@@ -76,7 +78,7 @@ void Manager::decrease_sensitivity() {
     if (new_val == config.sensitivity) return;
     config.sensitivity = new_val;
     save_config();
-    Overlay::show_hint("Sensitivity: " + to_string(config.sensitivity));
+    Logger::show("Sensitivity: " + to_string(config.sensitivity));
 }
 
 void Manager::increase_mode_value() {
@@ -88,7 +90,7 @@ void Manager::increase_mode_value() {
                 break;
             config.strength = new_val;
             save_config();
-            Overlay::show_hint("Strength: " + to_string(config.strength));
+            Logger::show("Strength: " + to_string(config.strength));
             break;
         }
         case trigger: {
@@ -97,7 +99,7 @@ void Manager::increase_mode_value() {
                 break;
             triggerDistanceThreshold = new_val;
             save_config();
-            Overlay::show_hint("Distance: " + std::to_string(triggerDistanceThreshold));
+            Logger::show("Distance: " + std::to_string(triggerDistanceThreshold));
             break;
         }
         case hanzo: {
@@ -106,7 +108,7 @@ void Manager::increase_mode_value() {
                 break;
             hanzoVerticalOffset = new_val;
             save_config();
-            Overlay::show_hint("Offset: " + std::to_string(hanzoVerticalOffset));
+            Logger::show("Offset: " + std::to_string(hanzoVerticalOffset));
             break;
         }
     }
@@ -121,7 +123,7 @@ void Manager::decrease_mode_value() {
                 break;
             config.strength = new_val;
             save_config();
-            Overlay::show_hint("Strength: " + to_string(config.strength));
+            Logger::show("Strength: " + to_string(config.strength));
             break;
         }
         case trigger: {
@@ -130,7 +132,7 @@ void Manager::decrease_mode_value() {
                 break;
             triggerDistanceThreshold = new_val;
             save_config();
-            Overlay::show_hint("Distance: " + std::to_string(triggerDistanceThreshold));
+            Logger::show("Distance: " + std::to_string(triggerDistanceThreshold));
             break;
         }
         case hanzo: {
@@ -139,7 +141,7 @@ void Manager::decrease_mode_value() {
                 break;
             hanzoVerticalOffset = new_val;
             save_config();
-            Overlay::show_hint("Offset: " + std::to_string(hanzoVerticalOffset));
+            Logger::show("Offset: " + std::to_string(hanzoVerticalOffset));
             break;
         }
     }
@@ -149,16 +151,16 @@ void Manager::toggle_mode() {
     mode = (Mode) ((((int) mode) + 1) % sizeof(Mode));
     switch (mode) {
         case hanzo:
-            Overlay::show_hint("Mode: Hanzo");
+            Logger::show("Mode: Hanzo");
             break;
         case aim:
-            Overlay::show_hint("Mode: Aim Assist");
+            Logger::show("Mode: Aim Assist");
             break;
         case flick:
-            Overlay::show_hint("Mode: Flickshots");
+            Logger::show("Mode: Flickshots");
             break;
         case trigger:
-            Overlay::show_hint("Mode: Triggerbot");
+            Logger::show("Mode: Triggerbot");
             break;
     }
     Overlay::toggle_render();
@@ -187,7 +189,7 @@ void Manager::set_running(const bool &state, const bool &silent) {
     std::unique_lock<std::mutex> lck(pause_mutex);
     running = state;
     pause_condition.notify_all();
-    if (!silent) Overlay::show_hint(running ? "Running" : "Paused");
+    if (!silent) Logger::show(running ? "Running" : "Paused");
 }
 
 bool Manager::read_next_colorconfig(std::vector<RGBQUAD> &colors, std::string &config) {
@@ -348,26 +350,6 @@ bool Manager::read_next_strength_map(std::string &message) {
     return true;
 }
 
-
-std::vector<std::string> Manager::list_files_by_mask(const std::string &mask) {
-    std::vector<std::string> configs = std::vector<std::string>();
-    try {
-        WIN32_FIND_DATAW FindFileData;
-        HANDLE hFind;
-        hFind = FindFirstFile(s2ws(mask).c_str(), &FindFileData);
-        if (hFind != INVALID_HANDLE_VALUE) {
-            do {
-                std::string filename = ws2s(FindFileData.cFileName);
-                configs.push_back(filename);
-            } while (FindNextFile(hFind, &FindFileData));
-            FindClose(hFind);
-        }
-    } catch (...) {
-        return configs;
-    }
-    return configs;
-}
-
 RGBQUAD Manager::parse_rgbquad_from_string(const std::string &line) {
     RGBQUAD rgbquad;
     std::vector<std::string> parts = split_string(line, ',');
@@ -379,29 +361,31 @@ RGBQUAD Manager::parse_rgbquad_from_string(const std::string &line) {
 }
 
 void Manager::toggle_next_colorconfig() {
-    auto runningCache = is_running();
-    set_running(false, true);
-    std::vector<RGBQUAD> colors;
-    std::string fname;
-    if (read_next_colorconfig(colors, fname)) {
-        Overlay::show_hint("Colors config: " + split_string(fname, '.').at(0));
-        initialize_color_table(colors, true);
-    } else {
-        Overlay::show_hint("Can't toggle colorset");
-    }
-    if (runningCache) {
-        set_running(runningCache, true);
-    }
+    if (auto brutePtr = dynamic_cast<ScreenshotProbeHashTableBrute*>(screenshotProbe.get())) {
+        auto runningCache = is_running();
+        set_running(false, true);
+        std::vector<RGBQUAD> colors;
+        std::string fname;
+        if (read_next_colorconfig(colors, fname)) {
+            Logger::show("Colors config: " + split_string(fname, '.').at(0));
+            brutePtr->initialize_color_table(colors, true);
+        } else {
+            Logger::show("Can't toggle colorset");
+        }
+        if (runningCache) {
+            set_running(runningCache, true);
+        }    }
+
 }
 void Manager::toggle_next_strengthmap() {
     auto runningCache = is_running();
     set_running(false, true);
     std::string message;
     if (read_next_strength_map(message)) {
-        Overlay::show_hint("Strength map loaded: " + message);
+        Logger::show("Strength map loaded: " + message);
         strength_map_ready = true;
     } else {
-        Overlay::show_hint("Can't load strength map: " + message);
+        Logger::show("Can't load strength map: " + message);
         strength_map_ready = false;
     }
     if (runningCache) {
@@ -414,12 +398,12 @@ bool Manager::dump_table(std::string &tablename) const {
     outStream.open(tablename, std::ios::out | std::ios::binary);
     outStream.write((const char *) colorHashTable, sizeof(colorHashTable));
     outStream.close();
-    Overlay::show_hint("Saving color scan table to file.");
+    Logger::show("Saving color scan table to file.");
     return true;
 }
 
 bool Manager::restore_table(std::string &tablename) const {
-    Overlay::show_hint("Restoring cached color scan table.");
+    Logger::show("Restoring cached color scan table.");
     std::ifstream inStream(tablename);
     size_t chars_read;
     if (!(inStream.read((char *) colorHashTable, sizeof(colorHashTable)))) {
@@ -440,36 +424,6 @@ std::string Manager::hashtable_name(const std::vector<RGBQUAD> &pColors) {
         bytes.push_back(targetColor.rgbReserved);
     }
     return "ct_" + base64_encode(bytes) + ".bin";
-}
-
-void Manager::initialize_color_table(const std::vector<RGBQUAD> &pColors, const bool pUseCacheFile) {
-    memset(colorHashTable, '\0', COLOR_HASHTABLE_SIZE);
-    auto tablename = hashtable_name(pColors);
-    if (pUseCacheFile) {
-        if (restore_table(tablename)) {
-            return;
-        }
-    }
-    Overlay::show_hint("Building color scan table.");
-    int colorIndex = 0;
-    for (auto targetColor: pColors) {
-        colorIndex++;
-        Overlay::show_hint("Color " + std::to_string(colorIndex) + "/" + std::to_string(pColors.size()));
-        for (auto i = 0x000000u; i <= 0xFFFFFFu; i++) {
-            bool res = probe_bytes_against_rgbquad(((BYTE) ((i & 0xFF0000u) >> 16)), ((BYTE) ((i & 0x00FF00u) >> 8)),
-                                                   (BYTE) (i & 0x0000FFu), targetColor);
-            colorHashTable[i / 8] |= (byte) (res << (i % 8));
-        }
-    }
-    dump_table(tablename);
-}
-
-bool Manager::probe_bytes_against_rgbquad(const BYTE r, const BYTE g, const BYTE b, const RGBQUAD targetColor) {
-    auto dR = r - targetColor.rgbRed;
-    auto dG = g - targetColor.rgbGreen;
-    auto dB = b - targetColor.rgbBlue;
-    auto checkResult = dR * dR + dG * dG + dB * dB <= targetColor.rgbReserved * targetColor.rgbReserved;
-    return checkResult;
 }
 
 void Manager::fill_multiplier_table() {

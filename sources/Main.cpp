@@ -4,8 +4,8 @@
 #include "../headers/Manager.h"
 #include "../headers/AimAssistant.h"
 #include "../headers/Overlay.h"
-
-#pragma comment(lib,"user32.lib")
+#include "../headers/logging/overlay_logger.h"
+#include "../headers/probe/ScreenshotProbeHashTableBrute.h"
 
 void HideConsole()
 {
@@ -21,8 +21,11 @@ int main() {
     }
     SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
     HideConsole();
-    auto manager = Manager();
-    Overlay::init(manager);
+
+    auto settings = ProbeSettings();
+    auto manager = Manager(std::make_unique<ScreenshotProbeHashTableBrute>(settings));
+    OverlayLogger ol(manager);
+
     auto assistant = AimAssistant(manager);
     manager.set_running(true);
     manager.stop_thread_until_exit(hMutexHandle);

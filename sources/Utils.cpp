@@ -2,6 +2,8 @@
 #include <rpc.h>
 #include <random>
 #include <chrono>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 #if  !(_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING || _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
 #include <locale>
@@ -99,4 +101,26 @@ std::vector<std::string> split_string(const std::string& s, char delimiter) {
         tokens.push_back(token);
     }
     return tokens;
+}
+
+std::string hashtable_name(const std::vector<RGBQUAD> &pColors) {
+    std::string bytes;
+    for (auto targetColor: pColors) {
+        bytes.push_back(targetColor.rgbRed);
+        bytes.push_back(targetColor.rgbGreen);
+        bytes.push_back(targetColor.rgbBlue);
+        bytes.push_back(targetColor.rgbReserved);
+    }
+    return "ct_" + base64_encode(bytes) + ".bin";
+}
+
+std::vector<std::string> list_files_by_mask(const std::string &mask, const std::string &path) {
+    std::vector<std::string> configs = std::vector<std::string>();
+    std::vector<std::string> files;
+    for (const auto& entry : fs::directory_iterator(path)) {
+        if (entry.is_regular_file() && entry.path().filename().string().find(mask) != std::string::npos) {
+            files.push_back(entry.path().filename().string());
+        }
+    }
+    return files;
 }

@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 project(MEMU3 C CXX)
 
 set(TARGET_NAME MEMU3)
+set(TEST_TARGET_NAME ScreenshotTest)
 
 set(CMAKE_CXX_STANDARD 20)
 set(SUGGESTED_STACK_SIZE 10000000)
@@ -32,20 +33,26 @@ set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall")
 
 #string(REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 
+set(SHARED_SOURCES
+        sources/Rect.cpp
+        sources/ScreenshotData.cpp
+        sources/ScreenshotFactory.cpp
+        sources/Coords.cpp
+        sources/Utils.cpp
+        sources/probe/ScreenshotProbeHashTableBrute.cpp
+        sources/probe/ScreenshotProbeHashTable.cpp
+        )
+
 set(SOURCE_FILES
         MEMU3.rc
         sources/Main.cpp
         sources/Overlay.cpp
-        sources/Rect.cpp
-        sources/ScreenshotData.cpp
-        sources/ScreenshotFactory.cpp
-        sources/Manager.cpp
         sources/AimAssistant.cpp
-        sources/Coords.cpp
+        sources/Manager.cpp
         sources/InputController.cpp
-        sources/Utils.cpp
         sources/TtlStringCollection.cpp
         )
+
 
 configure_file(Icons/Aim.bmp Aim.bmp COPYONLY)
 configure_file(Icons/Trigger.bmp Trigger.bmp COPYONLY)
@@ -60,7 +67,9 @@ configure_file(Configs/red+neon.colorset red+neon.colorset COPYONLY)
 configure_file(Configs/neon.colorset neon.colorset COPYONLY)
 configure_file(Configs/MEMU3.config MEMU3.config COPYONLY)
 
-add_executable(${TARGET_NAME} ${SOURCE_FILES})
+add_executable(${TARGET_NAME} ${SOURCE_FILES} ${SHARED_SOURCES})
+
+add_executable(${TEST_TARGET_NAME} tests/ScreenshotTest.cpp ${SHARED_SOURCES} sources/debug/debug_utils.cpp)
 
 #set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /W3 /WX")
 
@@ -76,6 +85,7 @@ if (MSVC)
     set(MSVC_INCLUDE_ROOT "${MSVC_ROOT}\\include")
 
     target_link_directories(${TARGET_NAME} PUBLIC ${MSVC_LIB_ROOT})
+    target_link_directories(${TEST_TARGET_NAME} PUBLIC ${MSVC_LIB_ROOT})
     include_directories(${MSVC_INCLUDE_ROOT})
 else ()
     message("Other linker detected. Make sure to increase stack size is increased to ${SUGGESTED_STACK_SIZE}b!")
@@ -108,6 +118,10 @@ include_directories(${DirectX_INCLUDE_DIRS})
 
 target_link_libraries(${TARGET_NAME} PUBLIC \"${DirectX_LIB_ROOT_DIR}\\d3d9\")
 target_link_libraries(${TARGET_NAME} PUBLIC \"${DirectX_LIB_ROOT_DIR}\\d3dx9\")
+
+
+target_link_libraries(${TEST_TARGET_NAME} PUBLIC \"${DirectX_LIB_ROOT_DIR}\\d3d9\")
+target_link_libraries(${TEST_TARGET_NAME} PUBLIC \"${DirectX_LIB_ROOT_DIR}\\d3dx9\")
 
 #target_link_libraries(${TARGET_NAME} \"${DirectX_LIB_ROOT_DIR}/d3d9.lib\" \"${DirectX_LIB_ROOT_DIR}/d3dx9.lib\")
 
