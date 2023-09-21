@@ -131,24 +131,33 @@ void print_pixel_console(unsigned char r, unsigned char g, unsigned char b) {
     std::cout << "\033[0m";
 }
 
-bool debug_print_layers(const std::vector<std::vector<Coords>> &layers, const HDC &hdc, const std::vector<COLORREF> &colors) {
+bool debug_print_layers(const std::vector<std::vector<Coords>> &layers, HBITMAP &p_hbitmap, const std::vector<COLORREF> &colors) {
     for (auto i = 0; i < layers.size(); ++i){
-        debug_print_layer(layers[i], hdc, colors[i%colors.size()]);
+        debug_print_layer(layers[i], p_hbitmap, colors[i%colors.size()]);
     }
     return true;
 }
 
-bool debug_print_layer(const std::vector<Coords> &layer, const HDC &hdc, const COLORREF &color){
-    for(auto &coords : layer) {
-        SetPixel(hdc, coords.x, coords.y, color);
-    }
-    return true;
-}
-
-void debug_print_grey_background(const HDC &p_hdc, const HBITMAP &p_hbitmap, double d) {
-
-    HDC hdc = CreateCompatibleDC(p_hdc);
+bool debug_print_layer(const std::vector<Coords> &layer, HBITMAP &p_hbitmap, const COLORREF &color){
+    HDC hdc = CreateCompatibleDC(nullptr);
     SelectObject(hdc, p_hbitmap);
+    BITMAP bitmap;
+    GetObject(p_hbitmap, sizeof(BITMAP), &bitmap);
+    int height = bitmap.bmHeight;
+
+    for(auto &coords : layer) {
+        SetPixel(hdc, coords.x, height - coords.y, color);
+    }
+    DeleteDC(hdc);
+    return true;
+}
+
+void debug_print_grey_background(HBITMAP &canvas, const HBITMAP &p_hbitmap, double d) {
+    HDC bg_dc = CreateCompatibleDC(nullptr);
+    SelectObject(bg_dc, p_hbitmap);
+
+    HDC canvas_dc = CreateCompatibleDC(nullptr);
+    SelectObject(canvas_dc, canvas);
 
     BITMAP bitmap;
     GetObject(p_hbitmap, sizeof(BITMAP), &bitmap);
@@ -158,12 +167,26 @@ void debug_print_grey_background(const HDC &p_hdc, const HBITMAP &p_hbitmap, dou
 
     for (int i = 0; i < width; ++i) {
         for (int j = 0; j < height; ++j) {
-            auto color = GetPixel(hdc, i, j);
-            auto bg_color = RGB((int) GetRValue(color) * d, (int)  GetGValue(color) * d, (int)  GetBValue(color) * d);
-            SetPixel(p_hdc, i, j, bg_color);
+            auto color = GetPixel(bg_dc, i, j);
+            auto r = GetRValue(color);
+            auto g = GetGValue(color);
+            auto b = GetBValue(color);
+            auto max = max(r, max(g, b));
+            if (r != max) {
+                r += (max-r) * d;
+            }
+            if (g != max) {
+                g += (max-g) * d;
+            }
+            if (b != max) {
+                b += (max-b) * d;
+            }
+
+            SetPixel(canvas_dc, i, j, RGB(r, g, b));
         }
     }
-    DeleteDC(hdc);
+    DeleteDC(bg_dc);
+    DeleteDC(canvas_dc);
 }
 
 bool load_image_offset_region(const std::string &filename, const Rect &offset_region, HBITMAP &bitmap) {

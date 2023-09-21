@@ -41,6 +41,7 @@ set(SHARED_SOURCES
         sources/Utils.cpp
         sources/probe/ScreenshotProbeHashTableBrute.cpp
         sources/probe/ScreenshotProbeHashTable.cpp
+        sources/probe/ScreenshotProbeColorPattern.cpp
         )
 
 set(SOURCE_FILES
@@ -50,8 +51,7 @@ set(SOURCE_FILES
         sources/AimAssistant.cpp
         sources/Manager.cpp
         sources/InputController.cpp
-        sources/TtlStringCollection.cpp
-        )
+        sources/TtlStringCollection.cpp)
 
 
 configure_file(Icons/Aim.bmp Aim.bmp COPYONLY)

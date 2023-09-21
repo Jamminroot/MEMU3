@@ -24,7 +24,6 @@ bool ScreenshotFactory::update_screenshot_from_region_bitmap(ScreenshotData &scr
     HDC captureDC = CreateCompatibleDC(hdc);
     SelectObject(captureDC, hBmp);
 
-
     BITMAP bitmap;
     GetObject(hBmp, sizeof(BITMAP), &bitmap);
 

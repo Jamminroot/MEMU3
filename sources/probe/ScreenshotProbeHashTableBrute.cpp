@@ -43,8 +43,7 @@ bool ScreenshotProbeHashTableBrute::probe(const ScreenshotData &screenshot) {
     }
     auto i = (IGNORED_BORDER_SIZE) + IGNORED_BORDER_SIZE * screenshot.region.width;
 
-    // For Y we perform a reversed iteration - that is to address 0:0 being in _bottom_-left corner
-    for (auto y = screenshot.region.width - IGNORED_BORDER_SIZE; y > IGNORED_BORDER_SIZE; --y) {
+    for (auto y = IGNORED_BORDER_SIZE; y < screenshot.region.height - IGNORED_BORDER_SIZE; ++y) {
         for (auto x = IGNORED_BORDER_SIZE; x < screenshot.region.width - IGNORED_BORDER_SIZE; ++x) {
             // Next i - vertically. Unchecked, since we should not exceed that with the loop bounds above.
             i += 1;
@@ -71,13 +70,15 @@ std::vector<std::vector<Coords>> ScreenshotProbeHashTableBrute::debug_probe_feat
     auto mark_handle_layer = std::vector<Coords>();
     auto final_result_layer = std::vector<Coords>();
     auto i = (IGNORED_BORDER_SIZE) + IGNORED_BORDER_SIZE * screenshot.region.width;
-    for (auto y = screenshot.region.width - IGNORED_BORDER_SIZE; y > IGNORED_BORDER_SIZE; --y) {
+    for (auto y = IGNORED_BORDER_SIZE; y < screenshot.region.height - IGNORED_BORDER_SIZE; ++y) {
         for (auto x = IGNORED_BORDER_SIZE; x < screenshot.region.width - IGNORED_BORDER_SIZE; ++x) {
             // Next i - vertically. Unchecked, since we should not exceed that with the loop bounds above.
             i += 1;
             //auto i = coords_to_offset(x, y);
             if (!probe_color(screenshot.data[i])) continue;
-            mark_red_layer.emplace_back(x, y);
+            Coords coords;
+            screenshot.offset_to_coords(i, coords);
+            mark_red_layer.push_back(coords);
             auto xx = x;
             while (xx > IGNORED_BORDER_SIZE && (probe_all_points_diagonal(screenshot, i - 1)) || probe_any_point_left(screenshot, i - 3)) {
                 xx--;

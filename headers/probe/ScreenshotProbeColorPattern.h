@@ -1,8 +1,12 @@
 #pragma once
-#include "ScreenshotProbe.h"
-class ScreenshotProbeColorPattern : public ScreenshotProbe {
+#include "ScreenshotProbeHashTable.h"
+class ScreenshotProbeColorPattern : public ScreenshotProbeHashTable {
 public:
-    ScreenshotProbeColorPattern() = default;
+    ScreenshotProbeColorPattern(std::vector<int> &heights, int threshold = 85) : heights(heights), threshold(threshold) {};
     virtual ~ScreenshotProbeColorPattern() = default;
-    virtual bool probe(const ScreenshotData &data, Coords &enemyCoords) const = 0;
+    virtual bool probe(const ScreenshotData &screenshot) override;
+    virtual std::vector<std::vector<Coords>> debug_probe_feature_layers(const ScreenshotData &data) const override;
+private:
+    std::vector<int> heights;
+    int threshold;
 };
