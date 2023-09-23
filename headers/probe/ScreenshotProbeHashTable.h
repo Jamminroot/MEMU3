@@ -20,7 +20,7 @@ public:
 protected:
     const int SCANNING_THRESHOLD_PERCENT = 83;
 
-    bool probe_bytes_against_rgbquad(const BYTE r, const BYTE g, const BYTE b, const RGBQUAD targetColor) const;
+    static bool probe_bytes_against_rgbquad(const BYTE r, const BYTE g, const BYTE b, const RGBQUAD targetColor) ;
 
     bool dump_table(std::string &tablename) const;
 

@@ -23,23 +23,22 @@ bool ScreenshotProbeHashTable::dump_table(std::string &tablename) const {
 }
 
 ScreenshotProbeHashTable::ScreenshotProbeHashTable() {
-    /*
-     {65,  38,  240, 12},
-                                   {114, 81,  235, 12},
-                                   {105, 70,  227, 12},
-                                   {145, 124, 253, 12},
-                                   {133, 99,  239, 12},
-                                   {111, 99,  223, 12},
-                                   {115, 103, 229, 12},
-                                   {58,  54,  219, 12},
-                                   {60,  58,  224, 12},
-                                   {46,  23,  212, 12},
-                                   {48,  41,  211, 12},
-                                   {0,   10,  221, 12},
-     * */
+
     std::vector<RGBQUAD> colors = {
-                                   {80,   60,  248, 16},
-                                   };
+            {65,  38,  240, 16},
+            {114, 81,  235, 16},
+            {105, 70,  227, 16},
+            {145, 124, 253, 16},
+            {133, 99,  239, 16},
+            {111, 99,  223, 16},
+            {115, 103, 229, 16},
+            {58,  54,  219, 16},
+            {60,  58,  224, 16},
+            {46,  23,  212, 16},
+            {48,  41,  211, 16},
+            {0,   10,  221, 16},
+            {80,  60,  248, 24},
+    };
     initialize_color_table(colors, true);
 }
 
@@ -71,7 +70,7 @@ void ScreenshotProbeHashTable::initialize_color_table(const std::vector<RGBQUAD>
 }
 
 bool ScreenshotProbeHashTable::probe_bytes_against_rgbquad(const BYTE r, const BYTE g, const BYTE b,
-                                                           const RGBQUAD targetColor) const {
+                                                           const RGBQUAD targetColor) {
     auto dR = r - targetColor.rgbRed;
     auto dG = g - targetColor.rgbGreen;
     auto dB = b - targetColor.rgbBlue;

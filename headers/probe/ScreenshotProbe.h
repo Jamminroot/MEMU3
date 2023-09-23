@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <string>
 
 #include "../ScreenshotData.h"
 #include "ProbeResult.h"
@@ -13,7 +14,7 @@ public:
     ScreenshotProbe() = default;
     virtual ~ScreenshotProbe() = default;
     virtual bool probe(const ScreenshotData &data) = 0;
-    virtual std::vector<std::vector<Coords>> debug_probe_feature_layers(const ScreenshotData &data) const = 0;
+    virtual std::vector<std::pair<std::string, std::vector<Coords>>> debug_probe_feature_layers(const ScreenshotData &data) const = 0;
     ProbeResult get_probe_result() const { return probe_result; }
 protected:
     Coords lastKnownBarSize;

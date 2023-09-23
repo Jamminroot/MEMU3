@@ -51,7 +51,8 @@ set(SOURCE_FILES
         sources/AimAssistant.cpp
         sources/Manager.cpp
         sources/InputController.cpp
-        sources/TtlStringCollection.cpp)
+        sources/TtlStringCollection.cpp
+        headers/debug/scoped_time_meter.h)
 
 
 configure_file(Icons/Aim.bmp Aim.bmp COPYONLY)

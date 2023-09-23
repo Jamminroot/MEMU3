@@ -131,14 +131,14 @@ void print_pixel_console(unsigned char r, unsigned char g, unsigned char b) {
     std::cout << "\033[0m";
 }
 
-bool debug_print_layers(const std::vector<std::vector<Coords>> &layers, HBITMAP &p_hbitmap, const std::vector<COLORREF> &colors) {
+bool debug_print_layers(const std::vector<std::pair<std::string, std::vector<Coords>>> &layers, HBITMAP &p_hbitmap, const std::vector<COLORREF> &colors) {
     for (auto i = 0; i < layers.size(); ++i){
-        debug_print_layer(layers[i], p_hbitmap, colors[i%colors.size()]);
+        debug_print_layer(layers[i].first, layers[i].second, p_hbitmap, colors[i%colors.size()]);
     }
     return true;
 }
 
-bool debug_print_layer(const std::vector<Coords> &layer, HBITMAP &p_hbitmap, const COLORREF &color){
+bool debug_print_layer(const std::string& hint, const std::vector<Coords> &layer, HBITMAP &p_hbitmap, const COLORREF &color){
     HDC hdc = CreateCompatibleDC(nullptr);
     SelectObject(hdc, p_hbitmap);
     BITMAP bitmap;

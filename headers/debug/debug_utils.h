@@ -16,7 +16,7 @@ void print_hbitmap_console(HBITMAP &hbitmap, int scale_x = 1, int scale_y = 3);
 
 bool debug_print_layers(const std::vector<std::vector<Coords>> &layers, HBITMAP &p_hbitmap, const std::vector<COLORREF> &colors);
 
-bool debug_print_layer(const std::vector<Coords> &layer, HBITMAP &p_hbitmap, const COLORREF &color);
+bool debug_print_layer(const std::string &hint, const std::vector<Coords> &layer, HBITMAP &p_hbitmap, const COLORREF &color);
 
 bool load_image_offset_region(const std::string &filename, const Rect &offset_region, HBITMAP &bitmap);
 

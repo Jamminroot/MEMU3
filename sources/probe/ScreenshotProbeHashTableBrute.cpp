@@ -64,8 +64,8 @@ bool ScreenshotProbeHashTableBrute::probe(const ScreenshotData &screenshot) {
     return false;
 }
 
-std::vector<std::vector<Coords>> ScreenshotProbeHashTableBrute::debug_probe_feature_layers(const ScreenshotData &screenshot) const {
-    auto result = std::vector<std::vector<Coords>>();
+std::vector<std::pair<std::string, std::vector<Coords>>> ScreenshotProbeHashTableBrute::debug_probe_feature_layers(const ScreenshotData &screenshot) const {
+    auto result = std::vector<std::pair<std::string, std::vector<Coords>>>();
     auto mark_red_layer = std::vector<Coords>();
     auto mark_handle_layer = std::vector<Coords>();
     auto final_result_layer = std::vector<Coords>();
@@ -93,8 +93,8 @@ std::vector<std::vector<Coords>> ScreenshotProbeHashTableBrute::debug_probe_feat
         // Reset to the beginning of a new line - "0" x (actually + 0+border_size) plus height*width
         i = (IGNORED_BORDER_SIZE) + (y - 1) * screenshot.region.width;
     }
-    result.emplace_back(mark_red_layer);
-    result.emplace_back(mark_handle_layer);
-    result.emplace_back(final_result_layer);
+    result.emplace_back("reds",mark_red_layer);
+    result.emplace_back("mark_handle", mark_handle_layer);
+    result.emplace_back("final_result", final_result_layer);
     return result;
 }
