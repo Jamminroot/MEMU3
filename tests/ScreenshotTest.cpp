@@ -120,6 +120,18 @@ int check_image(const Rect &offset_region, const std::string &dir, const std::st
             debug_print_grey_background(result, bitmap, 0.95);
 
             std::cout << "Layer " << i << " (" + hint + ") size: " << layer.size() << "\n";
+           /* auto min_x = 999999;
+            auto max_y = 0;
+
+            for(auto c: layer){
+                if (c.x < min_x){
+                    min_x = c.x;
+                }
+                if (c.y > max_y){
+                    max_y = c.y;
+                }
+            }
+            std::cout << "min_x: " << min_x << " max_y: " << max_y << "\n";*/
             debug_print_layer(hint, layer, result, colors[i % colors.size()]);
 
             dump_bitmap(result, dump_path + "pattern_(" + std::to_string(i) + ")" + hint + ".bmp");
@@ -165,9 +177,9 @@ int main(int c, char **args) {
     auto files = list_files_by_mask(".jpg", dir);
     auto rect = Rect(400, 300, -200, -200);
     for (auto file: files) {
-        if (file.find("test_image (2)") == std::string::npos) {
+       /* if (file.find("test_image (13)") == std::string::npos) {
             continue;
-        }
+        }*/
         std::cout << "Checking " << file << std::endl;
         check_image(rect, dir, file);
         //break;

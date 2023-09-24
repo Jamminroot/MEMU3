@@ -183,37 +183,41 @@ ScreenshotProbeColorPattern::debug_probe_feature_layers(const ScreenshotData &sc
     int min_x_for_longest_group = INT_MAX;
 
     for (const auto &curr_handle: handles) {
-        bool found_in_group = false;
+        bool group_found = false;
 
-        for (auto it = y_to_x_range.lower_bound(curr_handle.y - max_group_distance_y);
-             it != y_to_x_range.end() && std::abs(it->first - curr_handle.y) <= max_group_distance_y;
-             ++it) {
+        for (auto fitting_grp_itr = y_to_x_range.lower_bound(curr_handle.y - max_group_distance_y);
+             fitting_grp_itr != y_to_x_range.end() && std::abs(fitting_grp_itr->first - curr_handle.y) <= max_group_distance_y;
+             ++fitting_grp_itr) {
 
-            auto &[min_x, max_x] = it->second;
+            auto &[min_x_in_group, max_x_in_group] = fitting_grp_itr->second;
+            auto grp_y = fitting_grp_itr->first;
 
-            if (curr_handle.x >= min_x - max_group_distance_x && curr_handle.x <= max_x + max_group_distance_x) {
-                found_in_group = true;
+            if (curr_handle.x >= min_x_in_group - max_group_distance_x && curr_handle.x <= max_x_in_group + max_group_distance_x) {
+                group_found = true;
+
                 // Update min and max x
-                min_x = min(min_x, curr_handle.x);
-                max_x = max(max_x, curr_handle.x);
-                y_to_x_range[curr_handle.y] = {min_x, max_x};
-                int group_idx = y_to_group_index[it->first];
-                handle_groups[group_idx].push_back(curr_handle);
+                min_x_in_group = min(min_x_in_group, curr_handle.x);
+                max_x_in_group = max(max_x_in_group, curr_handle.x);
+
+                y_to_x_range[grp_y] = {min_x_in_group, max_x_in_group};
+                int curr_group_idx = y_to_group_index[grp_y];
+                handle_groups[curr_group_idx].push_back(curr_handle);
 
                 // Update longest group info
-                int delta = max_x - min_x;
+                int delta = max_x_in_group - min_x_in_group;
                 if (delta > longest_group_delta) {
                     longest_group_delta = delta;
-                    longest_group_index = group_idx;
+                    longest_group_index = curr_group_idx;
+
                     max_y_for_longest_group = max(max_y_for_longest_group, curr_handle.y);
-                    min_x_for_longest_group = min(min_x_for_longest_group, curr_handle.x);  // Update min_x for longest group
+                    min_x_for_longest_group = min_x_in_group;  // Update min_x for longest group ONLY here
                 }
 
                 break;
             }
         }
 
-        if (!found_in_group) {
+        if (!group_found) {
             handle_groups.emplace_back(std::vector<Coords>{curr_handle});
             y_to_x_range[curr_handle.y] = {curr_handle.x, curr_handle.x};
             y_to_group_index[curr_handle.y] = handle_groups.size() - 1;
