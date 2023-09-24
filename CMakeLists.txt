@@ -26,6 +26,7 @@ message("Build variant:\t ${VARIANT}")
 
 if (VARIANT STREQUAL "DEBUG")
     add_definitions(-DDEBUG=1)
+    #add_definitions(-DDEBUG_WITHOUT_INPUT=1)
 endif ()
 
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
@@ -54,6 +55,9 @@ set(SOURCE_FILES
         sources/TtlStringCollection.cpp
         headers/debug/scoped_time_meter.h)
 
+if (VARIANT STREQUAL "DEBUG")
+    set(SOURCE_FILES ${SOURCE_FILES} sources/debug/debug_utils.cpp)
+endif ()
 
 configure_file(Icons/Aim.bmp Aim.bmp COPYONLY)
 configure_file(Icons/Trigger.bmp Trigger.bmp COPYONLY)

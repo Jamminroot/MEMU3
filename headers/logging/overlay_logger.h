@@ -4,7 +4,6 @@
 #include "../Manager.h"
 #include "../Overlay.h"
 #include <string>
-#include <iostream>
 class OverlayLogger : public Logger {
 public:
     OverlayLogger(Manager& manager){

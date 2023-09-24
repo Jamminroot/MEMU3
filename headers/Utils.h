@@ -29,3 +29,5 @@ std::string hashtable_name(const std::vector<RGBQUAD> &pColors);
 std::vector<std::string> list_files_by_mask(const std::string &mask, const std::string &path = ".");
 
 BITMAPINFO create_bitmap_info_struct(int width, int height, int bitCount = 32);
+
+std::string get_last_error(DWORD err);

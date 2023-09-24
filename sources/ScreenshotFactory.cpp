@@ -1,73 +1,68 @@
 #include "../headers/ScreenshotFactory.h"
+#include "../headers/Utils.h"
+#include "../headers/logging/logger.h"
 #include <Windows.h>
-#include <iostream>
 
 #pragma comment(lib, "Gdi32.lib")
 #pragma comment(lib, "user32.lib")
 
 using namespace std;
 
-ScreenshotFactory::ScreenshotFactory(class Rect &coords) : region(coords) { }
-
-bool ScreenshotFactory::update_screenshot_data(ScreenshotData &screenshot) {
-    HBITMAP hBmp = capture_region();
-    if (!hBmp) {
-        cout << "ERROR: Bitmap creation failed!" << endl;
-        return false;
-    }
-
-    return update_screenshot_from_region_bitmap(screenshot, hBmp);
+ScreenshotFactory::ScreenshotFactory(const struct Rect &coords) : region(coords) {
+    sourceDC = GetDC(nullptr);
+    hbitmap = CreateCompatibleBitmap(sourceDC, region.width, region.height);
+    targetDC = CreateCompatibleDC(sourceDC);
 }
 
-bool ScreenshotFactory::update_screenshot_from_region_bitmap(ScreenshotData &screenshot, HBITMAP &hBmp) {
-    HDC hdc = GetDC(nullptr);
-    HDC captureDC = CreateCompatibleDC(hdc);
-    SelectObject(captureDC, hBmp);
-
-    BITMAP bitmap;
-    GetObject(hBmp, sizeof(BITMAP), &bitmap);
-
-    BITMAPINFO bmpInfo = {0};
-    bmpInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmpInfo.bmiHeader.biWidth = bitmap.bmWidth;
-    bmpInfo.bmiHeader.biHeight = bitmap.bmHeight;
-    bmpInfo.bmiHeader.biPlanes = 1;
-    bmpInfo.bmiHeader.biBitCount = 32;
-    bmpInfo.bmiHeader.biCompression = BI_RGB;
-
-    GetDIBits(hdc, hBmp, 0, bitmap.bmHeight, (LPVOID) screenshot.data, &bmpInfo, DIB_RGB_COLORS);
-    if (GetLastError() != ERROR_SUCCESS) {
-        cerr << "ERROR: Getting the bitmap buffer!" << endl;
-        release(hdc, captureDC, hBmp);
+bool ScreenshotFactory::update_screenshot_data(ScreenshotData &screenshot) {
+    if (!refresh_capture()){
+        Logger::show("Failed to refresh capture");
+        return false;
+    }
+    if (!hbitmap) {
+        Logger::show("ERROR: Bitmap creation failed!");
         return false;
     }
 
-    DeleteDC(hdc);
-    DeleteDC(captureDC);
+    return update_screenshot_from_region_bitmap(screenshot, hbitmap);
+}
+
+bool ScreenshotFactory::update_screenshot_from_region_bitmap(ScreenshotData &screenshot, HBITMAP &p_hbitmap) {
+    SelectObject(sourceDC, p_hbitmap);
+
+    // Perform BitBlt
+    if (!BitBlt(targetDC, 0, 0, region.width, region.height, sourceDC, region.left, region.top, SRCCOPY | CAPTUREBLT)) {
+        Logger::show("ERROR: bit-block transfer failed!");
+        return false;
+    }
+
+    // Get Bitmap Info
+    BITMAPINFO bmpInfo = create_bitmap_info_struct(region.width, region.height, 32);
+    bmpInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    if (!GetDIBits(targetDC, p_hbitmap, 0, 0, nullptr, &bmpInfo, DIB_RGB_COLORS)) {
+        Logger::show("ERROR: Failed to get Bitmap Info.");
+        return false;
+    }
+
+    bmpInfo.bmiHeader.biCompression = BI_RGB;
+
+    // Get the Pixel Data
+    if (!GetDIBits(targetDC, p_hbitmap, 0, bmpInfo.bmiHeader.biHeight, (LPVOID)screenshot.data, &bmpInfo, DIB_RGB_COLORS)) {
+        Logger::show( "ERROR: Getting the bitmap buffer!");
+        return false;
+    }
 
     return true;
 }
 
-HBITMAP ScreenshotFactory::capture_region() {
-    HDC hdc = GetDC(nullptr);
-    HBITMAP hBmp = CreateCompatibleBitmap(hdc, region.width, region.height);
+bool ScreenshotFactory::refresh_capture() {
+    SelectObject(targetDC, hbitmap);
 
-    if (!hBmp) {
-        release(hdc, hdc, hBmp);
-        return nullptr;
+    if (!BitBlt(targetDC, 0, 0, region.width, region.height, sourceDC, region.left, region.top, SRCCOPY | CAPTUREBLT)) {
+        Logger::show("ERROR: bit-block transfer failed!");
+        return false;
     }
-
-    HDC captureDC = CreateCompatibleDC(hdc);
-    SelectObject(captureDC, hBmp);
-
-    if (!BitBlt(captureDC, 0, 0, region.width, region.height, hdc, region.left, region.top, SRCCOPY | CAPTUREBLT)) {
-        cout << "ERROR: bit-block transfer failed!" << endl;
-        release(hdc, captureDC, hBmp);
-        return nullptr;
-    }
-
-    release(hdc, captureDC, hBmp);
-    return hBmp;
+    return true;
 }
 
 void ScreenshotFactory::release(HDC &hdc, HDC &captureDC, HBITMAP &hBmp) {
@@ -77,3 +72,7 @@ void ScreenshotFactory::release(HDC &hdc, HDC &captureDC, HBITMAP &hBmp) {
 }
 
 const Rect &ScreenshotFactory::get_region() const { return region; }
+
+ScreenshotFactory::~ScreenshotFactory() {
+    release(sourceDC, targetDC, hbitmap);
+}

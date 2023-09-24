@@ -18,7 +18,8 @@ auto vec = std::vector({7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17});
 auto pattern = ScreenshotProbeColorPattern(vec, 80);
 std::vector<COLORREF> colors = {RGB(255, 0, 0), RGB(50, 200, 50), RGB(0, 0, 255), RGB(0, 255, 255), RGB(255, 255, 0),
                                 RGB(255, 0, 255)};
-
+Rect r(400, 300, 0, 0);
+ScreenshotFactory factory(r);
 int check_image(const Rect &offset_region, const std::string &dir, const std::string &fname) {
 
     auto screenshot = ScreenshotData(offset_region);
@@ -38,16 +39,16 @@ int check_image(const Rect &offset_region, const std::string &dir, const std::st
     load_image_offset_region(full_path, offset_region, bitmap);
     //print_hbitmap_console(bitmap);
     dump_bitmap(bitmap, dump_path + "_region.bmp");
-    ScreenshotFactory::update_screenshot_from_region_bitmap(screenshot, bitmap);
-    auto brute_layers = std::vector<std::pair<std::string, std::vector<Coords>>>();
-    auto pattern_layers = std::vector<std::pair<std::string, std::vector<Coords>>>();
+    factory.update_screenshot_from_region_bitmap(screenshot, bitmap);
+    std::vector<std::pair<std::string, std::vector<Coords>>> brute_layers;
+    std::vector<std::pair<std::string, std::vector<Coords>>> pattern_layers;
     {
         ScopedTimeMeter("brute");
-        brute_layers = brute.debug_probe_feature_layers(screenshot);
+        brute.debug_probe_feature_layers(screenshot, brute_layers);
     }
     {
         ScopedTimeMeter("pattern");
-        pattern_layers = pattern.debug_probe_feature_layers(screenshot);
+        pattern.debug_probe_feature_layers(screenshot, pattern_layers);
     }
     BITMAPINFO bmi = create_bitmap_info_struct(offset_region.width, -offset_region.height, 24);
 
@@ -177,7 +178,7 @@ int main(int c, char **args) {
     auto files = list_files_by_mask(".jpg", dir);
     auto rect = Rect(400, 300, -200, -200);
     for (auto file: files) {
-       /* if (file.find("test_image (13)") == std::string::npos) {
+/*        if (file.find("test_image (1)") == std::string::npos) {
             continue;
         }*/
         std::cout << "Checking " << file << std::endl;

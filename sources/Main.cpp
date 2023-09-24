@@ -6,6 +6,8 @@
 #include "../headers/Overlay.h"
 #include "../headers/logging/overlay_logger.h"
 #include "../headers/probe/ScreenshotProbeHashTableBrute.h"
+#include "../headers/probe/ScreenshotProbeColorPattern.h"
+#include "../headers/logging/console_logger.h"
 
 void HideConsole()
 {
@@ -21,9 +23,10 @@ int main() {
     }
     SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
     HideConsole();
+    auto vec = std::vector({7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17});
+    auto pattern = ScreenshotProbeColorPattern(vec, 80);
+    auto manager = Manager(std::make_unique<ScreenshotProbeColorPattern>(pattern));
 
-    auto settings = ProbeSettings();
-    auto manager = Manager(std::make_unique<ScreenshotProbeHashTableBrute>(settings));
     OverlayLogger ol(manager);
 
     auto assistant = AimAssistant(manager);

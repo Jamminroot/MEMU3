@@ -1,6 +1,7 @@
 #include "../headers/AimAssistant.h"
 #include "../headers/ScreenshotFactory.h"
 #include "../headers/Utils.h"
+#include "../headers/logging/logger.h"
 #include <thread>
 #include <random>
 #include <mutex>
@@ -23,16 +24,19 @@ AimAssistant::AimAssistant(class Manager &pManager) : manager(pManager), input(m
 
 void AimAssistant::main_thread() {
     auto factory = ScreenshotFactory(manager.region);
-    ScreenshotData screenshot;
+    ScreenshotData screenshot(manager.region);
     while (!manager.is_exit_requested()) {
         manager.pause_thread_if_not_running();
         bool captured = factory.update_screenshot_data(screenshot);
         if (!captured) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
         }
         auto start = std::chrono::high_resolution_clock::now();
-        manager.enemyVisible = manager.screenshotProbe->probe(screenshot, manager.enemyCoords);
-
+        manager.enemyVisible = manager.screenshotProbe->probe(screenshot);
+        if (manager.enemyVisible) {
+            manager.update_enemy_coords_with_local_coords(manager.screenshotProbe->get_probe_result().coords);
+        }
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> elapsed = std::chrono::high_resolution_clock::now() - start;
         manager.elapsedScanTime = elapsed.count();
@@ -66,7 +70,6 @@ void AimAssistant::flick_handler() {
     std::thread flickThread(&AimAssistant::flick_and_shot, this, manager.enemyCoords);
     flickThread.detach();
     std::this_thread::sleep_for(std::chrono::milliseconds(next_random_user_delay() * 5));
-
 }
 
 void AimAssistant::hanzo_handler() {
@@ -188,7 +191,7 @@ void AimAssistant::input_handler() {
 
 // That is outdated, and only here for reference
 void AimAssistant::apply_modifiers_distance(Coords &coords) const {
-    auto index = (int) coords.length;
+    auto index = (int) coords.vector_length;
     float distance_multiplier;
     if (index >= Manager::MULTIPLIER_TABLE_SIZE) {
         distance_multiplier = 0.2f;

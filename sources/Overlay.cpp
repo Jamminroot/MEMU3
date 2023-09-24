@@ -6,7 +6,6 @@
 #include <string>
 #include <algorithm>
 #include <thread>
-#include <iostream>
 #include <dwmapi.h>
 #include <d3d9.h>
 #include <d3dx9core.h>

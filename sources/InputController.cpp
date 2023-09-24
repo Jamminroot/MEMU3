@@ -1,9 +1,9 @@
 #include "../headers/InputController.h"
 #include "../headers/Overlay.h"
 #include "../headers/Utils.h"
+#include "../headers/logging/logger.h"
 #include <thread>
 
-#include <iostream>
 
 #if defined(TARGET_64) || defined(_WIN64)
 
@@ -28,8 +28,12 @@ const int AimMouseDownKeys = InterceptionMouseState::INTERCEPTION_MOUSE_BUTTON_5
 
 InputController::InputController(Manager &pManager) : manager(pManager) {
     context = interception_create_context();
+#if DEBUG_WITHOUT_INPUT
+    Logger::show("DEBUG_WITHOUT_INPUT", 30000);
+#else
     std::thread inputFiltrationThread(&InputController::input_thread_handler, this);
     inputFiltrationThread.detach();
+#endif
 }
 
 void InputController::input_thread_handler() {

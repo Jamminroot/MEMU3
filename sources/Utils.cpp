@@ -135,3 +135,13 @@ BITMAPINFO create_bitmap_info_struct(int width, int height, int bitCount) {
     bmpInfo.bmiHeader.biCompression = BI_RGB;
     return bmpInfo;
 }
+
+std::string get_last_error(DWORD err) {
+    LPSTR messageBuffer = nullptr;
+    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                                 NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR) &messageBuffer, 0, NULL);
+    std::string message(messageBuffer, size);
+    //Free the buffer.
+    LocalFree(messageBuffer);
+    return message;
+}

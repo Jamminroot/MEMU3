@@ -1,16 +1,12 @@
 #include "../headers/Manager.h"
 #include "../headers/Utils.h"
 #include "../headers/Overlay.h"
-#include "../headers/Configuration.h"
 #include "../headers/logging/logger.h"
 #include "../headers/probe/ScreenshotProbeHashTableBrute.h"
 
-#include <condition_variable>
 #include <mutex>
 #include <fstream>
 #include <cmath>
-#include <iostream>
-#include <windows.h>
 
 std::mutex exit_mutex;
 std::mutex pause_mutex;
@@ -23,7 +19,8 @@ bool Manager::is_running() const {
     return running;
 }
 
-Manager::Manager(std::unique_ptr<ScreenshotProbe> probe) : running(false), exitRequested(false), screenshotProbe(std::move(probe)) {
+Manager::Manager(std::unique_ptr<ScreenshotProbe> probe) : running(false), exitRequested(false),
+                                                           screenshotProbe(std::move(probe)) {
     read_configuration(config);
     Rect regionSizeAndOffset = Rect(config.scan_width, config.scan_height, config.scan_horizontal_offset,
                                     config.scan_vertical_offset);
@@ -56,7 +53,7 @@ void Manager::update_enemy_coords_with_local_coords(int x, int y) {
 }
 
 bool Manager::is_crosshair_over_enemy() const {
-    return enemyCoords.length <= (float) triggerDistanceThreshold;
+    return enemyCoords.vector_length <= (float) triggerDistanceThreshold;
 }
 
 void Manager::update_enemy_coords_with_local_coords(Coords coords) {
@@ -193,7 +190,7 @@ void Manager::set_running(const bool &state, const bool &silent) {
 }
 
 bool Manager::read_next_colorconfig(std::vector<RGBQUAD> &colors, std::string &config) {
-    auto configs = list_files_by_mask("*.colorset");
+    auto configs = list_files_by_mask(".colorset");
     if (configs.empty()) return false;
     currentColorconfigIndex = (currentColorconfigIndex + 1) % configs.size();
     config = configs[currentColorconfigIndex];
@@ -209,7 +206,7 @@ bool Manager::read_next_colorconfig(std::vector<RGBQUAD> &colors, std::string &c
 }
 
 bool Manager::read_next_strength_map(std::string &message) {
-    auto maps = list_files_by_mask("maps/*.bmp");
+    auto maps = list_files_by_mask(".bmp", "maps");
     if (maps.empty()) {
         message = "No strength maps found";
         return false;
@@ -219,12 +216,13 @@ bool Manager::read_next_strength_map(std::string &message) {
     auto map = maps[currentStrengthMapIndex];
     std::string line;
     std::ifstream bmpFile("maps/" + map);
-    int distribution[255] {0};
+    int distribution[255]{0};
 
-    HBITMAP hBitmap = (HBITMAP)LoadImageA(NULL, ("maps/"+map).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+    HBITMAP hBitmap = (HBITMAP) LoadImageA(NULL, ("maps/" + map).c_str(), IMAGE_BITMAP, 0, 0,
+                                           LR_LOADFROMFILE | LR_CREATEDIBSECTION);
     if (hBitmap == NULL) {
 #if DEBUG
-        std::cout << "Failed to open strength map: " << map << std::endl;
+        Logger::show("Failed to open strength map: "+map);
 #endif
         message = "Failed to open strength map: " + map;
         return false;
@@ -235,7 +233,7 @@ bool Manager::read_next_strength_map(std::string &message) {
 
     if (bitmap.bmHeight != STRENGTH_MAP_HEIGHT || bitmap.bmWidth != STRENGTH_MAP_WIDTH) {
 #if DEBUG
-        std::cout << "Invalid strength map size: " << map << std::endl;
+        Logger::show("Invalid strength map size: "  + map);
 #endif
         message = "Invalid strength map size: " + map;
         return false;
@@ -248,13 +246,13 @@ bool Manager::read_next_strength_map(std::string &message) {
     HDC hdc = GetDC(NULL);
 
     // Select the bitmap into the device context
-    HBITMAP hOldBitmap = (HBITMAP)SelectObject(hdc, hBitmap);
+    HBITMAP hOldBitmap = (HBITMAP) SelectObject(hdc, hBitmap);
 
     // Get the pixel data
-    BITMAPINFO bmi = { 0 };
+    BITMAPINFO bmi = {0};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth = bitmap.bmWidth;
-    bmi.bmiHeader.biHeight = - bitmap.bmHeight; // top-down
+    bmi.bmiHeader.biHeight = -bitmap.bmHeight; // top-down
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 32; // BGRA
     bmi.bmiHeader.biCompression = BI_RGB;
@@ -273,69 +271,30 @@ bool Manager::read_next_strength_map(std::string &message) {
     std::vector<RGBQUAD> filteredPixels;
     auto x = 0;
     auto y = 0;
-    for (const RGBQUAD& pixel : pixels) {
+    for (const RGBQUAD &pixel: pixels) {
 
-        x ++;
+        x++;
         if (x >= bitmap.bmWidth) {
             x = 0;
-            y ++;
+            y++;
         }
         auto px = pixel.rgbRed;
         strengthMap[x][y] = px;
         distribution[px]++;
     }
 
-
-#if DEBUG
-    std::vector <int> buckets;
-    std::cout << "Strength map: " << map << std::endl;
-    const int bucket_size = 10;
-    auto bucket_total = 0;
-    auto max = 0;
-    for(int i = 0; i < 255; i++) {
-        bucket_total += distribution[i];
-        if (i % bucket_size == 0) {
-
-            std::cout << i << ": " << bucket_total << "\t";
-
-            buckets.push_back(bucket_total);
-            if (bucket_total > max) {
-                max = bucket_total;
-            }
-            bucket_total = 0;
-        }
-    }
-    buckets.push_back(bucket_total);
-    const int max_draw_length = 200;
-    std::cout << std::endl;
-    for(int i = 0; i < buckets.size(); i++) {
-        auto bucket = buckets[i];
-        auto bucket_size = bucket / (max/max_draw_length);
-        std::cout << i * 10 << "\t: ";
-        for(int j = 0; j < bucket_size; j++) {
-            std::cout << "#";
-        }
-        std::cout << "\t\t\t(" << bucket << ")" << std::endl;
-    }
-
-    std::cout << std::endl;
-#endif
     auto minimums = distribution[0] + distribution[1] + distribution[2];
     auto maximums = distribution[255] + distribution[254] + distribution[253] + distribution[252] + distribution[251];
 
-#if DEBUG
-    std::cout << "Minimums: " << minimums << std::endl;
-    std::cout << "Maximums: " << maximums << std::endl;
-#endif
     auto size = STRENGTH_MAP_HEIGHT * STRENGTH_MAP_WIDTH;
     if (minimums >= (int) (size * 0.97f)) {
         // Too many zeros
-        message = "Too many minimums" + std::to_string(minimums) +" max=" + std::to_string((int)(size * 0.99f));
+        message = "Too many minimums" + std::to_string(minimums) + " max=" + std::to_string((int) (size * 0.99f));
         return false;
     }
     if (maximums >= (int) (size * 0.97f)) {
         // Too many maximums
-        message = "Too many maximums: " + std::to_string(maximums) +" max=" + std::to_string((int)(size * 0.99f));
+        message = "Too many maximums: " + std::to_string(maximums) + " max=" + std::to_string((int) (size * 0.99f));
         return false;
     }
     if (maximums < 1) {
@@ -343,10 +302,8 @@ bool Manager::read_next_strength_map(std::string &message) {
         message = "White pixel (red>250) not found";
         return false;
     }
-    message =  split_string(map, '.').at(0);
-#if DEBUG
-    std::cout << "Strength map loaded: " << map << std::endl;
-#endif
+    message = split_string(map, '.').at(0);
+
     return true;
 }
 
@@ -361,7 +318,7 @@ RGBQUAD Manager::parse_rgbquad_from_string(const std::string &line) {
 }
 
 void Manager::toggle_next_colorconfig() {
-    if (auto brutePtr = dynamic_cast<ScreenshotProbeHashTableBrute*>(screenshotProbe.get())) {
+    if (auto brutePtr = dynamic_cast<ScreenshotProbeHashTableBrute *>(screenshotProbe.get())) {
         auto runningCache = is_running();
         set_running(false, true);
         std::vector<RGBQUAD> colors;
@@ -374,9 +331,11 @@ void Manager::toggle_next_colorconfig() {
         }
         if (runningCache) {
             set_running(runningCache, true);
-        }    }
+        }
+    }
 
 }
+
 void Manager::toggle_next_strengthmap() {
     auto runningCache = is_running();
     set_running(false, true);
@@ -391,39 +350,6 @@ void Manager::toggle_next_strengthmap() {
     if (runningCache) {
         set_running(runningCache, true);
     }
-}
-
-bool Manager::dump_table(std::string &tablename) const {
-    std::ofstream outStream;
-    outStream.open(tablename, std::ios::out | std::ios::binary);
-    outStream.write((const char *) colorHashTable, sizeof(colorHashTable));
-    outStream.close();
-    Logger::show("Saving color scan table to file.");
-    return true;
-}
-
-bool Manager::restore_table(std::string &tablename) const {
-    Logger::show("Restoring cached color scan table.");
-    std::ifstream inStream(tablename);
-    size_t chars_read;
-    if (!(inStream.read((char *) colorHashTable, sizeof(colorHashTable)))) {
-        if (!inStream.eof()) {
-            return false;
-        }
-    }
-    chars_read = (size_t) inStream.gcount();
-    return chars_read == sizeof(colorHashTable);
-}
-
-std::string Manager::hashtable_name(const std::vector<RGBQUAD> &pColors) {
-    std::string bytes;
-    for (auto targetColor: pColors) {
-        bytes.push_back(targetColor.rgbRed);
-        bytes.push_back(targetColor.rgbGreen);
-        bytes.push_back(targetColor.rgbBlue);
-        bytes.push_back(targetColor.rgbReserved);
-    }
-    return "ct_" + base64_encode(bytes) + ".bin";
 }
 
 void Manager::fill_multiplier_table() {
@@ -453,7 +379,8 @@ void Manager::fill_multiplier_table() {
     for (auto i = distance; i < MULTIPLIER_TABLE_SIZE; ++i) {
         multiplierTable[i] = lerp_value((float) i / (MULTIPLIER_TABLE_SIZE -
                                                      (float) (config.point_a_distance + config.point_a_b_distance +
-                                                             config.point_b_c_distance)), config.multiplier_point_at_point_c,
+                                                              config.point_b_c_distance)),
+                                        config.multiplier_point_at_point_c,
                                         config.multiplier_at_furthest);
     }
 }
