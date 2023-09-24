@@ -173,13 +173,13 @@ void debug_print_grey_background(HBITMAP &canvas, const HBITMAP &p_hbitmap, doub
             auto b = GetBValue(color);
             auto max = max(r, max(g, b));
             if (r != max) {
-                r += (max-r) * d;
+                r += (BYTE) (max-r) * d;
             }
             if (g != max) {
-                g += (max-g) * d;
+                g += (BYTE) (max-g) * d;
             }
             if (b != max) {
-                b += (max-b) * d;
+                b += (BYTE) (max-b) * d;
             }
 
             SetPixel(canvas_dc, i, j, RGB(r, g, b));
