@@ -8,6 +8,7 @@
 #include <string>
 #include <iostream>
 #include <chrono>
+#include <filesystem>
 #include "../headers/debug/scoped_time_meter.h"
 
 ConsoleLogger l;
@@ -19,10 +20,15 @@ std::vector<COLORREF> colors = {RGB(255, 0, 0), RGB(50, 200, 50), RGB(0, 0, 255)
                                 RGB(255, 0, 255)};
 
 int check_image(const Rect &offset_region, const std::string &dir, const std::string &fname) {
+
     auto screenshot = ScreenshotData(offset_region);
 
     std::string full_path = dir + "\\" + fname;
     std::string dump_path = dir + "\\dump\\" + fname + "\\";
+
+    if (std::filesystem::exists(dump_path)) {
+        std::filesystem::remove_all(dump_path);
+    }
 
     CreateDirectoryA((dir + "\\dump\\").c_str(), NULL);
     CreateDirectoryA(dump_path.c_str(), NULL);
@@ -49,47 +55,86 @@ int check_image(const Rect &offset_region, const std::string &dir, const std::st
     HDC hdc = CreateCompatibleDC(nullptr);
     HBITMAP result = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &pvBits, NULL, 0);
 
-    std::cout << "Brute matching:" << std::endl;
+/*    std::cout << "Brute matching:" << std::endl;
     for (int i = 0; i < brute_layers.size(); i++) {
+        auto hint = pattern_layers[i].first;
+        if (hint.find("Handle") == std::string::npos) {
+            continue;
+        }
         std::cout << "Layer " << i << " (" + brute_layers[i].first + ") size: " << brute_layers[i].second.size()
                   << "\n";
         debug_print_grey_background(result, bitmap, 0.95);
         debug_print_layer(brute_layers[i].first, brute_layers[i].second, result, colors[i % colors.size()]);
         dump_bitmap(result, dump_path + "brute_(" + std::to_string(i) +")" + brute_layers[i].first + ".bmp");
-    }
+    }*/
 
     std::cout << "Pattern matching:" << std::endl;
-    for (int i = 0; i < pattern_layers.size(); i++) {
-        std::cout << "Layer " << i << " (" + pattern_layers[i].first + ") size: " << pattern_layers[i].second.size()
-                  << "\n";
-        debug_print_grey_background(result, bitmap, 0.95);
-        debug_print_layer(pattern_layers[i].first, pattern_layers[i].second, result, colors[i % colors.size()]);
-        dump_bitmap(result, dump_path + "pattern_(" + std::to_string(i) + ")"+ pattern_layers[i].first +  + ".bmp");
+    auto group_background_printed = false;
+    // If folder exists - clear it
+
+
+    auto join_groups = false;
+
+    if (join_groups){
+
+
+        bool inGroup = false;
+        auto groups = 0;
+        for (int i = 0; i < pattern_layers.size(); i++) {
+            auto hint = pattern_layers[i].first;
+            auto layer = pattern_layers[i].second;
+            auto is_group = hint.find("group") != std::string::npos;
+
+            if (!is_group || !group_background_printed) {
+                debug_print_grey_background(result, bitmap, 0.95);
+                if (is_group) {
+                    group_background_printed = true;
+                }
+            }
+
+            if (is_group) {
+                groups++;
+            }
+            std::cout << "Layer " << i << " (" + hint + ") size: " << layer.size() << "\n";
+            if (is_group) {
+                debug_print_layer(hint, layer, result, colors[groups % colors.size()]);
+            } else {
+                debug_print_layer(hint, layer, result, colors[i % colors.size()]);
+            }
+
+            if (is_group) {
+                inGroup = true;
+            } else if (inGroup) {
+                inGroup = false;
+                dump_bitmap(result, dump_path + "pattern_(" + std::to_string(i) + ")_combined_groups("+std::to_string(groups)+").bmp");
+            }
+
+            if (!is_group || i == pattern_layers.size() - 1) {
+                dump_bitmap(result, dump_path + "pattern_(" + std::to_string(i) + ")" + hint + ".bmp");
+            }
+        }
+    } else {
+        for (int i = 0; i < pattern_layers.size(); i++) {
+            auto hint = pattern_layers[i].first;
+            auto layer = pattern_layers[i].second;
+            debug_print_grey_background(result, bitmap, 0.95);
+
+            std::cout << "Layer " << i << " (" + hint + ") size: " << layer.size() << "\n";
+            debug_print_layer(hint, layer, result, colors[i % colors.size()]);
+
+            dump_bitmap(result, dump_path + "pattern_(" + std::to_string(i) + ")" + hint + ".bmp");
+
+        }
     }
 
     DeleteObject(bitmap);
     DeleteObject(result);
     DeleteDC(hdc);
 
-    // measure time
     auto start = std::chrono::high_resolution_clock::now();
-    auto brute_result = brute.probe(screenshot);
-    auto end = std::chrono::high_resolution_clock::now();
-    auto brute_time = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-
-
-    start = std::chrono::high_resolution_clock::now();
     auto pattern_result = pattern.probe(screenshot);
-    end = std::chrono::high_resolution_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
     auto pattern_time = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-
-    if (brute_result) {
-        std::cout << "Brute: " << brute.get_probe_result().coords.x << ", " << brute.get_probe_result().coords.y
-                  << "\n";
-    } else {
-        std::cout << "Brute: not found\n";
-    }
-    std::cout << "Brute time: " << brute_time << " ns\n";
 
     if (pattern_result) {
         std::cout << "Pattern: " << pattern.get_probe_result().coords.x << ", " << pattern.get_probe_result().coords.y
@@ -120,6 +165,9 @@ int main(int c, char **args) {
     auto files = list_files_by_mask(".jpg", dir);
     auto rect = Rect(400, 300, -200, -200);
     for (auto file: files) {
+        if (file.find("test_image (2)") == std::string::npos) {
+            continue;
+        }
         std::cout << "Checking " << file << std::endl;
         check_image(rect, dir, file);
         //break;
