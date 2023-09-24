@@ -189,6 +189,7 @@ ProbeResult ScreenshotProbeColorPattern::common_probe(const ScreenshotData &scre
     std::map<int, std::pair<int, int>> y_to_x_range; // Maps y to a pair of min_x and max_x
     std::map<int, size_t> y_to_group_index; // Maps y to its corresponding group index
     int min_x_for_longest_group = INT_MAX;
+    int max_x_for_longest_group = INT_MIN;
 
     for (const auto &curr_handle: handles) {
         bool group_found = false;
@@ -221,6 +222,7 @@ ProbeResult ScreenshotProbeColorPattern::common_probe(const ScreenshotData &scre
 
                     max_y_for_longest_group = max(max_y_for_longest_group, curr_handle.y);
                     min_x_for_longest_group = min(min_x_in_group, curr_handle.x);
+                    max_x_for_longest_group = max(max_x_in_group, curr_handle.x);
                 }
 
                 break;
@@ -245,7 +247,9 @@ ProbeResult ScreenshotProbeColorPattern::common_probe(const ScreenshotData &scre
 
     if (longest_group_index >= 0) {
         result.coords = Coords(min_x_for_longest_group, max_y_for_longest_group);
-        result.success = true;
+        auto group = handle_groups[longest_group_index];
+        auto distance = max_x_for_longest_group - min_x_for_longest_group;
+        result.success = group.size()>1 && distance>=4;
     } else {
         result.success = false;
     }
