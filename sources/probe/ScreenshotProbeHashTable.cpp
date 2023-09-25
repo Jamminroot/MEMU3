@@ -38,6 +38,7 @@ ScreenshotProbeHashTable::ScreenshotProbeHashTable() {
             {48,  41,  211, 19},
             {0,   10,  221, 19},
             {80,  60,  248, 27},
+            {92,  55,  255, 16},
     };
     initialize_color_table(colors, true);
 }

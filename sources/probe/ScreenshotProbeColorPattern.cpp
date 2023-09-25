@@ -1,6 +1,7 @@
 #include <chrono>
 #include "../headers/probe/ScreenshotProbeColorPattern.h"
 #include <map>
+#include <unordered_set>
 
 bool ScreenshotProbeColorPattern::probe(const ScreenshotData &screenshot) {
     int longest_group_idx = -1;
@@ -8,6 +9,17 @@ bool ScreenshotProbeColorPattern::probe(const ScreenshotData &screenshot) {
     probe_result = result;
     return probe_result.success;
 }
+
+struct GroupData {
+    int unique_xs;
+    int min_x;
+    int max_x;
+    int max_y;
+
+    int get_delta() {
+        return max_x - min_x;
+    }
+};
 
 void ScreenshotProbeColorPattern::debug_probe_feature_layers(const ScreenshotData &screenshot,
                                                              std::vector<std::pair<std::string, std::vector<Coords>>> &res) {
@@ -42,34 +54,25 @@ bool ScreenshotProbeColorPattern::probe_handle(const ScreenshotData &screenshot,
                                                int check_not_red_stripes) {
 
     // When iterating a screenshot, 0:0 is bottom-left corner
-    if (x + check_width >= screenshot.region.width || y + check_height >= screenshot.region.height ||
-        x <= check_offset + check_not_red_stripes || y <= check_offset + check_not_red_stripes) {
+    if (x + check_width + check_not_red_stripes >= screenshot.region.width || y + check_height + check_not_red_stripes >= screenshot.region.height ||
+        x < check_width + check_not_red_stripes || y < check_height + check_not_red_stripes) {
         return false;
     }
 
-/*
+
     if (match_map[x-check_offset][y+check_offset]) {
         return false;
     }
-*/
+
 
     auto count_not_reds = 0;
 
-    // Checking that area to the left and down of the given pixel is not red
-    // Given pixel is top-right corner of the area
-    for (auto i = 1; i <= check_not_red_stripes; ++i) {
-        for (auto j = 1; j <= check_not_red_stripes; ++j) {
-            if (!match_map[x - i][y - j - check_offset]) {
-                count_not_reds++;
+    for (auto ox = x-check_not_red_stripes; ox<=x+check_width-check_not_red_stripes; ++ox){
+        for (auto oy = y-check_height+check_not_red_stripes; oy <= y + check_not_red_stripes; ++oy) {
+            if (ox>=x && oy <= y) {
+                continue;
             }
-        }
-    }
-
-    // Checking that area to the right and up of the given pixel is not red
-    // Given pixel is bottom-left corner of the area
-    for (auto i = 0; i < check_width; ++i) {
-        for (auto j = 0; j < check_not_red_stripes; ++j) {
-            if (!match_map[x + i][y + j + check_offset]) {
+            if (!match_map[ox][oy]) {
                 count_not_reds++;
             }
         }
@@ -108,7 +111,9 @@ bool ScreenshotProbeColorPattern::probe_handle(const ScreenshotData &screenshot,
 
 ProbeResult ScreenshotProbeColorPattern::common_probe(const ScreenshotData &screenshot, int &longest_group_index) {
     ProbeResult result;
-
+    if (match_map == nullptr) {
+        init(screenshot.region);
+    }
     matches.clear();
     handles.clear();
     handle_groups.clear();
@@ -120,42 +125,35 @@ ProbeResult ScreenshotProbeColorPattern::common_probe(const ScreenshotData &scre
             if (probe_color(color)) {
                 match_map[x][y] = true;
                 matches.emplace_back(x, y);
+            } else {
+                match_map[x][y] = false;
             }
         }
     }
 
-    std::map<int, std::vector<int>> handles_indices;
 
     // Measure time for this block
-    auto threshold_is_red = 0.80;
+    auto threshold_is_red = 0.85;
     auto threshold_is_not_red = 0.50;
-    auto check_not_red_pixels_area = 3;
+    auto check_not_red_pixels_area = 5;
     auto check_offset = 2;
     auto check_height = 8;
     auto check_width = 8;
     int is_red_threshold_w = (int) (threshold_is_red * check_width) / 2;
     int is_red_threshold_h = (int) (threshold_is_red * check_height);
-    int not_red_threshold = (int) (
-            (check_not_red_pixels_area * check_height + check_not_red_pixels_area * check_width) *
-            threshold_is_not_red);
+    int not_red_threshold = (int) ((check_not_red_pixels_area * check_height + check_not_red_pixels_area * check_width) *threshold_is_not_red);
     for (auto coords: matches) {
         auto x = coords.x;
         auto y = coords.y;
         if (probe_handle(screenshot, x, y, is_red_threshold_w, is_red_threshold_h, not_red_threshold,
                          check_height, check_width, check_offset, check_not_red_pixels_area)) {
-            handles.emplace_back(x, y);
-            if (handles_indices.find(y) == handles_indices.end()) {
-                handles_indices.emplace(y, std::vector<int>());
-            }
-            handles_indices.at(y).push_back(x);
+            handles.emplace_back(coords);
         }
     }
 
     handle_groups.emplace_back();
     longest_group_index = -1;
 
-    int longest_group_delta = -1;
-    int max_y_for_longest_group = -1;
 
     auto max_group_distance_y = 3;
     auto max_group_distance_x = 80;
@@ -163,10 +161,11 @@ ProbeResult ScreenshotProbeColorPattern::common_probe(const ScreenshotData &scre
     // * Adjacent to each other
     // * Have y coordinate difference less than max_group_distance_y and x coordinate difference less than max_group_distance_x
 
-    std::map<int, std::pair<int, int>> y_to_x_range; // Maps y to a pair of min_x and max_x
+    std::map<int, std::pair<int, int>> y_to_x_range; // Maps y to min_x-max_x pair
+    if (!handles.empty()) {
+        y_to_x_range.emplace(handles[0].y, std::make_pair(handles[0].x, handles[0].x));
+    }
     std::map<int, size_t> y_to_group_index; // Maps y to its corresponding group index
-    int min_x_for_longest_group = INT_MAX;
-    int max_x_for_longest_group = INT_MIN;
 
     for (const auto &curr_handle: handles) {
         bool group_found = false;
@@ -190,18 +189,6 @@ ProbeResult ScreenshotProbeColorPattern::common_probe(const ScreenshotData &scre
                 y_to_x_range[grp_y] = {min_x_in_group, max_x_in_group};
                 size_t curr_group_idx = y_to_group_index[grp_y];
                 handle_groups[curr_group_idx].push_back(curr_handle);
-
-                // Update longest group info
-                int delta = max_x_in_group - min_x_in_group;
-                if (delta > longest_group_delta) {
-                    longest_group_delta = delta;
-                    longest_group_index = (int) curr_group_idx;
-
-                    max_y_for_longest_group = max(max_y_for_longest_group, curr_handle.y);
-                    min_x_for_longest_group = min(min_x_in_group, curr_handle.x);
-                    max_x_for_longest_group = max(max_x_in_group, curr_handle.x);
-                }
-
                 break;
             }
         }
@@ -222,22 +209,66 @@ ProbeResult ScreenshotProbeColorPattern::common_probe(const ScreenshotData &scre
         thresholds[hi] = passable_threshold;
     }
 
+    std::vector<GroupData> group_datas = std::vector<GroupData>();
+    for (auto &group: handle_groups) {
+        auto group_length = 0;
+        std::unordered_set<int> group_heights;
+        auto min_x = INT_MAX;
+        auto max_x = INT_MIN;
+        auto max_y = INT_MIN;
+        // Increase length if group has a handle with x which has not yet appeared in the group
+        for (auto &handle: group) {
+            if (group_heights.find(handle.x) == group_heights.end()) {
+                group_length++;
+                group_heights.insert(handle.x);
+            }
+            min_x = min(min_x, handle.x);
+            max_x = max(max_x, handle.x);
+            max_y = max(max_y, handle.y);
+        }
+        group_datas.emplace_back(GroupData{(int) group_heights.size(), min_x, max_x, max_y});
+    }
+
+
+    auto top_result = GroupData{0, 0, 0, 0};
+
+    // Get top result from group_datas
+    auto idx = -1;
+    for (auto &group_data: group_datas) {
+        idx++;
+        if (group_data.unique_xs > top_result.unique_xs) {
+            longest_group_index = idx;
+            top_result = group_data;
+        } else if (group_data.unique_xs == top_result.unique_xs) {
+            if (group_data.get_delta() < top_result.get_delta()) {
+                longest_group_index = idx;
+                top_result = group_data;
+            } else if (group_data.get_delta() == top_result.get_delta()) {
+                if (group_data.max_y < top_result.max_y) {
+                    longest_group_index = idx;
+                    top_result = group_data;
+                }
+            }
+        }
+    }
+
+
     if (longest_group_index >= 0) {
-        result.coords = Coords(min_x_for_longest_group, max_y_for_longest_group);
-        auto group = handle_groups[longest_group_index];
-        auto distance = max_x_for_longest_group - min_x_for_longest_group;
-        result.success = group.size()>1 && distance>=4;
+        result.coords = Coords(top_result.min_x, top_result.max_y);
+        result.success = top_result.unique_xs > 1 && top_result.get_delta() >= 5;
     } else {
         result.success = false;
     }
     return result;
 }
 
-ScreenshotProbeColorPattern::ScreenshotProbeColorPattern(std::vector<int> &heights, int threshold) :  heights(heights), threshold(threshold) {
+ScreenshotProbeColorPattern::ScreenshotProbeColorPattern(std::vector<int> &heights, int threshold) : heights(heights),
+                                                                                                     threshold(
+                                                                                                             threshold) {
 }
 
-void delete_match_map(bool **match_map, const Rect &size){
-    if (match_map == nullptr){
+void ScreenshotProbeColorPattern::delete_match_map(bool **match_map, const Rect &size) {
+    if (match_map == nullptr) {
         return;
     }
     for (int i = 0; i < size.width; ++i) {
@@ -246,8 +277,8 @@ void delete_match_map(bool **match_map, const Rect &size){
     delete[] match_map;
 }
 
-void ScreenshotProbeColorPattern::init(const Rect &p_size){
-    if (match_map!=nullptr){
+void ScreenshotProbeColorPattern::init(const Rect &p_size) {
+    if (match_map != nullptr) {
         delete_match_map(match_map, size);
     }
     size = p_size;

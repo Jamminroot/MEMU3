@@ -26,7 +26,6 @@ int main() {
     auto vec = std::vector({7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17});
     auto pattern = ScreenshotProbeColorPattern(vec, 80);
     auto manager = Manager(std::make_unique<ScreenshotProbeColorPattern>(pattern));
-    pattern.init(manager.region);
     OverlayLogger ol(manager);
 
     auto assistant = AimAssistant(manager);

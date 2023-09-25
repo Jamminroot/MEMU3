@@ -146,7 +146,7 @@ bool debug_print_layer(const std::string& hint, const std::vector<Coords> &layer
     int height = bitmap.bmHeight;
 
     for(auto &coords : layer) {
-        SetPixel(hdc, coords.x, height - coords.y, color);
+        SetPixel(hdc, coords.x, height - coords.y - 1, color);
     }
     DeleteDC(hdc);
     return true;
@@ -173,13 +173,13 @@ void debug_print_grey_background(HBITMAP &canvas, const HBITMAP &p_hbitmap, doub
             auto b = GetBValue(color);
             auto max = max(r, max(g, b));
             if (r != max) {
-                r += (BYTE) (max-r) * d;
+                r += BYTE((max-r) * d);
             }
             if (g != max) {
-                g += (BYTE) (max-g) * d;
+                g += BYTE((max-g) * d);
             }
             if (b != max) {
-                b += (BYTE) (max-b) * d;
+                b += BYTE((max-b) * d);
             }
 
             SetPixel(canvas_dc, i, j, RGB(r, g, b));

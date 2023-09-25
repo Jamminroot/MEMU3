@@ -176,14 +176,13 @@ int main(int c, char **args) {
     }
 
     // list all files in folder
-    auto files = list_files_by_mask(".jpg", dir);
+    auto files = list_files_by_mask(".png", dir);
     auto rect = Rect(400, 300, -200, -200);
-    pattern.init(r);
 
     for (auto file: files) {
-/*        if (file.find("test_image (1)") == std::string::npos) {
+        if (file.find("test_screen") == std::string::npos) {
             continue;
-        }*/
+        }
         std::cout << "Checking " << file << std::endl;
         check_image(rect, dir, file);
         //break;

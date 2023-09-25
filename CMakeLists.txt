@@ -27,6 +27,7 @@ message("Build variant:\t ${VARIANT}")
 if (VARIANT STREQUAL "DEBUG")
     add_definitions(-DDEBUG=1)
     #add_definitions(-DDEBUG_WITHOUT_INPUT=1)
+    add_definitions(-DDEBUG_WITHOUT_MOUSE=1)
 endif ()
 
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
