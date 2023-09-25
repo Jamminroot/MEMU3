@@ -19,6 +19,7 @@ auto pattern = ScreenshotProbeColorPattern(vec, 80);
 std::vector<COLORREF> colors = {RGB(255, 0, 0), RGB(50, 200, 50), RGB(0, 0, 255), RGB(0, 255, 255), RGB(255, 255, 0),
                                 RGB(255, 0, 255)};
 Rect r(400, 300, 0, 0);
+
 ScreenshotFactory factory(r);
 int check_image(const Rect &offset_region, const std::string &dir, const std::string &fname) {
 
@@ -177,6 +178,8 @@ int main(int c, char **args) {
     // list all files in folder
     auto files = list_files_by_mask(".jpg", dir);
     auto rect = Rect(400, 300, -200, -200);
+    pattern.init(r);
+
     for (auto file: files) {
 /*        if (file.find("test_image (1)") == std::string::npos) {
             continue;

@@ -14,7 +14,7 @@ public:
     ScreenshotProbe() = default;
     virtual ~ScreenshotProbe() = default;
     virtual bool probe(const ScreenshotData &data) = 0;
-    virtual void debug_probe_feature_layers(const ScreenshotData &data, std::vector<std::pair<std::string, std::vector<Coords>>> &res) const = 0;
+    virtual void debug_probe_feature_layers(const ScreenshotData &data, std::vector<std::pair<std::string, std::vector<Coords>>> &res) = 0;
     [[nodiscard]] ProbeResult get_probe_result() const { return probe_result; }
 protected:
     Coords lastKnownBarSize;

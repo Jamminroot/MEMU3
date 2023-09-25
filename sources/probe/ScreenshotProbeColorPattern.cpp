@@ -2,44 +2,19 @@
 #include "../headers/probe/ScreenshotProbeColorPattern.h"
 #include <map>
 
-// Extract common initialization code into a helper function
-bool **initialize_match_map(int width, int height) {
-    bool **match_map = new bool *[width];
-    for (int i = 0; i < width; ++i) {
-        match_map[i] = new bool[height]{false};
-    }
-    return match_map;
-}
-
-// Another helper function to clean up dynamic arrays
-void delete_match_map(bool **match_map, int width) {
-    for (int i = 0; i < width; ++i) {
-        delete[] match_map[i];
-    }
-    delete[] match_map;
-}
-
 bool ScreenshotProbeColorPattern::probe(const ScreenshotData &screenshot) {
-    bool **match_map = initialize_match_map(screenshot.region.width, screenshot.region.height);
-    std::vector<Coords> matches;
-    std::vector<Coords> handles;
-    std::vector<std::vector<Coords>> handle_groups;
     int longest_group_idx = -1;
-    auto result = common_probe(screenshot, matches, handles, handle_groups, match_map, longest_group_idx);
-    delete_match_map(match_map, screenshot.region.width);
+    auto result = common_probe(screenshot, longest_group_idx);
     probe_result = result;
     return probe_result.success;
 }
 
 void ScreenshotProbeColorPattern::debug_probe_feature_layers(const ScreenshotData &screenshot,
-                                                             std::vector<std::pair<std::string, std::vector<Coords>>> &res) const {
+                                                             std::vector<std::pair<std::string, std::vector<Coords>>> &res) {
     res = std::vector<std::pair<std::string, std::vector<Coords>>>();
-    bool **match_map = initialize_match_map(screenshot.region.width, screenshot.region.height);
-    std::vector<Coords> matches;
-    std::vector<Coords> handles;
-    std::vector<std::vector<Coords>> handle_groups;
+
     int longest_group_index = -1;
-    auto result = common_probe(screenshot, matches, handles, handle_groups, match_map, longest_group_index);
+    auto result = common_probe(screenshot, longest_group_index);
     res.emplace_back("0_Reds", matches);
     res.emplace_back("1_Handles", handles);
 
@@ -61,7 +36,7 @@ void ScreenshotProbeColorPattern::debug_probe_feature_layers(const ScreenshotDat
     }
 }
 
-bool ScreenshotProbeColorPattern::probe_handle(const ScreenshotData &screenshot, bool **match_map, int x, int y,
+bool ScreenshotProbeColorPattern::probe_handle(const ScreenshotData &screenshot, int x, int y,
                                                int red_threshold_w, int red_threshold_h, int not_red_threshold,
                                                int check_height, int check_width, int check_offset,
                                                int check_not_red_stripes) {
@@ -131,11 +106,13 @@ bool ScreenshotProbeColorPattern::probe_handle(const ScreenshotData &screenshot,
     return true;
 }
 
-ProbeResult ScreenshotProbeColorPattern::common_probe(const ScreenshotData &screenshot, std::vector<Coords> &matches,
-                                                      std::vector<Coords> &handles,
-                                                      std::vector<std::vector<Coords>> &handle_groups, bool **match_map,
-                                                      int &longest_group_index) const {
+ProbeResult ScreenshotProbeColorPattern::common_probe(const ScreenshotData &screenshot, int &longest_group_index) {
     ProbeResult result;
+
+    matches.clear();
+    handles.clear();
+    handle_groups.clear();
+
     // When iterating a screenshot, 0:0 is bottom-left corner
     for (int y = 0; y < screenshot.region.height; ++y) {
         for (int x = 0; x < screenshot.region.width; ++x) {
@@ -164,7 +141,7 @@ ProbeResult ScreenshotProbeColorPattern::common_probe(const ScreenshotData &scre
     for (auto coords: matches) {
         auto x = coords.x;
         auto y = coords.y;
-        if (probe_handle(screenshot, match_map, x, y, is_red_threshold_w, is_red_threshold_h, not_red_threshold,
+        if (probe_handle(screenshot, x, y, is_red_threshold_w, is_red_threshold_h, not_red_threshold,
                          check_height, check_width, check_offset, check_not_red_pixels_area)) {
             handles.emplace_back(x, y);
             if (handles_indices.find(y) == handles_indices.end()) {
@@ -254,4 +231,32 @@ ProbeResult ScreenshotProbeColorPattern::common_probe(const ScreenshotData &scre
         result.success = false;
     }
     return result;
+}
+
+ScreenshotProbeColorPattern::ScreenshotProbeColorPattern(std::vector<int> &heights, int threshold) :  heights(heights), threshold(threshold) {
+}
+
+void delete_match_map(bool **match_map, const Rect &size){
+    if (match_map == nullptr){
+        return;
+    }
+    for (int i = 0; i < size.width; ++i) {
+        delete[] match_map[i];
+    }
+    delete[] match_map;
+}
+
+void ScreenshotProbeColorPattern::init(const Rect &p_size){
+    if (match_map!=nullptr){
+        delete_match_map(match_map, size);
+    }
+    size = p_size;
+    match_map = new bool *[size.width];
+    for (int i = 0; i < size.width; ++i) {
+        match_map[i] = new bool[size.height]{false};
+    }
+}
+
+ScreenshotProbeColorPattern::~ScreenshotProbeColorPattern() {
+    delete_match_map(match_map, size);
 }
